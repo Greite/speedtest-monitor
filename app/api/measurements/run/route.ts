@@ -12,9 +12,9 @@ export async function POST() {
     return NextResponse.json({ measurement: toMeasurementDto(row) });
   } catch (err) {
     if (err instanceof MeasurementBusyError) {
-      return NextResponse.json({ error: 'already running' }, { status: 409 });
+      return NextResponse.json({ error: 'Already running' }, { status: 409 });
     }
-    const message = err instanceof Error ? err.message : 'unknown error';
+    const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -4,6 +4,11 @@ dist
 coverage
 .git
 .gitignore
+.github
+.vscode
+mockups
+README.md
+*.test.ts
 .DS_Store
 *.log
 data

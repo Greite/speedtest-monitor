@@ -46,10 +46,7 @@ export function ThemeToggle() {
             <DropdownMenuItem
               key={value}
               onSelect={() => setTheme(value)}
-              className={cn(
-                'gap-2',
-                active && 'bg-accent text-accent-foreground focus:bg-accent',
-              )}
+              className={cn('gap-2', active && 'bg-accent text-accent-foreground focus:bg-accent')}
             >
               <Icon className="size-4" />
               {label}

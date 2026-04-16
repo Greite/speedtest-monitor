@@ -53,7 +53,11 @@ export function Dashboard({ initial }: { initial: MeasurementDto[] }) {
           />
           {connected ? 'Live' : 'Disconnected'}
         </Badge>
-        <Button onClick={onRun} disabled={running}>
+        <Button
+          onClick={onRun}
+          disabled={running || !connected}
+          title={connected ? undefined : 'Waiting for live connection…'}
+        >
           {running ? (
             <>
               <Loader2 className="animate-spin" /> Running…

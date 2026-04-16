@@ -14,4 +14,5 @@ fastcom.db*
 .DS_Store
 .claude/
 tsconfig.tsbuildinfo
+next-env.d.ts
 
