@@ -8,7 +8,10 @@ coverage
 .vscode
 mockups
 README.md
+CONTRIBUTING.md
+LICENSE
 *.test.ts
+*.log
 .DS_Store
 *.log
 data
