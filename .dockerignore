@@ -1,0 +1,17 @@
+node_modules
+.next
+dist
+coverage
+.git
+.gitignore
+.DS_Store
+*.log
+data
+*.sqlite
+*.sqlite-*
+fastcom.db*
+.env
+.env.local
+.claude
+mockups
+README.md

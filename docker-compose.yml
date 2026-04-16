@@ -1,0 +1,15 @@
+services:
+  fastcom:
+    build: .
+    container_name: fastcom-monitor
+    ports:
+      - "3000:3000"
+    environment:
+      FASTCOM_INTERVAL_MINUTES: "15"
+      TZ: "Europe/Paris"
+    volumes:
+      - fastcom-data:/data
+    restart: unless-stopped
+
+volumes:
+  fastcom-data:

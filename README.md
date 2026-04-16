@@ -1,0 +1,99 @@
+# Fast.com Monitor
+
+Self-hosted internet speed monitor. Runs [`fast-cli`](https://github.com/sindresorhus/fast-cli) on a configurable schedule, stores every measurement in SQLite, and serves a dashboard with live updates over WebSocket.
+
+## Stack
+
+- **Runtime**: Node.js 24 LTS
+- **Package manager**: Bun 1.3
+- **Framework**: Next.js 16 (App Router) + TypeScript 6 + Biome 2 + Tailwind v4
+- **Custom server** (`server.ts`): hosts Next.js **and** a `ws` WebSocket endpoint on the same port
+- **Scheduler**: `node-cron` 4.x, reprogrammable at runtime from the UI
+- **DB**: Drizzle ORM 0.45 + `better-sqlite3` 12
+- **Tests**: Vitest 4
+- **Runtime image**: `node:24-bookworm-slim` + Chromium runtime libs (required by `fast-cli` → Puppeteer)
+
+## Run with Docker
+
+```bash
+docker compose up -d --build
+open http://localhost:3000
+```
+
+Configuration:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `FASTCOM_INTERVAL_MINUTES` | `15` | Default interval used if the DB has no override |
+| `FASTCOM_DB_PATH` | `/data/fastcom.db` | SQLite file path (volume-persisted) |
+| `PORT` | `3000` | HTTP + WebSocket port |
+| `TZ` | — | Display timezone inside the container |
+
+Change the interval at any time via the UI (`/settings`) — it is persisted in SQLite and takes effect immediately without a restart.
+
+## Development
+
+```bash
+bun install
+bun run db:generate        # generate drizzle migrations
+bun run dev                # tsx watch server.ts → http://localhost:3000
+bun run test               # vitest unit tests
+bun run lint               # biome check
+bun run typecheck          # tsc --noEmit
+bun run build              # next build + tsup bundle for server.ts
+```
+
+### End-to-end check
+
+```bash
+# trigger one measurement (~90s)
+curl -X POST http://localhost:3000/api/measurements/run
+
+# read history
+curl 'http://localhost:3000/api/measurements?range=24h' | jq
+
+# tail the WebSocket stream
+websocat ws://localhost:3000/ws
+
+# change interval (live)
+curl -X PATCH http://localhost:3000/api/settings \
+  -H 'content-type: application/json' \
+  -d '{"intervalMinutes":5}'
+```
+
+## API
+
+| Route | Method | Description |
+|---|---|---|
+| `/api/measurements?range=1h\|6h\|24h\|7d\|30d` | GET | History for the given range |
+| `/api/measurements/run` | POST | Trigger a manual run (409 if already running) |
+| `/api/settings` | GET | Current interval + env default |
+| `/api/settings` | PATCH | `{ intervalMinutes: 1..1440 }` |
+| `/ws` | WebSocket | Pushes `measurement`, `running`, `settings_updated` events |
+
+## Tests
+
+Unit tests live next to the code they cover (`lib/**/*.test.ts`). Run with:
+
+```bash
+bun run test
+```
+
+Covered areas: formatting helpers, latency thresholds, cron expression generation, range validation, PATCH settings schema.
+
+## Reverse proxy
+
+The WebSocket lives on `/ws`. Make sure your proxy forwards the `Upgrade` header:
+
+```nginx
+location /ws {
+  proxy_pass http://fastcom:3000;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+}
+```
+
+## Mockups
+
+See `mockups/dashboard.pen` (Pencil) for the dashboard + settings wireframes used to design the UI.
