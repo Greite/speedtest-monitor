@@ -1,9 +1,8 @@
 ARG BUN_IMAGE=oven/bun:1.3.12-debian
 ARG NODE_IMAGE=node:24-trixie-slim
-ARG TARGETPLATFORM=linux/amd64
 
 # ---------- deps ----------
-FROM --platform=${TARGETPLATFORM} ${BUN_IMAGE} AS deps
+FROM ${BUN_IMAGE} AS deps
 WORKDIR /app
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,24 +12,31 @@ COPY package.json bun.lock* .puppeteerrc.cjs ./
 RUN bun install --frozen-lockfile
 
 # ---------- build ----------
-FROM --platform=${TARGETPLATFORM} ${BUN_IMAGE} AS builder
+FROM ${BUN_IMAGE} AS builder
+ARG TARGETARCH
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Build, then prune off-platform native variants Next NFT-traced into the
-# standalone output (Next keeps every sharp/@img platform folder "just in case").
-RUN bun run build \
+# standalone output. Keep only the variant for the build target (TARGETARCH
+# is auto-set by buildx: amd64 → linux-x64, arm64 → linux-arm64).
+RUN set -eux \
+ && bun run build \
+ && case "$TARGETARCH" in \
+      amd64) KEEP_NODEARCH=x64 ;; \
+      arm64) KEEP_NODEARCH=arm64 ;; \
+      *) echo "unsupported TARGETARCH: $TARGETARCH"; exit 1 ;; \
+    esac \
+ && find .next/standalone/node_modules/@img -mindepth 1 -maxdepth 1 -type d \
+      ! -name "sharp-libvips-linux-$KEEP_NODEARCH" \
+      ! -name "sharp-linux-$KEEP_NODEARCH" \
+      ! -name 'colour' \
+      -exec rm -rf {} + \
  && rm -rf -- \
-      .next/standalone/node_modules/@img/*-linuxmusl-* \
-      .next/standalone/node_modules/@img/*-linux-arm* \
-      .next/standalone/node_modules/@img/*-darwin-* \
-      .next/standalone/node_modules/@img/*-wasm32* \
-      .next/standalone/node_modules/@img/*-win32-* \
       .next/standalone/node_modules/sharp/vendor \
       .next/standalone/node_modules/@next/swc-*-musl* \
-      .next/standalone/node_modules/@next/swc-*-arm* \
       .next/standalone/node_modules/@next/swc-darwin-* \
       .next/standalone/node_modules/@next/swc-win32-* \
  && find .next/standalone/node_modules \
@@ -41,7 +47,8 @@ RUN bun run build \
 
 # ---------- runtime-deps: minimal node_modules needed by dist/server.js.
 # Pruning happens inline so the final COPY layer only carries the trimmed tree.
-FROM --platform=${TARGETPLATFORM} ${BUN_IMAGE} AS runtime-deps
+FROM ${BUN_IMAGE} AS runtime-deps
+ARG TARGETARCH
 WORKDIR /app
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -49,6 +56,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 COPY .puppeteerrc.cjs ./
 RUN set -eux \
+ && case "$TARGETARCH" in \
+      amd64) KEEP_NODEARCH=x64; KEEP_PREBUILD=linux-x64 ;; \
+      arm64) KEEP_NODEARCH=arm64; KEEP_PREBUILD=linux-arm64 ;; \
+      *) echo "unsupported TARGETARCH: $TARGETARCH"; exit 1 ;; \
+    esac \
  && echo '{"name":"runtime","version":"0.0.0","trustedDependencies":["better-sqlite3"]}' > package.json \
  && bun add \
       better-sqlite3@^12.9.0 \
@@ -59,34 +71,24 @@ RUN set -eux \
       node-cron@^4.2.1 \
       ws@^8.20.0 \
       zod@^4.3.6 \
- # Off-platform native packages. Shell globs (not find) — in the bun debian
- # image /bin/sh is bash-derived and expands globs; non-matches are passed
- # literally and `rm -rf -- ...` with -f silently ignores nonexistent paths.
- && rm -rf -- \
-      node_modules/@img/*-linuxmusl-* \
-      node_modules/@img/*-linux-arm* \
-      node_modules/@img/*-darwin-* \
-      node_modules/@img/*-wasm32* \
-      node_modules/@img/*-win32-* \
-      node_modules/@next/swc-*-musl* \
-      node_modules/@next/swc-*-arm* \
-      node_modules/@next/swc-darwin-* \
-      node_modules/@next/swc-win32-* \
-      node_modules/@next/swc-*-freebsd-* \
-      node_modules/better-sqlite3/prebuilds/darwin-* \
-      node_modules/better-sqlite3/prebuilds/linux-arm* \
-      node_modules/better-sqlite3/prebuilds/linuxmusl-* \
-      node_modules/better-sqlite3/prebuilds/win32-* \
-      node_modules/better-sqlite3/prebuilds/freebsd-* \
- # Delete the 125 MB @next/swc native binary — Next.js standalone ships a
- # fallback JS stub (preserved in the merged /app/node_modules from the
- # builder's standalone output) that covers what a production custom server
- # actually calls. SWC is only needed for dev compilation / next build, not
- # for serving pre-built pages.
- && rm -rf node_modules/@next/swc-linux-x64-gnu \
+ # @img: keep only the target arch (both the libvips and the sharp wrapper).
+ && find node_modules/@img -mindepth 1 -maxdepth 1 -type d \
+      ! -name "sharp-libvips-linux-$KEEP_NODEARCH" \
+      ! -name "sharp-linux-$KEEP_NODEARCH" \
+      ! -name 'colour' \
+      -exec rm -rf {} + \
+ # @next/swc: nuke every platform variant. Next.js standalone ships a JS
+ # fallback stub (preserved via the builder's standalone COPY) that covers
+ # what a production custom server actually calls — SWC is only needed for
+ # dev compilation / next build, not for serving pre-built pages.
+ && find node_modules/@next -mindepth 1 -maxdepth 1 -type d \
+      -name 'swc-*' -exec rm -rf {} + \
+ # better-sqlite3 prebuilds: keep only the target platform.
+ && find node_modules/better-sqlite3/prebuilds -mindepth 1 -maxdepth 1 -type d \
+      ! -name "$KEEP_PREBUILD" -exec rm -rf {} + 2>/dev/null || true \
  && find node_modules/better-sqlite3 -name '*.node' -exec strip --strip-unneeded {} + 2>/dev/null || true \
  && find node_modules/@img -name '*.so*' -exec strip --strip-unneeded {} + 2>/dev/null || true \
- # Dev-only / tooling / cache. DO NOT touch node_modules/.bin — it holds the
+ # Dev-only tooling/cache. DO NOT touch node_modules/.bin — it holds the
  # `fast` binary that execa('fast', ...) in lib/fastcli/runner.ts spawns.
  && rm -rf \
       node_modules/typescript \
@@ -116,7 +118,7 @@ RUN set -eux \
       -prune -exec rm -rf {} + 2>/dev/null || true
 
 # ---------- runtime (Debian slim + system Chromium) ----------
-FROM --platform=${TARGETPLATFORM} ${NODE_IMAGE} AS runner
+FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
@@ -129,6 +131,8 @@ ENV NODE_ENV=production \
 
 # Install Chromium + purge locales / docs / icons inside the SAME layer so
 # the deleted bytes never land in history. Create the runtime user here too.
+# The `chromium` Debian package is available for amd64 AND arm64 so this
+# stage is arch-agnostic.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       ca-certificates dumb-init chromium fonts-liberation \
@@ -161,12 +165,12 @@ RUN apt-get update \
 
 # All COPYs carry --chown, no recursive chown needed afterwards (avoids
 # duplicating node_modules into a 340 MB "fix-ownership" layer).
-COPY --from=builder    --chown=nodejs:nodejs /app/.next/standalone ./
-COPY --from=builder    --chown=nodejs:nodejs /app/.next/static     ./.next/static
-COPY --from=builder    --chown=nodejs:nodejs /app/public           ./public
-COPY --from=builder    --chown=nodejs:nodejs /app/drizzle          ./drizzle
-COPY --from=builder    --chown=nodejs:nodejs /app/dist             ./dist
-COPY --from=runtime-deps --chown=nodejs:nodejs /app/node_modules   ./node_modules
+COPY --from=builder      --chown=nodejs:nodejs /app/.next/standalone ./
+COPY --from=builder      --chown=nodejs:nodejs /app/.next/static     ./.next/static
+COPY --from=builder      --chown=nodejs:nodejs /app/public           ./public
+COPY --from=builder      --chown=nodejs:nodejs /app/drizzle          ./drizzle
+COPY --from=builder      --chown=nodejs:nodejs /app/dist             ./dist
+COPY --from=runtime-deps --chown=nodejs:nodejs /app/node_modules     ./node_modules
 
 USER nodejs
 EXPOSE 3000
