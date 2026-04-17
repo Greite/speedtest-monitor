@@ -13,6 +13,9 @@ type FastCliJson = {
   uploadSpeed?: number;
   latency?: number;
   bufferBloat?: number;
+  serverLocations?: string[];
+  userLocation?: string;
+  userIp?: string;
 };
 
 const RUN_TIMEOUT_MS = 180_000;
@@ -64,9 +67,9 @@ export async function runMeasurement(): Promise<Measurement> {
       bufferBloatMs: result.bufferBloat ?? null,
       status: 'success',
       error: null,
-      serverLocations: null,
-      userLocation: null,
-      userIp: null,
+      serverLocations: result.serverLocations?.length ? result.serverLocations : null,
+      userLocation: result.userLocation ? result.userLocation : null,
+      userIp: result.userIp ? result.userIp : null,
     });
     broadcastMeasurement(row);
     return row;
