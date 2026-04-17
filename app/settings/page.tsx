@@ -3,7 +3,9 @@ import { PasswordChangeCard } from '@/components/auth/password-change-card';
 import { Header } from '@/components/header';
 import { AlertsCard } from '@/components/settings/alerts-card';
 import { SettingsForm } from '@/components/settings-form';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { UsersCard } from '@/components/users/users-card';
+import { auth } from '@/lib/auth/handler';
 import {
   getEnvDefaultIntervalMinutes,
   getEnvDefaultRetentionDays,
@@ -14,7 +16,9 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await auth();
+  const readOnly = session?.user?.role !== 'admin';
   const intervalMinutes = getIntervalMinutes();
   const envDefaultMinutes = getEnvDefaultIntervalMinutes();
   const retentionDays = getRetentionDays();
@@ -29,6 +33,12 @@ export default function SettingsPage() {
           ← Back to dashboard
         </Link>
       </div>
+      {readOnly ? (
+        <Alert variant="default">
+          <AlertTitle>Read-only mode</AlertTitle>
+          <AlertDescription>You do not have permission to change settings.</AlertDescription>
+        </Alert>
+      ) : null}
       <PasswordChangeCard />
       <SettingsForm
         initialMinutes={intervalMinutes}

@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,8 @@ function IntervalCard({
   initialMinutes: number;
   envDefault: number;
 }) {
+  const { data: session } = useSession();
+  const readOnly = session?.user?.role !== 'admin';
   const [value, setValue] = useState(String(initialMinutes));
   const [saved, setSaved] = useState(initialMinutes);
   const [saving, setSaving] = useState(false);
@@ -86,6 +89,7 @@ function IntervalCard({
             type="number"
             min={1}
             max={1440}
+            disabled={readOnly}
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
@@ -102,7 +106,7 @@ function IntervalCard({
           </Alert>
         ) : null}
         <div className="flex items-center gap-2">
-          <Button onClick={onSave} disabled={!valid || !dirty || saving}>
+          <Button onClick={onSave} disabled={!valid || !dirty || saving || readOnly}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
           <Button
@@ -111,7 +115,7 @@ function IntervalCard({
               setValue(String(saved));
               setError(null);
             }}
-            disabled={!dirty || saving}
+            disabled={!dirty || saving || readOnly}
           >
             Cancel
           </Button>
@@ -128,6 +132,8 @@ function RetentionCard({
   initialRetentionDays: number;
   envDefault: number;
 }) {
+  const { data: session } = useSession();
+  const readOnly = session?.user?.role !== 'admin';
   const [value, setValue] = useState(String(initialRetentionDays));
   const [saved, setSaved] = useState(initialRetentionDays);
   const [saving, setSaving] = useState(false);
@@ -174,6 +180,7 @@ function RetentionCard({
             type="number"
             min={1}
             max={3650}
+            disabled={readOnly}
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
@@ -190,7 +197,7 @@ function RetentionCard({
           </Alert>
         ) : null}
         <div className="flex items-center gap-2">
-          <Button onClick={onSave} disabled={!valid || !dirty || saving}>
+          <Button onClick={onSave} disabled={!valid || !dirty || saving || readOnly}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
           <Button
@@ -199,7 +206,7 @@ function RetentionCard({
               setValue(String(saved));
               setError(null);
             }}
-            disabled={!dirty || saving}
+            disabled={!dirty || saving || readOnly}
           >
             Cancel
           </Button>
