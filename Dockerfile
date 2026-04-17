@@ -69,6 +69,7 @@ RUN set -eux \
       fast-cli@^5.2.0 \
       next@^16.2.4 \
       node-cron@^4.2.1 \
+      nodemailer@^6 \
       ws@^8.20.0 \
       zod@^4.3.6 \
  # @img: keep only the target arch (both the libvips and the sharp wrapper).
