@@ -15,4 +15,5 @@ fastcom.db*
 .claude/
 tsconfig.tsbuildinfo
 next-env.d.ts
+.worktrees/
 
