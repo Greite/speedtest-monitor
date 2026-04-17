@@ -1,6 +1,6 @@
 import { desc, gte, lt } from 'drizzle-orm';
 import { getDb } from './db/client';
-import { type Measurement, measurements } from './db/schema';
+import { type Measurement, alerts, measurements } from './db/schema';
 
 export type Range = '1h' | '6h' | '24h' | '7d' | '30d';
 
@@ -33,8 +33,9 @@ export function cutoffForRetentionDays(retentionDays: number, now: Date = new Da
 
 export function purgeMeasurementsOlderThan(cutoff: Date): number {
   const db = getDb();
-  const result = db.delete(measurements).where(lt(measurements.timestamp, cutoff)).run();
-  return result.changes;
+  const m = db.delete(measurements).where(lt(measurements.timestamp, cutoff)).run();
+  db.delete(alerts).where(lt(alerts.timestamp, cutoff)).run();
+  return m.changes;
 }
 
 export function purgeByRetention(retentionDays: number, now: Date = new Date()): number {
