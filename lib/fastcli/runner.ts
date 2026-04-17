@@ -1,4 +1,5 @@
 import { execa } from 'execa';
+import { handleAlertsForMeasurement } from '../alerts/handle';
 import { getDb } from '../db/client';
 import { type Measurement, measurements } from '../db/schema';
 import { broadcastMeasurement, broadcastRunning } from '../ws/broadcast';
@@ -72,6 +73,7 @@ export async function runMeasurement(): Promise<Measurement> {
       userIp: result.userIp ? result.userIp : null,
     });
     broadcastMeasurement(row);
+    void handleAlertsForMeasurement(row);
     return row;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -89,6 +91,7 @@ export async function runMeasurement(): Promise<Measurement> {
       userIp: null,
     });
     broadcastMeasurement(row);
+    void handleAlertsForMeasurement(row);
     return row;
   } finally {
     globalThis.__fastcomRunning = false;
