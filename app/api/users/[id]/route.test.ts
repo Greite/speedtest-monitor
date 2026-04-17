@@ -43,7 +43,12 @@ const pathReq = (id: number, body: unknown) =>
 
 describe('/api/users/[id]', () => {
   it('PATCH role updates', async () => {
-    const admin = createUser({ email: 'a@x.y', passwordHash: 'h', role: 'admin', provider: 'local' });
+    const admin = createUser({
+      email: 'a@x.y',
+      passwordHash: 'h',
+      role: 'admin',
+      provider: 'local',
+    });
     const u = createUser({ email: 'b@x.y', passwordHash: 'h', role: 'viewer', provider: 'local' });
     const res = await PATCH(pathReq(u.id, { role: 'admin' }), {
       params: Promise.resolve({ id: String(u.id) }),
@@ -54,7 +59,12 @@ describe('/api/users/[id]', () => {
   });
 
   it('PATCH blocks last-admin demote', async () => {
-    const admin = createUser({ email: 'a@x.y', passwordHash: 'h', role: 'admin', provider: 'local' });
+    const admin = createUser({
+      email: 'a@x.y',
+      passwordHash: 'h',
+      role: 'admin',
+      provider: 'local',
+    });
     const res = await PATCH(pathReq(admin.id, { role: 'viewer' }), {
       params: Promise.resolve({ id: String(admin.id) }),
     });
@@ -63,7 +73,12 @@ describe('/api/users/[id]', () => {
   });
 
   it('DELETE blocks last admin', async () => {
-    const admin = createUser({ email: 'a@x.y', passwordHash: 'h', role: 'admin', provider: 'local' });
+    const admin = createUser({
+      email: 'a@x.y',
+      passwordHash: 'h',
+      role: 'admin',
+      provider: 'local',
+    });
     const res = await DELETE(new Request(`http://x/api/users/${admin.id}`, { method: 'DELETE' }), {
       params: Promise.resolve({ id: String(admin.id) }),
     });

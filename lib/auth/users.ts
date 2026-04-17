@@ -18,7 +18,11 @@ export function countAdmins(): number {
 
 export function findUserByEmail(email: string): User | undefined {
   const db = getDb();
-  return db.select().from(users).where(eq(users.email, lower(email))).get();
+  return db
+    .select()
+    .from(users)
+    .where(eq(users.email, lower(email)))
+    .get();
 }
 
 export function findUserByOidcSubject(sub: string): User | undefined {

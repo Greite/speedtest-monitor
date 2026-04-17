@@ -66,9 +66,7 @@ describe('POST /api/account/password', () => {
   });
 
   it('rejects short new password', async () => {
-    const res = await POST(
-      body({ currentPassword: 'oldpassword1', newPassword: 'short' }),
-    );
+    const res = await POST(body({ currentPassword: 'oldpassword1', newPassword: 'short' }));
     expect(res.status).toBe(400);
   });
 });

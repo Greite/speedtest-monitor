@@ -37,7 +37,12 @@ beforeEach(() => {
 
 describe('POST /api/users/:id/reset-password', () => {
   it('admin resets target password', async () => {
-    const u = createUser({ email: 'b@x.y', passwordHash: 'old', role: 'viewer', provider: 'local' });
+    const u = createUser({
+      email: 'b@x.y',
+      passwordHash: 'old',
+      role: 'viewer',
+      provider: 'local',
+    });
     const res = await POST(
       new Request(`http://x/api/users/${u.id}/reset-password`, {
         method: 'POST',
@@ -52,7 +57,12 @@ describe('POST /api/users/:id/reset-password', () => {
   });
 
   it('rejects short password', async () => {
-    const u = createUser({ email: 'b@x.y', passwordHash: 'old', role: 'viewer', provider: 'local' });
+    const u = createUser({
+      email: 'b@x.y',
+      passwordHash: 'old',
+      role: 'viewer',
+      provider: 'local',
+    });
     const res = await POST(
       new Request(`http://x/api/users/${u.id}/reset-password`, {
         method: 'POST',

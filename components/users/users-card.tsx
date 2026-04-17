@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -19,7 +19,7 @@ export function UsersCard() {
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     const res = await fetch('/api/users');
     if (!res.ok) {
       setStatus(`Load failed: HTTP ${res.status}`);
@@ -27,10 +27,10 @@ export function UsersCard() {
     }
     const body = await res.json();
     setUsers(body.users);
-  }
+  }, []);
   useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
 
   if (session?.user?.role !== 'admin') return null;
 

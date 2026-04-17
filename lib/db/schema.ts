@@ -73,8 +73,12 @@ export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash'),
-  role: text('role', { enum: ['admin', 'viewer'] }).notNull().default('viewer'),
-  provider: text('provider', { enum: ['local', 'oidc'] }).notNull().default('local'),
+  role: text('role', { enum: ['admin', 'viewer'] })
+    .notNull()
+    .default('viewer'),
+  provider: text('provider', { enum: ['local', 'oidc'] })
+    .notNull()
+    .default('local'),
   oidcSubject: text('oidc_subject').unique(),
   name: text('name'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
