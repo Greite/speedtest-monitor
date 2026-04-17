@@ -15,6 +15,13 @@
       "when": 1776416411258,
       "tag": "0001_secret_virginia_dare",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1776438116424,
+      "tag": "0002_smooth_stark_industries",
+      "breakpoints": true
     }
   ]
 }
