@@ -3,6 +3,7 @@ import { PasswordChangeCard } from '@/components/auth/password-change-card';
 import { Header } from '@/components/header';
 import { AlertsCard } from '@/components/settings/alerts-card';
 import { SettingsForm } from '@/components/settings-form';
+import { UsersCard } from '@/components/users/users-card';
 import {
   getEnvDefaultIntervalMinutes,
   getEnvDefaultRetentionDays,
@@ -36,6 +37,7 @@ export default function SettingsPage() {
         envDefaultRetentionDays={envDefaultRetentionDays}
       />
       <AlertsCard />
+      <UsersCard />
     </main>
   );
 }
