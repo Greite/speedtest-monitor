@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,8 @@ function numOrNull(v: string): number | null {
 }
 
 export function AlertsCard() {
+  const { data: session } = useSession();
+  const readOnly = session?.user?.role !== 'admin';
   const [rules, setRules] = useState<Rules | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -160,6 +163,7 @@ export function AlertsCard() {
           <Switch
             id="alerts-enabled"
             checked={rules.enabled}
+            disabled={readOnly}
             onCheckedChange={(v) => setRules({ ...rules, enabled: v })}
           />
           <Label htmlFor="alerts-enabled">Enable alerts</Label>
@@ -178,6 +182,7 @@ export function AlertsCard() {
                 type="number"
                 min={0}
                 step="any"
+                disabled={readOnly}
                 value={rules.thresholds.downloadMbps ?? ''}
                 onChange={(e) => setThreshold('downloadMbps', numOrNull(e.target.value))}
               />
@@ -189,6 +194,7 @@ export function AlertsCard() {
                 type="number"
                 min={0}
                 step="any"
+                disabled={readOnly}
                 value={rules.thresholds.uploadMbps ?? ''}
                 onChange={(e) => setThreshold('uploadMbps', numOrNull(e.target.value))}
               />
@@ -200,6 +206,7 @@ export function AlertsCard() {
                 type="number"
                 min={0}
                 step="any"
+                disabled={readOnly}
                 value={rules.thresholds.latencyMs ?? ''}
                 onChange={(e) => setThreshold('latencyMs', numOrNull(e.target.value))}
               />
@@ -211,6 +218,7 @@ export function AlertsCard() {
                 type="number"
                 min={0}
                 step="any"
+                disabled={readOnly}
                 value={rules.thresholds.bufferBloatMs ?? ''}
                 onChange={(e) => setThreshold('bufferBloatMs', numOrNull(e.target.value))}
               />
@@ -222,6 +230,7 @@ export function AlertsCard() {
                 type="number"
                 min={1}
                 step={1}
+                disabled={readOnly}
                 value={rules.failureStreak ?? ''}
                 onChange={(e) => setRules({ ...rules, failureStreak: numOrNull(e.target.value) })}
               />
@@ -243,7 +252,7 @@ export function AlertsCard() {
                   <Switch
                     id={`dest-${key}`}
                     checked={rules.destinations[key]}
-                    disabled={!configured}
+                    disabled={!configured || readOnly}
                     onCheckedChange={(v) => setDest(key, v)}
                   />
                   <Label htmlFor={`dest-${key}`} className="w-24">
@@ -255,7 +264,7 @@ export function AlertsCard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={!configured}
+                    disabled={!configured || readOnly}
                     onClick={() => test(key)}
                   >
                     Send test
@@ -276,7 +285,7 @@ export function AlertsCard() {
         ) : null}
 
         <div className="flex items-center gap-2">
-          <Button onClick={save} disabled={saving}>
+          <Button onClick={save} disabled={saving || readOnly}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
           {status ? <span className="text-xs text-muted-foreground">{status}</span> : null}

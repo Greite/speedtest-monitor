@@ -70,6 +70,73 @@ wiring without waiting for a real incident.
 - **Secrets stay in env.** Destination credentials are never persisted to
   the SQLite DB and never returned by `/api/alerts/rules`.
 
+## Authentication
+
+fastcom-monitor requires authentication for all routes. Two roles exist:
+
+- **admin** - full access, can manage users, change settings, configure alerts, trigger manual measurements
+- **viewer** - read-only access: dashboard, history, settings in read-only mode
+
+### Required environment
+
+```
+AUTH_SECRET=<run: openssl rand -base64 32>
+AUTH_TRUST_HOST=true      # set when behind a reverse proxy (Traefik, Caddy, Nginx, ...)
+```
+
+Missing `AUTH_SECRET` is a fatal boot error.
+
+### First run: create the first admin
+
+Pick one of the following three paths. They are independent; the most recent write wins.
+
+**Path A: env seed (recommended for docker-compose)**
+
+```
+FASTCOM_ADMIN_EMAIL=admin@example.com
+FASTCOM_ADMIN_PASSWORD=<at least 10 chars>
+```
+
+The seed runs at every boot and is idempotent: the admin is created if absent, promoted
+to admin if demoted, and rehashed if the password env var has changed.
+
+**Path B: setup wizard**
+
+Visit `/setup` on first boot. The page is only accessible while no user exists. You can
+create your admin account from the form.
+
+**Path C: OIDC admin claim**
+
+Set `FASTCOM_OIDC_ADMIN_EMAIL=you@example.com` in addition to the OIDC env vars below.
+On first OIDC sign-in with that email, the account is auto-promoted to admin.
+
+### OIDC single sign-on (optional)
+
+```
+FASTCOM_OIDC_ISSUER=https://auth.example.com
+FASTCOM_OIDC_CLIENT_ID=fastcom
+FASTCOM_OIDC_CLIENT_SECRET=...
+FASTCOM_OIDC_DISPLAY_NAME=SSO           # label on the sign-in button
+FASTCOM_OIDC_ADMIN_EMAIL=you@example.com
+FASTCOM_OIDC_ALLOW_NEW_USERS=true       # "false" = only admin-created users may sign in via OIDC
+```
+
+Tested with Authelia, Authentik, and Keycloak (any OIDC-compliant provider should work).
+
+### User management
+
+Admins manage users from `/settings` under the "Users" card. Add a user with an initial
+password (no email invite in v1). Admins can change roles, reset passwords, and delete
+users. The last remaining admin cannot be demoted or deleted.
+
+### Upgrading from a pre-auth version
+
+1. Set `AUTH_SECRET` in your environment before starting the upgraded container.
+2. Pick a bootstrap path (A, B, or C above).
+3. Scripts and cURL commands that previously called `/api/*` anonymously will now receive
+   `401 Unauthorized`. Add an authenticated session cookie or migrate to the session-aware
+   clients.
+
 ## Development
 
 ```bash

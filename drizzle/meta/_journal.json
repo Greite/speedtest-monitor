@@ -22,6 +22,13 @@
       "when": 1776438116424,
       "tag": "0002_smooth_stark_industries",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1776458444040,
+      "tag": "0003_curly_angel",
+      "breakpoints": true
     }
   ]
 }

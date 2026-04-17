@@ -17,6 +17,11 @@ ARG TARGETARCH
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+# Next.js page-data collection evaluates the next-auth route at build time,
+# which imports handler.ts → loadAuthConfig() and throws without AUTH_SECRET.
+# Inject a dummy value used only during `next build`; runtime requires a real
+# AUTH_SECRET supplied via `docker run -e AUTH_SECRET=...`.
+ENV AUTH_SECRET=build-time-placeholder-not-used-at-runtime
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Build, then prune off-platform native variants Next NFT-traced into the
@@ -63,11 +68,13 @@ RUN set -eux \
     esac \
  && echo '{"name":"runtime","version":"0.0.0","trustedDependencies":["better-sqlite3"]}' > package.json \
  && bun add \
+      @node-rs/argon2@^2 \
       better-sqlite3@^12.9.0 \
       drizzle-orm@^0.45.2 \
       execa@^9.6.1 \
       fast-cli@^5.2.0 \
       next@^16.2.4 \
+      next-auth@beta \
       node-cron@^4.2.1 \
       nodemailer@^6 \
       ws@^8.20.0 \
