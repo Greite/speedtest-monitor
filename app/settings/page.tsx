@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PasswordChangeCard } from '@/components/auth/password-change-card';
 import { Header } from '@/components/header';
 import { AlertsCard } from '@/components/settings/alerts-card';
 import { SettingsForm } from '@/components/settings-form';
@@ -27,6 +28,7 @@ export default function SettingsPage() {
           ← Back to dashboard
         </Link>
       </div>
+      <PasswordChangeCard />
       <SettingsForm
         initialMinutes={intervalMinutes}
         envDefaultMinutes={envDefaultMinutes}
