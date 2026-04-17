@@ -147,7 +147,7 @@ function ChartTooltip({ active, payload, label }: TooltipContentProps) {
     >
       <div style={{ color: 'var(--color-muted-foreground)', marginBottom: 4 }}>{label}</div>
       {payload.map((entry) => {
-        const key = String(entry.dataKey ?? entry.name ?? '');
+        const key = entry.graphicalItemId;
         const displayName = String(entry.name ?? entry.dataKey ?? '');
         return (
           <div key={key} style={{ color: entry.color }}>
