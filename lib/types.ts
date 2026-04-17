@@ -10,6 +10,9 @@ export type MeasurementDto = {
   bufferBloatMs: number | null;
   status: 'success' | 'error' | 'timeout';
   error: string | null;
+  serverLocations: string[] | null;
+  userLocation: string | null;
+  userIp: string | null;
 };
 
 export function toMeasurementDto(row: Measurement): MeasurementDto {
@@ -23,6 +26,9 @@ export function toMeasurementDto(row: Measurement): MeasurementDto {
     bufferBloatMs: row.bufferBloatMs,
     status: row.status,
     error: row.error,
+    serverLocations: row.serverLocations ?? null,
+    userLocation: row.userLocation ?? null,
+    userIp: row.userIp ?? null,
   };
 }
 
