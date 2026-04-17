@@ -46,8 +46,8 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
               <TableHead>Download</TableHead>
               <TableHead>Upload</TableHead>
               <TableHead>Latency (u/l)</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Server</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,10 +75,10 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
                       {formatMs(m.latencyUnloadedMs)} / {formatMs(m.latencyLoadedMs)}
                     </span>
                   </TableCell>
-                  <TableCell>{statusBadge(m.status)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {m.serverLocations?.join(' | ') ?? '-'}
                   </TableCell>
+                  <TableCell>{statusBadge(m.status)}</TableCell>
                 </TableRow>
               ))
             )}
