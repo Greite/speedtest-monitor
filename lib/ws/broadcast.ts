@@ -1,4 +1,4 @@
-import type { Measurement } from '../db/schema';
+import type { Alert, Measurement } from '../db/schema';
 import { toMeasurementDto } from '../types';
 import { broadcast } from './server';
 
@@ -12,4 +12,20 @@ export function broadcastRunning(startedAt: number) {
 
 export function broadcastSettingsUpdated(intervalMinutes: number) {
   broadcast({ type: 'settings_updated', payload: { intervalMinutes } });
+}
+
+export function broadcastAlert(row: Alert) {
+  broadcast({
+    type: 'alert',
+    payload: {
+      id: row.id,
+      timestamp: row.timestamp.getTime(),
+      kind: row.kind,
+      event: row.event,
+      measurementId: row.measurementId,
+      threshold: row.threshold,
+      observed: row.observed,
+      deliveryStatus: row.deliveryStatus ?? {},
+    },
+  });
 }
