@@ -23,7 +23,7 @@ export function SettingsForm({
   envDefaultRetentionDays,
 }: Props) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex max-w-2xl flex-col gap-4">
       <IntervalCard initialMinutes={initialMinutes} envDefault={envDefaultMinutes} />
       <RetentionCard
         initialRetentionDays={initialRetentionDays}
