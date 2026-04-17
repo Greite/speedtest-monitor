@@ -47,12 +47,13 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
               <TableHead>Upload</TableHead>
               <TableHead>Latency (u/l)</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Server</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {measurements.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
                   No measurements yet.
                 </TableCell>
               </TableRow>
@@ -75,6 +76,9 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
                     </span>
                   </TableCell>
                   <TableCell>{statusBadge(m.status)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {m.serverLocations?.join(' | ') ?? '-'}
+                  </TableCell>
                 </TableRow>
               ))
             )}
