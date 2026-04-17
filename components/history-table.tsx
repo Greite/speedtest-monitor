@@ -6,15 +6,18 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
+  type PaginationState,
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { NumericRange, StatusValue, TimeRange } from '@/components/table-filters';
 import { TableFilters } from '@/components/table-filters';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -130,23 +133,33 @@ const columns: ColumnDef<MeasurementDto>[] = [
   },
 ];
 
+const PAGE_SIZES = [10, 25, 50, 100] as const;
+
 export function HistoryTable({ measurements }: { measurements: MeasurementDto[] }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'timestamp', desc: true }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 });
   const data = useMemo(() => measurements, [measurements]);
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnFilters },
+    state: { sorting, columnFilters, pagination },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const rows = table.getRowModel().rows;
+  const totalFiltered = table.getFilteredRowModel().rows.length;
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageSize = table.getState().pagination.pageSize;
+  const firstRow = totalFiltered === 0 ? 0 : pageIndex * pageSize + 1;
+  const lastRow = Math.min(totalFiltered, (pageIndex + 1) * pageSize);
 
   return (
     <Card>
@@ -206,6 +219,50 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
             )}
           </TableBody>
         </Table>
+        <div className="mt-4 flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            {totalFiltered === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalFiltered}`}
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2">
+              Rows per page
+              <select
+                value={pageSize}
+                onChange={(e) => table.setPageSize(Number(e.target.value))}
+                className="h-7 rounded-md border bg-background px-2 text-xs"
+              >
+                {PAGE_SIZES.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex items-center gap-2">
+              <span>
+                Page {table.getPageCount() === 0 ? 0 : pageIndex + 1} of {table.getPageCount()}
+              </span>
+              <Button
+                variant="outline"
+                size="icon-xs"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                aria-label="Previous page"
+              >
+                <ChevronLeft />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon-xs"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                aria-label="Next page"
+              >
+                <ChevronRight />
+              </Button>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
