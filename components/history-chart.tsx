@@ -7,6 +7,7 @@ import {
   LineChart,
   ResponsiveContainer,
   Tooltip,
+  type TooltipContentProps,
   XAxis,
   YAxis,
 } from 'recharts';
@@ -20,6 +21,9 @@ type Point = {
   download: number | null;
   upload: number | null;
   latency: number | null;
+  serverLocations: string[] | null;
+  userLocation: string | null;
+  userIp: string | null;
 };
 
 export function HistoryChart({ measurements }: { measurements: MeasurementDto[] }) {
@@ -32,6 +36,9 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
         download: m.downloadMbps,
         upload: m.uploadMbps,
         latency: m.latencyLoadedMs,
+        serverLocations: m.serverLocations,
+        userLocation: m.userLocation,
+        userIp: m.userIp,
       }));
   }, [measurements]);
 
@@ -76,16 +83,7 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
                 width={48}
                 unit=" ms"
               />
-              <Tooltip
-                contentStyle={{
-                  background: 'var(--color-popover)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 8,
-                  color: 'var(--color-popover-foreground)',
-                  fontSize: 12,
-                }}
-                labelStyle={{ color: 'var(--color-muted-foreground)' }}
-              />
+              <Tooltip content={ChartTooltip} />
               <Line
                 yAxisId="speed"
                 type="monotone"
@@ -128,5 +126,51 @@ function Legend({ color, label }: { color: string; label: string }) {
       <span className="inline-block size-2 rounded-full" style={{ background: color }} />
       {label}
     </span>
+  );
+}
+
+function ChartTooltip({ active, payload, label }: TooltipContentProps) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0]?.payload as Point | undefined;
+  if (!point) return null;
+
+  return (
+    <div
+      style={{
+        background: 'var(--color-popover)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 8,
+        color: 'var(--color-popover-foreground)',
+        fontSize: 12,
+        padding: '8px 10px',
+      }}
+    >
+      <div style={{ color: 'var(--color-muted-foreground)', marginBottom: 4 }}>{label}</div>
+      {payload.map((entry) => {
+        const key = String(entry.dataKey ?? entry.name ?? '');
+        const displayName = String(entry.name ?? entry.dataKey ?? '');
+        return (
+          <div key={key} style={{ color: entry.color }}>
+            {displayName}: {entry.value}
+          </div>
+        );
+      })}
+      {(point.serverLocations || point.userLocation || point.userIp) && (
+        <div
+          style={{
+            marginTop: 6,
+            paddingTop: 6,
+            borderTop: '1px solid var(--color-border)',
+            color: 'var(--color-muted-foreground)',
+          }}
+        >
+          {point.serverLocations?.length ? (
+            <div>Server: {point.serverLocations.join(' | ')}</div>
+          ) : null}
+          {point.userLocation ? <div>Client: {point.userLocation}</div> : null}
+          {point.userIp ? <div>IP: {point.userIp}</div> : null}
+        </div>
+      )}
+    </div>
   );
 }
