@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Header } from '@/components/header';
+import { AlertsCard } from '@/components/settings/alerts-card';
 import { SettingsForm } from '@/components/settings-form';
 import {
   getEnvDefaultIntervalMinutes,
@@ -32,6 +33,7 @@ export default function SettingsPage() {
         initialRetentionDays={retentionDays}
         envDefaultRetentionDays={envDefaultRetentionDays}
       />
+      <AlertsCard />
     </main>
   );
 }

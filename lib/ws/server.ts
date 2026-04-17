@@ -1,10 +1,23 @@
 import type { WebSocket, WebSocketServer } from 'ws';
+import type { AlertEvent, AlertKind } from '../db/schema';
 import type { MeasurementDto } from '../types';
+
+export type AlertDto = {
+  id: number;
+  timestamp: number;
+  kind: AlertKind;
+  event: AlertEvent;
+  measurementId: number | null;
+  threshold: number | null;
+  observed: number | null;
+  deliveryStatus: Record<string, { ok: boolean; error?: string; httpStatus?: number }>;
+};
 
 export type WsEvent =
   | { type: 'measurement'; payload: MeasurementDto }
   | { type: 'running'; payload: { startedAt: number } }
-  | { type: 'settings_updated'; payload: { intervalMinutes: number } };
+  | { type: 'settings_updated'; payload: { intervalMinutes: number } }
+  | { type: 'alert'; payload: AlertDto };
 
 declare global {
   // eslint-disable-next-line no-var

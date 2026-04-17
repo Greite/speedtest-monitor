@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const measurements = sqliteTable('measurements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -27,3 +27,44 @@ export const settings = sqliteTable('settings', {
 export type Measurement = typeof measurements.$inferSelect;
 export type NewMeasurement = typeof measurements.$inferInsert;
 export type Setting = typeof settings.$inferSelect;
+
+export const alerts = sqliteTable(
+  'alerts',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    timestamp: integer('timestamp', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    kind: text('kind', {
+      enum: [
+        'download_below',
+        'upload_below',
+        'latency_above',
+        'bufferbloat_above',
+        'failure_streak',
+      ],
+    }).notNull(),
+    event: text('event', { enum: ['fired', 'resolved'] }).notNull(),
+    measurementId: integer('measurement_id').references(() => measurements.id, {
+      onDelete: 'set null',
+    }),
+    threshold: real('threshold'),
+    observed: real('observed'),
+    deliveryStatus: text('delivery_status', { mode: 'json' }).$type<
+      Record<string, { ok: boolean; error?: string; httpStatus?: number }>
+    >(),
+  },
+  (t) => ({
+    kindTimestampIdx: index('alerts_kind_timestamp_idx').on(t.kind, t.timestamp),
+  }),
+);
+
+export type Alert = typeof alerts.$inferSelect;
+export type NewAlert = typeof alerts.$inferInsert;
+export type AlertKind =
+  | 'download_below'
+  | 'upload_below'
+  | 'latency_above'
+  | 'bufferbloat_above'
+  | 'failure_streak';
+export type AlertEvent = 'fired' | 'resolved';
