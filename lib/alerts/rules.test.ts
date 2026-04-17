@@ -1,0 +1,40 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { getAlertRules, setAlertRules } from './rules';
+import { DEFAULT_RULES } from './types';
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import * as schema from '../db/schema';
+
+beforeEach(() => {
+  const sqlite = new Database(':memory:');
+  const db = drizzle(sqlite, { schema });
+  sqlite.exec(
+    `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
+  );
+  // @ts-expect-error test-only global injection for lib/db/client
+  globalThis.__fastcomDb = { sqlite, db };
+});
+
+describe('alerts/rules', () => {
+  it('returns DEFAULT_RULES when no row exists', () => {
+    expect(getAlertRules()).toEqual(DEFAULT_RULES);
+  });
+
+  it('round-trips via setAlertRules', () => {
+    const rules = {
+      ...DEFAULT_RULES,
+      enabled: true,
+      thresholds: { ...DEFAULT_RULES.thresholds, downloadMbps: 100 },
+      destinations: { ...DEFAULT_RULES.destinations, ntfy: true },
+    };
+    setAlertRules(rules);
+    expect(getAlertRules()).toEqual(rules);
+  });
+
+  it('merges partial updates over defaults (missing fields get defaults)', () => {
+    setAlertRules({ enabled: true } as never);
+    const rules = getAlertRules();
+    expect(rules.enabled).toBe(true);
+    expect(rules.thresholds.downloadMbps).toBeNull();
+  });
+});
