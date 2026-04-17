@@ -68,3 +68,22 @@ export type AlertKind =
   | 'bufferbloat_above'
   | 'failure_streak';
 export type AlertEvent = 'fired' | 'resolved';
+
+export const users = sqliteTable('users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash'),
+  role: text('role', { enum: ['admin', 'viewer'] }).notNull().default('viewer'),
+  provider: text('provider', { enum: ['local', 'oidc'] }).notNull().default('local'),
+  oidcSubject: text('oidc_subject').unique(),
+  name: text('name'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  lastLoginAt: integer('last_login_at', { mode: 'timestamp_ms' }),
+});
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type UserRole = 'admin' | 'viewer';
+export type UserProvider = 'local' | 'oidc';
