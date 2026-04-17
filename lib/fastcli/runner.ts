@@ -64,6 +64,9 @@ export async function runMeasurement(): Promise<Measurement> {
       bufferBloatMs: result.bufferBloat ?? null,
       status: 'success',
       error: null,
+      serverLocations: null,
+      userLocation: null,
+      userIp: null,
     });
     broadcastMeasurement(row);
     return row;
@@ -78,6 +81,9 @@ export async function runMeasurement(): Promise<Measurement> {
       bufferBloatMs: null,
       status: isTimeout ? 'timeout' : 'error',
       error: message.slice(0, 500),
+      serverLocations: null,
+      userLocation: null,
+      userIp: null,
     });
     broadcastMeasurement(row);
     return row;

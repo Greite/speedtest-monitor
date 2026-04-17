@@ -13,6 +13,9 @@ export const measurements = sqliteTable('measurements', {
   bufferBloatMs: real('buffer_bloat_ms'),
   status: text('status', { enum: ['success', 'error', 'timeout'] }).notNull(),
   error: text('error'),
+  serverLocations: text('server_locations', { mode: 'json' }).$type<string[]>(),
+  userLocation: text('user_location'),
+  userIp: text('user_ip'),
 });
 
 export const settings = sqliteTable('settings', {
