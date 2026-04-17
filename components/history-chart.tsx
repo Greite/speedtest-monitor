@@ -44,9 +44,9 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="text-base">History</CardTitle>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <Legend color="var(--color-speed-down)" label="Download" />
           <Legend color="var(--color-speed-up)" label="Upload" />
           <Legend color="var(--color-latency-ok)" label="Latency" />
