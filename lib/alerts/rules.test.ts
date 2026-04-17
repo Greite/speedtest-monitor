@@ -11,7 +11,6 @@ beforeEach(() => {
   sqlite.exec(
     `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
   );
-  // @ts-expect-error test-only global injection for lib/db/client
   globalThis.__fastcomDb = { sqlite, db };
 });
 
