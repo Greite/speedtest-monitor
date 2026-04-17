@@ -1,12 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as schema from '@/lib/db/schema';
 import { GET, PATCH } from './route';
 
 beforeEach(() => {
   const sqlite = new Database(':memory:');
-  sqlite.exec(`CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`);
+  sqlite.exec(
+    `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
+  );
   globalThis.__fastcomDb = { sqlite, db: drizzle(sqlite, { schema }) };
 });
 afterEach(() => {

@@ -26,9 +26,7 @@ function parseHeadersJson(raw: string | undefined): Record<string, string> {
   try {
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return Object.fromEntries(
-        Object.entries(parsed).map(([k, v]) => [k, String(v)]),
-      );
+      return Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, String(v)]));
     }
   } catch {
     console.warn('[alerts] FASTCOM_WEBHOOK_HEADERS is not valid JSON; ignoring');
@@ -45,8 +43,7 @@ function parseSmtp(): SmtpConfig | null {
   const port = Number.parseInt(portRaw, 10);
   if (Number.isNaN(port)) return null;
   const secureRaw = process.env.FASTCOM_SMTP_SECURE ?? 'auto';
-  const secure =
-    secureRaw === 'true' ? true : secureRaw === 'false' ? false : port === 465;
+  const secure = secureRaw === 'true' ? true : secureRaw === 'false' ? false : port === 465;
   const to = toRaw
     .split(',')
     .map((s) => s.trim())
@@ -71,9 +68,7 @@ export function loadAlertConfig(): AlertConfig {
     webhook: webhookUrl
       ? { url: webhookUrl, headers: parseHeadersJson(process.env.FASTCOM_WEBHOOK_HEADERS) }
       : null,
-    ntfy: ntfyUrl
-      ? { url: ntfyUrl, token: process.env.FASTCOM_NTFY_TOKEN || undefined }
-      : null,
+    ntfy: ntfyUrl ? { url: ntfyUrl, token: process.env.FASTCOM_NTFY_TOKEN || undefined } : null,
     discord: discordUrl ? { url: discordUrl } : null,
     slack: slackUrl ? { url: slackUrl } : null,
     smtp: parseSmtp(),

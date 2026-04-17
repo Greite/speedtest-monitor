@@ -13,12 +13,7 @@ export function GET(req: Request) {
   const limit = Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 500) : 50;
 
   const db = getDb();
-  const rows = db
-    .select()
-    .from(alerts)
-    .orderBy(desc(alerts.timestamp))
-    .limit(limit)
-    .all();
+  const rows = db.select().from(alerts).orderBy(desc(alerts.timestamp)).limit(limit).all();
 
   return NextResponse.json({
     alerts: rows.map((r) => ({

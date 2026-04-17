@@ -3,9 +3,15 @@ import type { AlertPayload } from '../types';
 import { createSlackDestination } from './slack';
 
 const payload: AlertPayload = {
-  event: 'fired', kind: 'download_below',
-  title: 'Fastcom: X', body: 'body', observed: 1, threshold: 2,
-  timestamp: 0, measurementId: 1, alertId: 7,
+  event: 'fired',
+  kind: 'download_below',
+  title: 'Fastcom: X',
+  body: 'body',
+  observed: 1,
+  threshold: 2,
+  timestamp: 0,
+  measurementId: 1,
+  alertId: 7,
 };
 
 const fetchMock = vi.fn();

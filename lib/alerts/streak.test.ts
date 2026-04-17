@@ -27,7 +27,9 @@ beforeEach(() => {
 
 const insert = (status: 'success' | 'error' | 'timeout', ts: number) => {
   const db = drizzle(sqlite, { schema });
-  db.insert(measurements).values({ status, timestamp: new Date(ts) }).run();
+  db.insert(measurements)
+    .values({ status, timestamp: new Date(ts) })
+    .run();
 };
 
 describe('alerts/streak', () => {

@@ -35,7 +35,8 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
     'download_below',
     rules.thresholds.downloadMbps,
     measurement.downloadMbps,
-    isSuccess && measurement.downloadMbps !== null &&
+    isSuccess &&
+      measurement.downloadMbps !== null &&
       rules.thresholds.downloadMbps !== null &&
       measurement.downloadMbps < rules.thresholds.downloadMbps,
     isSuccess && measurement.downloadMbps !== null,
@@ -44,7 +45,8 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
     'upload_below',
     rules.thresholds.uploadMbps,
     measurement.uploadMbps,
-    isSuccess && measurement.uploadMbps !== null &&
+    isSuccess &&
+      measurement.uploadMbps !== null &&
       rules.thresholds.uploadMbps !== null &&
       measurement.uploadMbps < rules.thresholds.uploadMbps,
     isSuccess && measurement.uploadMbps !== null,
@@ -53,7 +55,8 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
     'latency_above',
     rules.thresholds.latencyMs,
     measurement.latencyUnloadedMs,
-    isSuccess && measurement.latencyUnloadedMs !== null &&
+    isSuccess &&
+      measurement.latencyUnloadedMs !== null &&
       rules.thresholds.latencyMs !== null &&
       measurement.latencyUnloadedMs > rules.thresholds.latencyMs,
     isSuccess && measurement.latencyUnloadedMs !== null,
@@ -62,7 +65,8 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
     'bufferbloat_above',
     rules.thresholds.bufferBloatMs,
     measurement.bufferBloatMs,
-    isSuccess && measurement.bufferBloatMs !== null &&
+    isSuccess &&
+      measurement.bufferBloatMs !== null &&
       rules.thresholds.bufferBloatMs !== null &&
       measurement.bufferBloatMs > rules.thresholds.bufferBloatMs,
     isSuccess && measurement.bufferBloatMs !== null,

@@ -1,6 +1,6 @@
 import { desc, gte, lt } from 'drizzle-orm';
 import { getDb } from './db/client';
-import { type Measurement, alerts, measurements } from './db/schema';
+import { alerts, type Measurement, measurements } from './db/schema';
 
 export type Range = '1h' | '6h' | '24h' | '7d' | '30d';
 

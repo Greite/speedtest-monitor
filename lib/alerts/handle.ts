@@ -19,7 +19,10 @@ export async function handleAlertsForMeasurement(measurement: Measurement): Prom
   const state = readAlertState();
   const streakCount = computeFailureStreak();
   const transitions = evaluateAlerts({
-    measurement, streakCount, currentState: state, rules,
+    measurement,
+    streakCount,
+    currentState: state,
+    rules,
   });
   if (transitions.length === 0) return;
 
@@ -62,7 +65,8 @@ async function dispatchAndUpdate(
     payload: {
       event: transition.event,
       kind: transition.kind,
-      title, body,
+      title,
+      body,
       observed: transition.observed,
       threshold: transition.threshold,
       timestamp: row.timestamp.getTime(),

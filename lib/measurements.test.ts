@@ -60,7 +60,9 @@ describe('purgeByRetention extended to alerts', () => {
     const db = drizzle(sqlite, { schema });
     const old = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
     db.insert(alerts).values({ kind: 'download_below', event: 'fired', timestamp: old }).run();
-    db.insert(alerts).values({ kind: 'download_below', event: 'resolved', timestamp: new Date() }).run();
+    db.insert(alerts)
+      .values({ kind: 'download_below', event: 'resolved', timestamp: new Date() })
+      .run();
     purgeByRetention(5);
     const rows = db.select().from(alerts).all();
     expect(rows).toHaveLength(1);

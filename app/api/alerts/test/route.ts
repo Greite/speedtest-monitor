@@ -30,9 +30,7 @@ export async function POST(req: Request) {
   const cfg = loadAlertConfig();
   const destinations = buildDestinations(cfg);
   const filter: DestinationName | null = parsed.data.destination ?? null;
-  const targets = filter
-    ? destinations.filter((d) => d.name === filter)
-    : destinations;
+  const targets = filter ? destinations.filter((d) => d.name === filter) : destinations;
 
   const payload: AlertPayload = {
     event: 'fired',

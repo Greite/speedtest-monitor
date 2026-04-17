@@ -10,9 +10,15 @@ vi.mock('nodemailer', () => ({
 const { createSmtpDestination } = await import('./smtp');
 
 const payload: AlertPayload = {
-  event: 'fired', kind: 'download_below',
-  title: 't', body: 'b', observed: 1, threshold: 2,
-  timestamp: 0, measurementId: 1, alertId: 7,
+  event: 'fired',
+  kind: 'download_below',
+  title: 't',
+  body: 'b',
+  observed: 1,
+  threshold: 2,
+  timestamp: 0,
+  measurementId: 1,
+  alertId: 7,
 };
 
 describe('destinations/smtp', () => {
@@ -21,8 +27,11 @@ describe('destinations/smtp', () => {
     sendMailMock.mockResolvedValue({ messageId: 'x' });
     const d = createSmtpDestination(
       {
-        host: 'smtp', port: 587, secure: false,
-        user: 'u', pass: 'p',
+        host: 'smtp',
+        port: 587,
+        secure: false,
+        user: 'u',
+        pass: 'p',
         from: 'Fastcom <a@b>',
         to: ['c@d', 'e@f'],
       },

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Measurement } from '../db/schema';
 import { evaluateAlerts } from './evaluate';
-import { DEFAULT_RULES, type AlertRules, type AlertState } from './types';
+import { type AlertRules, type AlertState, DEFAULT_RULES } from './types';
 
 const base: Measurement = {
   id: 1,
@@ -41,9 +41,7 @@ describe('evaluateAlerts', () => {
       currentState: stateAllOK,
       rules: rules({ thresholds: { ...DEFAULT_RULES.thresholds, downloadMbps: 100 } }),
     });
-    expect(out).toEqual([
-      { kind: 'download_below', event: 'fired', observed: 50, threshold: 100 },
-    ]);
+    expect(out).toEqual([{ kind: 'download_below', event: 'fired', observed: 50, threshold: 100 }]);
   });
 
   it('resolves download_below when download recovers above threshold', () => {
@@ -76,9 +74,7 @@ describe('evaluateAlerts', () => {
       currentState: stateAllOK,
       rules: rules({ failureStreak: 3 }),
     });
-    expect(out).toEqual([
-      { kind: 'failure_streak', event: 'fired', observed: 3, threshold: 3 },
-    ]);
+    expect(out).toEqual([{ kind: 'failure_streak', event: 'fired', observed: 3, threshold: 3 }]);
   });
 
   it('failure_streak resolves on first success after ALERTING', () => {
@@ -88,9 +84,7 @@ describe('evaluateAlerts', () => {
       currentState: { ...stateAllOK, failure_streak: 'ALERTING' },
       rules: rules({ failureStreak: 3 }),
     });
-    expect(out).toEqual([
-      { kind: 'failure_streak', event: 'resolved', observed: 0, threshold: 3 },
-    ]);
+    expect(out).toEqual([{ kind: 'failure_streak', event: 'resolved', observed: 0, threshold: 3 }]);
   });
 
   it('does not evaluate threshold conditions on non-success measurements', () => {
@@ -130,8 +124,6 @@ describe('evaluateAlerts', () => {
         },
       }),
     });
-    expect(out).toEqual([
-      { kind: 'latency_above', event: 'fired', observed: 200, threshold: 100 },
-    ]);
+    expect(out).toEqual([{ kind: 'latency_above', event: 'fired', observed: 200, threshold: 100 }]);
   });
 });

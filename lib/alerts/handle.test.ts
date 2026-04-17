@@ -7,11 +7,13 @@ import { handleAlertsForMeasurement } from './handle';
 import { setAlertRules } from './rules';
 
 vi.mock('./destinations', () => ({
-  buildDestinations: () => [
-    { name: 'webhook', send: async () => ({ ok: true }) },
-  ],
+  buildDestinations: () => [{ name: 'webhook', send: async () => ({ ok: true }) }],
   configuredNames: () => ({
-    webhook: true, ntfy: false, discord: false, slack: false, smtp: false,
+    webhook: true,
+    ntfy: false,
+    discord: false,
+    slack: false,
+    smtp: false,
   }),
 }));
 vi.mock('../ws/broadcast', () => ({ broadcastAlert: vi.fn() }));
@@ -48,10 +50,18 @@ beforeEach(() => {
 describe('handleAlertsForMeasurement', () => {
   it('skips when alerts are disabled', async () => {
     await handleAlertsForMeasurement({
-      id: 1, timestamp: new Date(), status: 'success',
-      downloadMbps: 50, uploadMbps: null,
-      latencyUnloadedMs: null, latencyLoadedMs: null, bufferBloatMs: null,
-      error: null, serverLocations: null, userLocation: null, userIp: null,
+      id: 1,
+      timestamp: new Date(),
+      status: 'success',
+      downloadMbps: 50,
+      uploadMbps: null,
+      latencyUnloadedMs: null,
+      latencyLoadedMs: null,
+      bufferBloatMs: null,
+      error: null,
+      serverLocations: null,
+      userLocation: null,
+      userIp: null,
     });
     const db = drizzle(sqlite, { schema });
     expect(db.select().from(alerts).all()).toEqual([]);

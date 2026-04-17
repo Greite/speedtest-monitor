@@ -3,9 +3,15 @@ import type { AlertPayload } from '../types';
 import { createNtfyDestination } from './ntfy';
 
 const basePayload: AlertPayload = {
-  event: 'fired', kind: 'download_below',
-  title: 'Fastcom: Download dropped below 100 Mbps', body: 'body',
-  observed: 50, threshold: 100, timestamp: 0, measurementId: 1, alertId: 7,
+  event: 'fired',
+  kind: 'download_below',
+  title: 'Fastcom: Download dropped below 100 Mbps',
+  body: 'body',
+  observed: 50,
+  threshold: 100,
+  timestamp: 0,
+  measurementId: 1,
+  alertId: 7,
 };
 
 const fetchMock = vi.fn();

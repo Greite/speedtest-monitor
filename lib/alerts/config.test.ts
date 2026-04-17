@@ -2,17 +2,28 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadAlertConfig } from './config';
 
 const ENV_KEYS = [
-  'FASTCOM_WEBHOOK_URL', 'FASTCOM_WEBHOOK_HEADERS',
-  'FASTCOM_NTFY_URL', 'FASTCOM_NTFY_TOKEN',
-  'FASTCOM_DISCORD_WEBHOOK', 'FASTCOM_SLACK_WEBHOOK',
-  'FASTCOM_SMTP_HOST', 'FASTCOM_SMTP_PORT', 'FASTCOM_SMTP_SECURE',
-  'FASTCOM_SMTP_USER', 'FASTCOM_SMTP_PASS',
-  'FASTCOM_SMTP_FROM', 'FASTCOM_SMTP_TO',
+  'FASTCOM_WEBHOOK_URL',
+  'FASTCOM_WEBHOOK_HEADERS',
+  'FASTCOM_NTFY_URL',
+  'FASTCOM_NTFY_TOKEN',
+  'FASTCOM_DISCORD_WEBHOOK',
+  'FASTCOM_SLACK_WEBHOOK',
+  'FASTCOM_SMTP_HOST',
+  'FASTCOM_SMTP_PORT',
+  'FASTCOM_SMTP_SECURE',
+  'FASTCOM_SMTP_USER',
+  'FASTCOM_SMTP_PASS',
+  'FASTCOM_SMTP_FROM',
+  'FASTCOM_SMTP_TO',
   'FASTCOM_PUBLIC_URL',
 ];
 
-beforeEach(() => ENV_KEYS.forEach((k) => delete process.env[k]));
-afterEach(() => ENV_KEYS.forEach((k) => delete process.env[k]));
+beforeEach(() => {
+  for (const k of ENV_KEYS) delete process.env[k];
+});
+afterEach(() => {
+  for (const k of ENV_KEYS) delete process.env[k];
+});
 
 describe('alerts/config', () => {
   it('marks all destinations unconfigured when no env is set', () => {
