@@ -1,4 +1,4 @@
-import { desc, gte } from 'drizzle-orm';
+import { desc, gte, lt } from 'drizzle-orm';
 import { getDb } from './db/client';
 import { type Measurement, measurements } from './db/schema';
 
@@ -25,4 +25,18 @@ export function listMeasurements(range: Range): Measurement[] {
     .where(gte(measurements.timestamp, since))
     .orderBy(desc(measurements.timestamp))
     .all();
+}
+
+export function cutoffForRetentionDays(retentionDays: number, now: Date = new Date()): Date {
+  return new Date(now.getTime() - retentionDays * 24 * 60 * 60 * 1000);
+}
+
+export function purgeMeasurementsOlderThan(cutoff: Date): number {
+  const db = getDb();
+  const result = db.delete(measurements).where(lt(measurements.timestamp, cutoff)).run();
+  return result.changes;
+}
+
+export function purgeByRetention(retentionDays: number, now: Date = new Date()): number {
+  return purgeMeasurementsOlderThan(cutoffForRetentionDays(retentionDays, now));
 }

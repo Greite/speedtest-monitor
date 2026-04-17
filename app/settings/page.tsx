@@ -1,14 +1,21 @@
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { SettingsForm } from '@/components/settings-form';
-import { getEnvDefaultIntervalMinutes, getIntervalMinutes } from '@/lib/settings';
+import {
+  getEnvDefaultIntervalMinutes,
+  getEnvDefaultRetentionDays,
+  getIntervalMinutes,
+  getRetentionDays,
+} from '@/lib/settings';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export default function SettingsPage() {
   const intervalMinutes = getIntervalMinutes();
-  const envDefault = getEnvDefaultIntervalMinutes();
+  const envDefaultMinutes = getEnvDefaultIntervalMinutes();
+  const retentionDays = getRetentionDays();
+  const envDefaultRetentionDays = getEnvDefaultRetentionDays();
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-8">
@@ -19,7 +26,12 @@ export default function SettingsPage() {
           ← Back to dashboard
         </Link>
       </div>
-      <SettingsForm initialMinutes={intervalMinutes} envDefault={envDefault} />
+      <SettingsForm
+        initialMinutes={intervalMinutes}
+        envDefaultMinutes={envDefaultMinutes}
+        initialRetentionDays={retentionDays}
+        envDefaultRetentionDays={envDefaultRetentionDays}
+      />
     </main>
   );
 }
