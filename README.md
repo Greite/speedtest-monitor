@@ -31,6 +31,45 @@ Configuration:
 
 Change the interval at any time via the UI (`/settings`) — it is persisted in SQLite and takes effect immediately without a restart.
 
+## Alerts
+
+fastcom-monitor can notify you when your connection degrades or fails, and
+again when it recovers. Alerts are fully opt-in - nothing fires until you
+enable them and set at least one threshold.
+
+### Configure destinations (env vars)
+
+All destinations are optional. A destination is available iff its required
+env vars are set.
+
+| Destination | Required env | Optional env |
+|---|---|---|
+| Webhook (generic) | `FASTCOM_WEBHOOK_URL` | `FASTCOM_WEBHOOK_HEADERS` (JSON) |
+| ntfy | `FASTCOM_NTFY_URL` (full URL incl. topic) | `FASTCOM_NTFY_TOKEN` |
+| Discord | `FASTCOM_DISCORD_WEBHOOK` | - |
+| Slack | `FASTCOM_SLACK_WEBHOOK` | - |
+| Email (SMTP) | `FASTCOM_SMTP_HOST`, `FASTCOM_SMTP_FROM`, `FASTCOM_SMTP_TO` | `FASTCOM_SMTP_PORT` (587), `FASTCOM_SMTP_SECURE` (auto), `FASTCOM_SMTP_USER`, `FASTCOM_SMTP_PASS` |
+| - | - | `FASTCOM_PUBLIC_URL` (dashboard link in emails) |
+
+### Configure rules (UI)
+
+In `/settings`, toggle "Enable alerts", set any subset of thresholds
+(download, upload, latency, bufferbloat, failure streak), and enable the
+destinations you want. Each destination has a "Send test" button to verify
+wiring without waiting for a real incident.
+
+### Semantics
+
+- **Fire on transition only.** Once a condition enters ALERTING it will not
+  re-fire until it first recovers. No spam during prolonged outages.
+- **Per-condition state.** Download dropping while latency is fine -> one
+  alert. Latency spiking later -> a second independent alert.
+- **Failure streak.** Counts consecutive measurements with status
+  error/timeout ending at the current one - useful when the connection
+  actually goes down.
+- **Secrets stay in env.** Destination credentials are never persisted to
+  the SQLite DB and never returned by `/api/alerts/rules`.
+
 ## Development
 
 ```bash
