@@ -68,7 +68,6 @@ RUN set -eux \
       @node-rs/argon2@^2 \
       better-sqlite3@^12.9.0 \
       drizzle-orm@^0.45.2 \
-      execa@^9.6.1 \
       next@^16.2.4 \
       next-auth@beta \
       node-cron@^4.2.1 \
