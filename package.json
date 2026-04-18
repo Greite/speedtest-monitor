@@ -27,7 +27,6 @@
     "db:migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
-    "@cloudflare/speedtest": "^1",
     "@node-rs/argon2": "^2",
     "@tanstack/react-table": "^8.21.3",
     "better-sqlite3": "^12.9.0",

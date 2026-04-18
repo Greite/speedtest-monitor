@@ -1,199 +1,88 @@
 // lib/measurement/cloudflare.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-type EngineListeners = {
-  onFinish?: (r: FakeResults) => void | Promise<void>;
-  onError?: (e: unknown) => void;
-};
-
-type FakeSummary = {
-  download?: number;
-  upload?: number;
-  latency?: number;
-  downLoadedLatency?: number;
-  upLoadedLatency?: number;
-  jitter?: number;
-  packetLoss?: number;
-};
-
-class FakeResults {
-  constructor(private readonly summary: FakeSummary) {}
-  getSummary() {
-    return this.summary;
-  }
-}
-
-class FakeSpeedtest {
-  static lastInstance: FakeSpeedtest | null = null;
-  listeners: EngineListeners = {};
-  paused = false;
-  set onFinish(fn: EngineListeners['onFinish']) {
-    this.listeners.onFinish = fn;
-  }
-  set onError(fn: EngineListeners['onError']) {
-    this.listeners.onError = fn;
-  }
-  play() {
-    FakeSpeedtest.lastInstance = this;
-  }
-  pause() {
-    this.paused = true;
-  }
-  async finishWith(summary: FakeSummary) {
-    await this.listeners.onFinish?.(new FakeResults(summary));
-  }
-  errorWith(err: unknown) {
-    this.listeners.onError?.(err);
-  }
-}
-
-vi.mock('@cloudflare/speedtest', () => ({
-  default: vi.fn(function FakeCtor(this: FakeSpeedtest) {
-    return new FakeSpeedtest();
-  }),
-}));
-
-const { runCloudflareSpeedTest } = await import('./cloudflare');
+import { fetchCloudflareMeta, probeLatency, probeUpload } from './cloudflare';
 
 const fetchMock = vi.fn();
 
 beforeEach(() => {
-  FakeSpeedtest.lastInstance = null;
   fetchMock.mockReset();
   globalThis.fetch = fetchMock as never;
-  vi.useRealTimers();
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function mockMeta(meta: Record<string, unknown>) {
-  fetchMock.mockResolvedValueOnce(
-    new Response(JSON.stringify(meta), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    }),
-  );
+function body(bytes: number) {
+  return new Response(new Uint8Array(bytes), { status: 200 });
 }
 
-describe('runCloudflareSpeedTest', () => {
-  it('maps a full summary + meta to EngineResult', async () => {
-    mockMeta({
-      city: 'Paris',
-      country: 'FR',
-      clientIp: '82.66.1.2',
-      asOrganization: 'Free SAS',
-      colo: 'CDG',
-    });
-    const p = runCloudflareSpeedTest();
-    await Promise.resolve();
-    const engine = FakeSpeedtest.lastInstance!;
-    await engine.finishWith({
-      download: 500_000_000,
-      upload: 120_000_000,
-      latency: 12,
-      downLoadedLatency: 45,
-      upLoadedLatency: 40,
-      jitter: 3,
-      packetLoss: 0.5,
-    });
-    const res = await p;
-    expect(res).toEqual({
-      downloadMbps: 500,
-      uploadMbps: 120,
-      latencyUnloadedMs: 12,
-      latencyLoadedMs: 45,
-      bufferBloatMs: 33,
-      jitterMs: 3,
-      packetLossPct: 0.5,
-      userLocation: 'Paris, FR',
-      userIp: '82.66.1.2',
-      userIsp: 'Free SAS',
-      serverLocations: ['CDG'],
-    });
-  });
+function metaRes(meta: unknown, headers: Record<string, string> = {}) {
+  return new Response(JSON.stringify(meta), { status: 200, headers });
+}
 
-  it('returns null for missing summary fields and missing meta', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('{}', { status: 200 }));
-    const p = runCloudflareSpeedTest();
-    await Promise.resolve();
-    await FakeSpeedtest.lastInstance!.finishWith({ latency: 10 });
-    const res = await p;
-    expect(res.downloadMbps).toBeNull();
-    expect(res.uploadMbps).toBeNull();
-    expect(res.latencyLoadedMs).toBeNull();
-    expect(res.bufferBloatMs).toBeNull();
-    expect(res.jitterMs).toBeNull();
-    expect(res.packetLossPct).toBeNull();
-    expect(res.userLocation).toBeNull();
-    expect(res.userIp).toBeNull();
-    expect(res.userIsp).toBeNull();
-    expect(res.serverLocations).toBeNull();
-  });
-
-  it('sends Referer and parses object-shaped colo from real /meta payload', async () => {
+describe('fetchCloudflareMeta', () => {
+  it('sends Referer https://speed.cloudflare.com/ and parses object-shape colo', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          clientIp: '1.2.3.4',
-          city: 'Paris',
-          country: 'FR',
-          asOrganization: 'Proxad / Free SAS',
-          colo: { iata: 'CDG', lat: 49, lon: 2.55 },
-        }),
-        { status: 200 },
-      ),
+      metaRes({
+        clientIp: '1.2.3.4',
+        city: 'Paris',
+        country: 'FR',
+        asOrganization: 'Proxad / Free SAS',
+        colo: { iata: 'CDG', lat: 49, lon: 2.55 },
+      }),
     );
-    const p = runCloudflareSpeedTest();
-    await Promise.resolve();
-    await FakeSpeedtest.lastInstance!.finishWith({
-      download: 100_000_000,
-      upload: 50_000_000,
-      latency: 10,
-    });
-    const res = await p;
+    const meta = await fetchCloudflareMeta();
     expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({
       Referer: 'https://speed.cloudflare.com/',
     });
-    expect(res.serverLocations).toEqual(['CDG']);
-    expect(res.userIsp).toBe('Proxad / Free SAS');
-    expect(res.userIp).toBe('1.2.3.4');
+    expect(meta.clientIp).toBe('1.2.3.4');
+    expect(meta.asOrganization).toBe('Proxad / Free SAS');
+    expect(typeof meta.colo === 'object' && meta.colo?.iata).toBe('CDG');
   });
 
-  it('survives meta-endpoint failure (soft fallback to nulls)', async () => {
-    fetchMock.mockRejectedValueOnce(new Error('meta fetch failed'));
-    const p = runCloudflareSpeedTest();
-    await Promise.resolve();
-    await FakeSpeedtest.lastInstance!.finishWith({
-      download: 100_000_000,
-      upload: 50_000_000,
-      latency: 20,
+  it('falls back to CF-RAY header when body colo is missing', async () => {
+    fetchMock.mockResolvedValueOnce(metaRes({ clientIp: '1.2.3.4' }, { 'cf-ray': 'abcd1234-CDG' }));
+    const meta = await fetchCloudflareMeta();
+    expect(meta.colo).toBe('CDG');
+  });
+
+  it('returns {} when the fetch throws', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('network'));
+    const meta = await fetchCloudflareMeta();
+    expect(meta).toEqual({});
+  });
+});
+
+describe('probeLatency', () => {
+  it('returns min / mean / jitter and ignores the warm-up', async () => {
+    // 1 warm-up + 10 probes
+    fetchMock.mockImplementation(async () => body(0));
+    const r = await probeLatency();
+    expect(fetchMock).toHaveBeenCalledTimes(11);
+    expect(r.min).toBeGreaterThanOrEqual(0);
+    expect(r.mean).toBeGreaterThanOrEqual(r.min);
+    expect(r.jitter).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('probeUpload', () => {
+  it('POSTs 10 MB and computes Mbps', async () => {
+    // Simulate a 100 ms upload.
+    fetchMock.mockImplementation(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      return new Response(null, { status: 200 });
     });
-    const res = await p;
-    expect(res.downloadMbps).toBe(100);
-    expect(res.userLocation).toBeNull();
-    expect(res.userIp).toBeNull();
-    expect(res.userIsp).toBeNull();
-    expect(res.serverLocations).toBeNull();
+    const r = await probeUpload();
+    expect(r.mbps).toBeGreaterThan(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.method).toBe('POST');
+    expect((init.body as Uint8Array).byteLength).toBe(10_000_000);
   });
 
-  it('rejects when the engine emits an error', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('{}'));
-    const p = runCloudflareSpeedTest();
-    await Promise.resolve();
-    FakeSpeedtest.lastInstance!.errorWith(new Error('network down'));
-    await expect(p).rejects.toThrow(/network down/);
-  });
-
-  it('rejects with "timed out" and pauses the engine after the timeout', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('{}'));
-    vi.useFakeTimers();
-    const p = runCloudflareSpeedTest();
-    await Promise.resolve();
-    vi.advanceTimersByTime(60_001);
-    vi.useRealTimers();
-    await expect(p).rejects.toThrow(/timed out/);
-    expect(FakeSpeedtest.lastInstance!.paused).toBe(true);
+  it('throws when server responds non-2xx', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 500 }));
+    await expect(probeUpload()).rejects.toThrow(/upload failed.*500/);
   });
 });

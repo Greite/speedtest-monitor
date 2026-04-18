@@ -64,7 +64,6 @@ RUN set -eux \
     esac \
  && echo '{"name":"runtime","version":"0.0.0","trustedDependencies":["better-sqlite3"]}' > package.json \
  && bun add \
-      @cloudflare/speedtest@^1 \
       @node-rs/argon2@^2 \
       better-sqlite3@^12.9.0 \
       drizzle-orm@^0.45.2 \
