@@ -4,15 +4,15 @@ Self-hosted internet speed monitor. Runs [`@cloudflare/speedtest`](https://www.n
 
 ## Stack
 
-- **Runtime**: Node.js 24 LTS
+- **Runtime**: Bun 1.x
 - **Package manager**: Bun 1.3
 - **Framework**: Next.js 16 (App Router) + TypeScript 6 + Biome 2 + Tailwind v4
 - **Custom server** (`server.ts`): hosts Next.js **and** a `ws` WebSocket endpoint on the same port
 - **Scheduler**: `node-cron` 4.x, reprogrammable at runtime from the UI
-- **DB**: Drizzle ORM 0.45 + `better-sqlite3` 12
+- **DB**: Drizzle ORM 0.45 + `bun:sqlite` (built-in)
 - **Measurement engine**: `@cloudflare/speedtest` (HTTP-only, no browser)
-- **Tests**: Vitest 4
-- **Runtime image**: `node:24-trixie-slim` (no Chromium, no browser sandbox)
+- **Tests**: Bun native (`bun test`)
+- **Runtime image**: `oven/bun:1-slim` (no Chromium, no browser sandbox)
 
 ## Run with Docker
 
@@ -161,19 +161,12 @@ first boot after the upgrade:
 ```bash
 bun install
 bun run db:generate        # generate drizzle migrations
-bun run dev                # tsx watch server.ts -> http://localhost:3000
-bun run test               # vitest unit tests
+bun run dev                # bun --hot server.ts -> http://localhost:3000
+bun test                   # bun native unit tests
 bun run lint               # biome check
 bun run typecheck          # tsc --noEmit
 bun run build              # next build + tsup bundle for server.ts
 ```
-
-> **Use `bun run test`, not `bun test`.** Bun's native test runner cannot
-> load `better-sqlite3` (tracked at [oven-sh/bun#4290][bun-4290]), and most
-> of the suite is DB-backed. `bun test` is blocked via `bunfig.toml` with a
-> hint message pointing here; the full suite runs under vitest (Node).
->
-> [bun-4290]: https://github.com/oven-sh/bun/issues/4290
 
 ### End-to-end check
 
@@ -208,7 +201,7 @@ curl -X PATCH http://localhost:3000/api/settings \
 Unit tests live next to the code they cover (`lib/**/*.test.ts`). Run with:
 
 ```bash
-bun run test
+bun test
 ```
 
 Covered areas: formatting helpers, latency thresholds, cron expression generation, range validation, PATCH settings schema.
