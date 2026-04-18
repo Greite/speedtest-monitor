@@ -3,6 +3,8 @@ import Speedtest from '@cloudflare/speedtest';
 import type { EngineResult } from './types';
 
 const RUN_TIMEOUT_MS = 60_000;
+const META_URL = 'https://speed.cloudflare.com/meta';
+const META_TIMEOUT_MS = 5_000;
 
 type Summary = {
   download?: number;
@@ -14,23 +16,39 @@ type Summary = {
   packetLoss?: number;
 };
 
-type UserInfo = {
+type Meta = {
+  clientIp?: string;
+  colo?: string;
   city?: string;
   country?: string;
-  clientIp?: string;
   asOrganization?: string;
-  isp?: string;
-  colo?: string;
 };
 
 type ResultsLike = {
   getSummary: () => Summary;
-  getUserInfo?: () => UserInfo;
 };
 
 function join(parts: (string | undefined)[]): string | null {
   const joined = parts.filter((p): p is string => Boolean(p)).join(', ');
   return joined || null;
+}
+
+// `@cloudflare/speedtest` does not expose client metadata on its Results class;
+// the browser bundle fetches https://speed.cloudflare.com/meta separately. We
+// replicate that here. Failures are soft — metadata fields fall back to null.
+export async function fetchCloudflareMeta(): Promise<Meta> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), META_TIMEOUT_MS);
+  try {
+    const res = await fetch(META_URL, { signal: ctrl.signal });
+    if (!res.ok) return {};
+    const body = (await res.json()) as Meta;
+    return body ?? {};
+  } catch {
+    return {};
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function runCloudflareSpeedTest(): Promise<EngineResult> {
@@ -54,6 +72,8 @@ export function runCloudflareSpeedTest(): Promise<EngineResult> {
     onError: (e: unknown) => void;
   };
 
+  const metaPromise = fetchCloudflareMeta();
+
   return new Promise<EngineResult>((resolve, reject) => {
     const timer = setTimeout(() => {
       try {
@@ -64,10 +84,10 @@ export function runCloudflareSpeedTest(): Promise<EngineResult> {
       reject(new Error('timed out'));
     }, RUN_TIMEOUT_MS);
 
-    engine.onFinish = (results) => {
+    engine.onFinish = async (results) => {
       clearTimeout(timer);
       const s = results.getSummary();
-      const meta: UserInfo = results.getUserInfo ? results.getUserInfo() : {};
+      const meta = await metaPromise;
       const downMbps = typeof s.download === 'number' ? s.download / 1_000_000 : null;
       const upMbps = typeof s.upload === 'number' ? s.upload / 1_000_000 : null;
       const unloaded = typeof s.latency === 'number' ? s.latency : null;
@@ -88,7 +108,7 @@ export function runCloudflareSpeedTest(): Promise<EngineResult> {
         packetLossPct: typeof s.packetLoss === 'number' ? s.packetLoss : null,
         userLocation: join([meta.city, meta.country]),
         userIp: meta.clientIp ?? null,
-        userIsp: meta.asOrganization ?? meta.isp ?? null,
+        userIsp: meta.asOrganization ?? null,
         serverLocations: colo ? [colo] : null,
       });
     };
