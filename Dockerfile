@@ -57,7 +57,6 @@ RUN set -eux \
     esac \
  && echo '{"name":"runtime","version":"0.0.0"}' > package.json \
  && bun add \
-      @node-rs/argon2@^2 \
       drizzle-orm@^0.45.2 \
       next@^16.2.4 \
       next-auth@beta \

@@ -1,23 +1,29 @@
-import * as argon2 from '@node-rs/argon2';
+// Password hashing via Bun's native `Bun.password` API (argon2id).
+// OWASP 2024 baseline parameters. Existing hashes produced by any standard
+// argon2id implementation (including the previous `@node-rs/argon2`
+// integration) verify without configuration.
 
-// argon2id with OWASP 2024-recommended parameters.
-// `algorithm: 2` is the numeric value of Algorithm.Argon2id (the exported
-// Algorithm enum is a `const enum`, which cannot be referenced with
-// `isolatedModules` enabled).
-const OPTS: argon2.Options = {
-  algorithm: 2,
+const OPTS = {
+  algorithm: 'argon2id' as const,
   memoryCost: 19456, // KiB (~19 MiB)
   timeCost: 2,
-  parallelism: 1,
 };
 
+// Parallelism is fixed at 1 by Bun.password (not configurable). We reference
+// it here only for `needsRehash`, which must compare a stored hash's encoded
+// params against what we now produce.
+const PARALLELISM = 1;
+
 export async function hashPassword(plain: string): Promise<string> {
-  return argon2.hash(plain, OPTS);
+  return Bun.password.hash(plain, OPTS);
 }
 
 export async function verifyPassword(hashed: string, plain: string): Promise<boolean> {
+  // Note: Bun.password.verify is (password, hash) — opposite of
+  // @node-rs/argon2's (hash, password). Our public signature keeps the
+  // prior (hashed, plain) order to avoid churn at call sites.
   try {
-    return await argon2.verify(hashed, plain);
+    return await Bun.password.verify(plain, hashed);
   } catch {
     return false;
   }
@@ -26,8 +32,8 @@ export async function verifyPassword(hashed: string, plain: string): Promise<boo
 /**
  * Returns true when the stored hash was produced with parameters weaker than
  * the current OPTS (i.e. it should be re-hashed on next successful login).
- * `@node-rs/argon2` does not export a `needsRehash` helper, so we parse the
- * PHC-formatted string directly: `$argon2id$v=19$m=19456,t=2,p=1$salt$hash`.
+ * We parse the PHC-formatted string directly:
+ *   `$argon2id$v=19$m=19456,t=2,p=1$salt$hash`
  */
 export function needsRehash(hashed: string): boolean {
   try {
@@ -49,9 +55,9 @@ export function needsRehash(hashed: string): boolean {
     const p = params.get('p');
     if (m === undefined || t === undefined || p === undefined) return true;
 
-    if (m < (OPTS.memoryCost ?? 0)) return true;
-    if (t < (OPTS.timeCost ?? 0)) return true;
-    if (p !== (OPTS.parallelism ?? 1)) return true;
+    if (m < OPTS.memoryCost) return true;
+    if (t < OPTS.timeCost) return true;
+    if (p !== PARALLELISM) return true;
 
     return false;
   } catch {
