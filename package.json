@@ -15,9 +15,9 @@
     "@biomejs/biome"
   ],
   "scripts": {
-    "dev": "bun --hot server.ts",
+    "dev": "bun server.ts",
     "build": "bunx drizzle-kit generate && next build && tsup server.ts --format esm --out-dir dist --target node24 --external next --external ws --external bun:sqlite --external drizzle-orm --external execa --external node-cron --external zod --no-splitting",
-    "start": "NODE_ENV=production node dist/server.js",
+    "start": "NODE_ENV=production bun dist/server.js",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
