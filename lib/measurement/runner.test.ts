@@ -1,21 +1,21 @@
 // lib/measurement/runner.test.ts
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Database } from 'bun:sqlite';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '../db/schema';
 import type { EngineResult } from './types';
 
-const engineMock = vi.fn<() => Promise<EngineResult>>();
+const engineMock = mock<() => Promise<EngineResult>>();
 
-vi.mock('./cloudflare', () => ({
+mock.module('./cloudflare', () => ({
   runCloudflareSpeedTest: () => engineMock(),
 }));
-vi.mock('../ws/broadcast', () => ({
-  broadcastMeasurement: vi.fn(),
-  broadcastRunning: vi.fn(),
+mock.module('../ws/broadcast', () => ({
+  broadcastMeasurement: mock(),
+  broadcastRunning: mock(),
 }));
-vi.mock('../alerts/handle', () => ({
-  handleAlertsForMeasurement: vi.fn(),
+mock.module('../alerts/handle', () => ({
+  handleAlertsForMeasurement: mock(),
 }));
 
 const { runMeasurement, runMeasurementSafe, MeasurementBusyError, isMeasurementRunning } =
@@ -35,7 +35,7 @@ const fullResult: EngineResult = {
   serverLocations: ['CDG'],
 };
 
-let sqlite: Database.Database;
+let sqlite: Database;
 beforeEach(() => {
   engineMock.mockReset();
   delete (globalThis as { __fastcomRunning?: boolean }).__fastcomRunning;
