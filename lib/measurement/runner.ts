@@ -1,25 +1,14 @@
-import { execa } from 'execa';
+// lib/measurement/runner.ts
 import { handleAlertsForMeasurement } from '../alerts/handle';
 import { getDb } from '../db/client';
 import { type Measurement, measurements } from '../db/schema';
 import { broadcastMeasurement, broadcastRunning } from '../ws/broadcast';
+import { runCloudflareSpeedTest } from './cloudflare';
 
 declare global {
   // eslint-disable-next-line no-var
   var __fastcomRunning: boolean | undefined;
 }
-
-type FastCliJson = {
-  downloadSpeed?: number;
-  uploadSpeed?: number;
-  latency?: number;
-  bufferBloat?: number;
-  serverLocations?: string[];
-  userLocation?: string;
-  userIp?: string;
-};
-
-const RUN_TIMEOUT_MS = 180_000;
 
 export class MeasurementBusyError extends Error {
   constructor() {
@@ -28,25 +17,15 @@ export class MeasurementBusyError extends Error {
   }
 }
 
-async function spawnFastCli(): Promise<FastCliJson> {
-  const { stdout } = await execa('fast', ['--upload', '--json'], {
-    timeout: RUN_TIMEOUT_MS,
-    preferLocal: true,
-  });
-  const parsed = JSON.parse(stdout) as FastCliJson;
-  return parsed;
-}
-
 function insertMeasurement(
   row: Omit<Measurement, 'id' | 'timestamp'> & { timestamp?: Date },
 ): Measurement {
   const db = getDb();
-  const inserted = db
+  return db
     .insert(measurements)
     .values({ ...row, timestamp: row.timestamp ?? new Date() })
     .returning()
     .get();
-  return inserted;
 }
 
 export async function runMeasurement(): Promise<Measurement> {
@@ -56,39 +35,47 @@ export async function runMeasurement(): Promise<Measurement> {
   broadcastRunning(startedAt);
 
   try {
-    const result = await spawnFastCli();
+    const result = await runCloudflareSpeedTest();
+    if (result.downloadMbps === null || result.uploadMbps === null) {
+      throw new Error(
+        `incomplete results: download=${result.downloadMbps} upload=${result.uploadMbps}`,
+      );
+    }
     const row = insertMeasurement({
-      downloadMbps: result.downloadSpeed ?? null,
-      uploadMbps: result.uploadSpeed ?? null,
-      latencyUnloadedMs: result.latency ?? null,
-      latencyLoadedMs:
-        typeof result.latency === 'number' && typeof result.bufferBloat === 'number'
-          ? result.latency + result.bufferBloat
-          : null,
-      bufferBloatMs: result.bufferBloat ?? null,
+      downloadMbps: result.downloadMbps,
+      uploadMbps: result.uploadMbps,
+      latencyUnloadedMs: result.latencyUnloadedMs,
+      latencyLoadedMs: result.latencyLoadedMs,
+      bufferBloatMs: result.bufferBloatMs,
+      jitterMs: result.jitterMs,
+      packetLossPct: result.packetLossPct,
       status: 'success',
       error: null,
-      serverLocations: result.serverLocations?.length ? result.serverLocations : null,
-      userLocation: result.userLocation ? result.userLocation : null,
-      userIp: result.userIp ? result.userIp : null,
+      serverLocations: result.serverLocations,
+      userLocation: result.userLocation,
+      userIp: result.userIp,
+      userIsp: result.userIsp,
     });
     broadcastMeasurement(row);
     void handleAlertsForMeasurement(row);
     return row;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const isTimeout = typeof message === 'string' && message.toLowerCase().includes('timed out');
+    const isTimeout = message.toLowerCase().includes('timed out');
     const row = insertMeasurement({
       downloadMbps: null,
       uploadMbps: null,
       latencyUnloadedMs: null,
       latencyLoadedMs: null,
       bufferBloatMs: null,
+      jitterMs: null,
+      packetLossPct: null,
       status: isTimeout ? 'timeout' : 'error',
       error: message.slice(0, 500),
       serverLocations: null,
       userLocation: null,
       userIp: null,
+      userIsp: null,
     });
     broadcastMeasurement(row);
     void handleAlertsForMeasurement(row);

@@ -1,7 +1,7 @@
 import cron, { type ScheduledTask } from 'node-cron';
 import { ensureSeededAdmin } from '../auth/bootstrap';
 import { runMigrations } from '../db/migrate';
-import { runMeasurementSafe } from '../fastcli/runner';
+import { runMeasurementSafe } from '../measurement/runner';
 import { purgeByRetention } from '../measurements';
 import { getIntervalMinutes, getRetentionDays } from '../settings';
 

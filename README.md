@@ -1,6 +1,6 @@
 # Fast.com Monitor
 
-Self-hosted internet speed monitor. Runs [`fast-cli`](https://github.com/sindresorhus/fast-cli) on a configurable schedule, stores every measurement in SQLite, and serves a dashboard with live updates over WebSocket.
+Self-hosted internet speed monitor. Runs [`@cloudflare/speedtest`](https://www.npmjs.com/package/@cloudflare/speedtest) on a configurable schedule, stores every measurement in SQLite, and serves a dashboard with live updates over WebSocket.
 
 ## Stack
 
@@ -10,8 +10,9 @@ Self-hosted internet speed monitor. Runs [`fast-cli`](https://github.com/sindres
 - **Custom server** (`server.ts`): hosts Next.js **and** a `ws` WebSocket endpoint on the same port
 - **Scheduler**: `node-cron` 4.x, reprogrammable at runtime from the UI
 - **DB**: Drizzle ORM 0.45 + `better-sqlite3` 12
+- **Measurement engine**: `@cloudflare/speedtest` (HTTP-only, no browser)
 - **Tests**: Vitest 4
-- **Runtime image**: `node:24-bookworm-slim` + Chromium runtime libs (required by `fast-cli` → Puppeteer)
+- **Runtime image**: `node:24-trixie-slim` (no Chromium, no browser sandbox)
 
 ## Run with Docker
 
@@ -137,6 +138,24 @@ users. The last remaining admin cannot be demoted or deleted.
    `401 Unauthorized`. Add an authenticated session cookie or migrate to the session-aware
    clients.
 
+### Upgrading the measurement engine
+
+The 0.2+ release swaps the measurement backend from fast.com (via the
+`fast-cli` + Chromium browser) to Cloudflare Speed Test (HTTP only). On
+first boot after the upgrade:
+
+- Three new nullable columns (`jitter_ms`, `packet_loss_pct`, `user_isp`)
+  are added to the `measurements` table. Historical rows keep them
+  `null` - the data was never captured.
+- Post-upgrade rows record the Cloudflare edge code (e.g. `CDG`) in
+  `server_locations` instead of Netflix Fast's location strings (e.g.
+  `Paris, FR | Saint Denis, FR`).
+- Absolute speed numbers may differ slightly vs. pre-upgrade runs
+  because the CDN behind the test is different. The trend is still
+  directly comparable.
+- The container image shrinks by roughly 700 MB; no Chromium, no
+  `fonts-liberation`, no sandbox requirement.
+
 ## Development
 
 ```bash
@@ -159,7 +178,7 @@ bun run build              # next build + tsup bundle for server.ts
 ### End-to-end check
 
 ```bash
-# trigger one measurement (~90s)
+# trigger one measurement (~20s)
 curl -X POST http://localhost:3000/api/measurements/run
 
 # read history

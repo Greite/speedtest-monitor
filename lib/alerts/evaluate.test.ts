@@ -16,6 +16,9 @@ const base: Measurement = {
   serverLocations: null,
   userLocation: null,
   userIp: null,
+  jitterMs: null,
+  packetLossPct: null,
+  userIsp: null,
 };
 
 const stateAllOK: AlertState = {

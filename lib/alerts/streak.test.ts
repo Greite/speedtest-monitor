@@ -19,7 +19,8 @@ beforeEach(() => {
       status TEXT NOT NULL,
       error TEXT,
       server_locations TEXT,
-      user_location TEXT, user_ip TEXT
+      user_location TEXT, user_ip TEXT,
+      jitter_ms REAL, packet_loss_pct REAL, user_isp TEXT
     );
   `);
   globalThis.__fastcomDb = { sqlite, db };
