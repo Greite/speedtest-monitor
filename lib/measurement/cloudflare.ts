@@ -22,9 +22,16 @@ const UP = `${ORIGIN}/__up`;
 
 const META_TIMEOUT_MS = 5_000;
 const LATENCY_PROBES = 10;
-const DOWNLOAD_BYTES = 25_000_000; // 25 MB
-const UPLOAD_BYTES = 10_000_000; // 10 MB
 const PHASE_TIMEOUT_MS = 30_000;
+
+// Download / upload recipes modelled on @cloudflare/speedtest's defaults.
+// Parallel streams are essential: a single HTTP stream caps well below the
+// real throughput because of TCP slow-start + bandwidth-delay product.
+// Running 4 concurrent streams saturates typical residential 1 Gbps links.
+const DOWNLOAD_PARALLEL = 4;
+const DOWNLOAD_BYTES_PER_STREAM = 25_000_000; // 25 MB × 4 = 100 MB aggregate
+const UPLOAD_PARALLEL = 4;
+const UPLOAD_BYTES_PER_STREAM = 10_000_000; //  10 MB × 4 =  40 MB aggregate
 
 type Meta = {
   clientIp?: string;
@@ -114,13 +121,12 @@ export async function probeLatency(): Promise<{ min: number; mean: number; jitte
 }
 
 export async function probeDownload(): Promise<{ mbps: number; loadedLatencyMs: number }> {
-  // Run a big download and concurrently ping latency probes to measure loaded
-  // latency / bufferbloat.
+  // Run N parallel downloads and concurrently ping latency probes to measure
+  // loaded latency / bufferbloat.
   const loadedSamples: number[] = [];
   let stopLatency = false;
   const latencyLoop = (async () => {
-    // Small delay so the TCP stream actually gets going first.
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 300));
     while (!stopLatency) {
       const t = await timedFetch(DOWN(0), { headers: COMMON_HEADERS }, 3_000).catch(() => null);
       if (t) loadedSamples.push(t.durationMs);
@@ -128,44 +134,60 @@ export async function probeDownload(): Promise<{ mbps: number; loadedLatencyMs: 
     }
   })();
 
-  const result = await timedFetch(
-    DOWN(DOWNLOAD_BYTES),
-    { headers: COMMON_HEADERS },
-    PHASE_TIMEOUT_MS,
+  const start = performance.now();
+  const results = await Promise.all(
+    Array.from({ length: DOWNLOAD_PARALLEL }, () =>
+      timedFetch(
+        DOWN(DOWNLOAD_BYTES_PER_STREAM),
+        { headers: COMMON_HEADERS },
+        PHASE_TIMEOUT_MS,
+      ),
+    ),
   );
+  const wallDurationMs = performance.now() - start;
   stopLatency = true;
   await latencyLoop;
 
-  if (result.status !== 200 || result.bytes === 0) {
-    throw new Error(`download failed: status=${result.status} bytes=${result.bytes}`);
+  const failed = results.find((r) => r.status !== 200 || r.bytes === 0);
+  if (failed) {
+    throw new Error(`download failed: status=${failed.status} bytes=${failed.bytes}`);
   }
-  // bits / seconds / 1_000_000 -> Mbps
-  const mbps = (result.bytes * 8) / (result.durationMs / 1000) / 1_000_000;
+  const totalBytes = results.reduce((acc, r) => acc + r.bytes, 0);
+  // Aggregate bandwidth over wall clock: all streams run concurrently, so
+  // total throughput = sum(bytes) / wall duration, not per-stream average.
+  const mbps = (totalBytes * 8) / (wallDurationMs / 1000) / 1_000_000;
   const loadedLatencyMs =
     loadedSamples.length > 0 ? loadedSamples.reduce((a, b) => a + b, 0) / loadedSamples.length : 0;
   return { mbps, loadedLatencyMs };
 }
 
 export async function probeUpload(): Promise<{ mbps: number }> {
-  const body = new Uint8Array(UPLOAD_BYTES);
+  const body = new Uint8Array(UPLOAD_BYTES_PER_STREAM);
   // Fill with non-zero so compression-aware proxies can't collapse the
   // payload (Cloudflare does not compress but be safe).
   for (let i = 0; i < body.length; i += 4) body[i] = (i * 2654435761) & 0xff;
-  const result = await timedFetch(
-    UP,
-    {
-      method: 'POST',
-      headers: { ...COMMON_HEADERS, 'Content-Type': 'application/octet-stream' },
-      body,
-    },
-    PHASE_TIMEOUT_MS,
+
+  const start = performance.now();
+  const results = await Promise.all(
+    Array.from({ length: UPLOAD_PARALLEL }, () =>
+      timedFetch(
+        UP,
+        {
+          method: 'POST',
+          headers: { ...COMMON_HEADERS, 'Content-Type': 'application/octet-stream' },
+          body,
+        },
+        PHASE_TIMEOUT_MS,
+      ),
+    ),
   );
-  if (result.status !== 200 && result.status !== 204) {
-    throw new Error(`upload failed: status=${result.status}`);
+  const wallDurationMs = performance.now() - start;
+  const failed = results.find((r) => r.status !== 200 && r.status !== 204);
+  if (failed) {
+    throw new Error(`upload failed: status=${failed.status}`);
   }
-  // We measured the full round-trip (request body + server ack). Payload size
-  // is what dominates; tiny server response is negligible.
-  const mbps = (UPLOAD_BYTES * 8) / (result.durationMs / 1000) / 1_000_000;
+  const totalBytes = UPLOAD_BYTES_PER_STREAM * UPLOAD_PARALLEL;
+  const mbps = (totalBytes * 8) / (wallDurationMs / 1000) / 1_000_000;
   return { mbps };
 }
 

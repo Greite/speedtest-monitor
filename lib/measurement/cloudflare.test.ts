@@ -67,22 +67,21 @@ describe('probeLatency', () => {
 });
 
 describe('probeUpload', () => {
-  it('POSTs 10 MB and computes Mbps', async () => {
-    // Simulate a 100 ms upload.
+  it('POSTs 4 parallel streams of 10 MB each and computes aggregate Mbps', async () => {
     fetchMock.mockImplementation(async () => {
       await new Promise((r) => setTimeout(r, 10));
       return new Response(null, { status: 200 });
     });
     const r = await probeUpload();
     expect(r.mbps).toBeGreaterThan(0);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     const [, init] = fetchMock.mock.calls[0];
     expect(init.method).toBe('POST');
     expect((init.body as Uint8Array).byteLength).toBe(10_000_000);
   });
 
-  it('throws when server responds non-2xx', async () => {
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 500 }));
+  it('throws when a stream responds non-2xx', async () => {
+    fetchMock.mockImplementation(async () => new Response(null, { status: 500 }));
     await expect(probeUpload()).rejects.toThrow(/upload failed.*500/);
   });
 });
