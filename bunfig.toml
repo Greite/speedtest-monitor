@@ -1,4 +1,0 @@
-[test]
-# `bun test` is blocked: the native runner cannot load better-sqlite3.
-# Use `bun run test` (vitest) instead. See scripts/block-bun-test.ts.
-preload = ["./scripts/block-bun-test.ts"]
