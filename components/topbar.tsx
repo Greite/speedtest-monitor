@@ -147,7 +147,8 @@ export function Topbar() {
   const label = liveLabel({ running: isBusy, connected });
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <>
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:gap-4 md:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -235,10 +236,12 @@ export function Topbar() {
           </Button>
         </div>
       </div>
+      </header>
 
-      {/* Mobile sheet */}
+      {/* Mobile sheet — rendered outside <header> so it is not confined by the
+          header's backdrop-filter containing block. */}
       {menuOpen ? (
-        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 flex md:hidden" role="dialog" aria-modal="true">
           <button
             type="button"
             aria-label="Close menu"
@@ -333,6 +336,6 @@ export function Topbar() {
           </div>
         </div>
       ) : null}
-    </header>
+    </>
   );
 }
