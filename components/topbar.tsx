@@ -1,16 +1,6 @@
 'use client';
 
-import {
-  Activity,
-  LogOut,
-  Menu,
-  Monitor,
-  Moon,
-  Play,
-  Settings,
-  Sun,
-  X,
-} from 'lucide-react';
+import { Activity, LogOut, Menu, Monitor, Moon, Play, Settings, Sun, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
@@ -162,93 +152,93 @@ export function Topbar() {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:gap-4 md:px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Activity className="size-5 text-chart-1" aria-hidden />
-          <span className="text-lg font-bold tracking-tight">
-            <span className="hidden md:inline">Fastcom Monitor</span>
-            <span className="md:hidden">Fastcom</span>
-          </span>
-        </Link>
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:gap-4 md:px-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <Activity className="size-5 text-chart-1" aria-hidden />
+            <span className="text-lg font-bold tracking-tight">
+              <span className="hidden md:inline">Fastcom Monitor</span>
+              <span className="md:hidden">Fastcom</span>
+            </span>
+          </Link>
 
-        <div className="flex-1" />
+          <div className="flex-1" />
 
-        {/* Desktop/tablet cluster */}
-        <div className="hidden items-center gap-3 md:flex md:gap-4">
-          <div
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground"
-            aria-live="polite"
-          >
-            <LiveDot running={isBusy} connected={connected} />
-            <span>{label}</span>
+          {/* Desktop/tablet cluster */}
+          <div className="hidden items-center gap-3 md:flex md:gap-4">
+            <div
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground"
+              aria-live="polite"
+            >
+              <LiveDot running={isBusy} connected={connected} />
+              <span>{label}</span>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRun}
+              disabled={isBusy || !connected}
+              className="border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
+              title={connected ? undefined : 'Waiting for live connection…'}
+            >
+              <Play className="text-chart-1" />
+              <span>Run now</span>
+            </Button>
+
+            <span aria-hidden className="h-6 w-px bg-border" />
+
+            <Button variant="ghost" size="icon-sm" asChild aria-label="Settings">
+              <Link href="/settings">
+                <Settings />
+              </Link>
+            </Button>
+
+            <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} />
+
+            <span aria-hidden className="h-6 w-px bg-border" />
+
+            {role ? (
+              <span className="rounded bg-muted px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                {role}
+              </span>
+            ) : null}
+
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleLogout}
+              aria-label="Log out"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut />
+            </Button>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRun}
-            disabled={isBusy || !connected}
-            className="border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
-            title={connected ? undefined : 'Waiting for live connection…'}
-          >
-            <Play className="text-chart-1" />
-            <span>Run now</span>
-          </Button>
-
-          <span aria-hidden className="h-6 w-px bg-border" />
-
-          <Button variant="ghost" size="icon-sm" asChild aria-label="Settings">
-            <Link href="/settings">
-              <Settings />
-            </Link>
-          </Button>
-
-          <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} />
-
-          <span aria-hidden className="h-6 w-px bg-border" />
-
-          {role ? (
-            <span className="rounded bg-muted px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {role}
-            </span>
-          ) : null}
-
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleLogout}
-            aria-label="Log out"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            <LogOut />
-          </Button>
+          {/* Mobile cluster */}
+          <div className="flex items-center gap-2 md:hidden">
+            <LiveDot running={isBusy} connected={connected} />
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={handleRun}
+              disabled={isBusy || !connected}
+              aria-label="Run now"
+              className="border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
+            >
+              <Play className="text-chart-1" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+            >
+              <Menu />
+            </Button>
+          </div>
         </div>
-
-        {/* Mobile cluster */}
-        <div className="flex items-center gap-2 md:hidden">
-          <LiveDot running={isBusy} connected={connected} />
-          <Button
-            variant="outline"
-            size="icon-sm"
-            onClick={handleRun}
-            disabled={isBusy || !connected}
-            aria-label="Run now"
-            className="border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
-          >
-            <Play className="text-chart-1" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Open menu"
-            aria-expanded={menuOpen}
-          >
-            <Menu />
-          </Button>
-        </div>
-      </div>
       </header>
 
       {/* Mobile sheet — rendered outside <header> so it is not confined by the

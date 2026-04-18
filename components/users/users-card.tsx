@@ -1,8 +1,32 @@
 'use client';
+
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  type SortingState,
+  useReactTable,
+} from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 type UserRow = {
   id: number;
@@ -14,10 +38,23 @@ type UserRow = {
   lastLoginAt: number | null;
 };
 
+type RoleFilter = 'all' | 'admin' | 'viewer';
+type ProviderFilter = 'all' | 'local' | 'oidc';
+
+function formatLastLogin(ts: number | null): string {
+  if (!ts) return '-';
+  return new Date(ts).toLocaleString('sv-SE').replace('T', ' ').slice(0, 16);
+}
+
 export function UsersCard() {
   const { data: session } = useSession();
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+
+  const [emailQuery, setEmailQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+  const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'email', desc: false }]);
 
   const refresh = useCallback(async () => {
     const res = await fetch('/api/users');
@@ -28,39 +65,44 @@ export function UsersCard() {
     const body = await res.json();
     setUsers(body.users);
   }, []);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  if (session?.user?.role !== 'admin') return null;
+  const setRole = useCallback(
+    async (id: number, role: 'admin' | 'viewer') => {
+      const res = await fetch(`/api/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setStatus(String(body.error ?? `HTTP ${res.status}`));
+        return;
+      }
+      await refresh();
+      setStatus('Role updated');
+    },
+    [refresh],
+  );
 
-  async function setRole(id: number, role: 'admin' | 'viewer') {
-    const res = await fetch(`/api/users/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setStatus(String(body.error ?? `HTTP ${res.status}`));
-      return;
-    }
-    await refresh();
-    setStatus('Role updated');
-  }
+  const del = useCallback(
+    async (id: number) => {
+      if (!confirm('Delete this user?')) return;
+      const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+      if (!res.ok && res.status !== 204) {
+        const body = await res.json().catch(() => ({}));
+        setStatus(String(body.error ?? `HTTP ${res.status}`));
+        return;
+      }
+      await refresh();
+    },
+    [refresh],
+  );
 
-  async function del(id: number) {
-    if (!confirm('Delete this user?')) return;
-    const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
-    if (!res.ok && res.status !== 204) {
-      const body = await res.json().catch(() => ({}));
-      setStatus(String(body.error ?? `HTTP ${res.status}`));
-      return;
-    }
-    await refresh();
-  }
-
-  async function add() {
+  const add = useCallback(async () => {
     const email = window.prompt('Email?');
     if (!email) return;
     const password = window.prompt('Temporary password (min 10 chars)?');
@@ -76,9 +118,9 @@ export function UsersCard() {
       return;
     }
     await refresh();
-  }
+  }, [refresh]);
 
-  async function resetPassword(id: number) {
+  const resetPassword = useCallback(async (id: number) => {
     const newPassword = window.prompt('New password (min 10 chars)?');
     if (!newPassword) return;
     const res = await fetch(`/api/users/${id}/reset-password`, {
@@ -92,7 +134,103 @@ export function UsersCard() {
       return;
     }
     setStatus('Password reset');
-  }
+  }, []);
+
+  const columns = useMemo<ColumnDef<UserRow>[]>(
+    () => [
+      {
+        id: 'email',
+        accessorKey: 'email',
+        header: 'Email',
+        cell: ({ row }) => <span className="font-medium">{row.original.email}</span>,
+        filterFn: (row, _id, value: string) =>
+          row.original.email.toLowerCase().includes(value.toLowerCase()),
+      },
+      {
+        id: 'role',
+        accessorKey: 'role',
+        header: 'Role',
+        cell: ({ row }) => (
+          <select
+            value={row.original.role}
+            onChange={(e) => setRole(row.original.id, e.target.value as 'admin' | 'viewer')}
+            className="h-7 rounded-md border bg-background px-2 text-xs"
+          >
+            <option value="admin">admin</option>
+            <option value="viewer">viewer</option>
+          </select>
+        ),
+        filterFn: (row, _id, value: RoleFilter) =>
+          value === 'all' ? true : row.original.role === value,
+      },
+      {
+        id: 'provider',
+        accessorKey: 'provider',
+        header: 'Provider',
+        cell: ({ row }) => (
+          <Badge variant="secondary" className="uppercase">
+            {row.original.provider}
+          </Badge>
+        ),
+        filterFn: (row, _id, value: ProviderFilter) =>
+          value === 'all' ? true : row.original.provider === value,
+      },
+      {
+        id: 'lastLoginAt',
+        accessorFn: (row) => row.lastLoginAt ?? 0,
+        header: 'Last login',
+        sortingFn: 'basic',
+        sortUndefined: 'last',
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {formatLastLogin(row.original.lastLoginAt)}
+          </span>
+        ),
+        enableColumnFilter: false,
+      },
+      {
+        id: 'actions',
+        header: '',
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: ({ row }) => (
+          <div className="flex justify-end gap-2 py-1">
+            <Button variant="outline" size="sm" onClick={() => resetPassword(row.original.id)}>
+              Reset pw
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => del(row.original.id)}>
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [setRole, resetPassword, del],
+  );
+
+  const columnFilters = useMemo<ColumnFiltersState>(() => {
+    const out: ColumnFiltersState = [];
+    if (emailQuery.trim()) out.push({ id: 'email', value: emailQuery.trim() });
+    if (roleFilter !== 'all') out.push({ id: 'role', value: roleFilter });
+    if (providerFilter !== 'all') out.push({ id: 'provider', value: providerFilter });
+    return out;
+  }, [emailQuery, roleFilter, providerFilter]);
+
+  const table = useReactTable({
+    data: users ?? [],
+    columns,
+    state: { sorting, columnFilters },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  if (session?.user?.role !== 'admin') return null;
+
+  const totalFiltered = table.getFilteredRowModel().rows.length;
+  const hasActiveFilter =
+    emailQuery.trim() !== '' || roleFilter !== 'all' || providerFilter !== 'all';
 
   return (
     <Card>
@@ -100,51 +238,168 @@ export function UsersCard() {
         <CardTitle className="text-base">Users</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="flex items-center gap-3">
-          <Button onClick={add}>Add user</Button>
-          <span className="text-xs">{status}</span>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="users-email-filter" className="text-xs">
+              Search email
+            </Label>
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                id="users-email-filter"
+                value={emailQuery}
+                onChange={(e) => setEmailQuery(e.target.value)}
+                placeholder="jane@example.com"
+                className="h-8 w-56 pl-7 text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs">Role</Label>
+            <Segmented<RoleFilter>
+              value={roleFilter}
+              onChange={setRoleFilter}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'viewer', label: 'Viewer' },
+              ]}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs">Provider</Label>
+            <Segmented<ProviderFilter>
+              value={providerFilter}
+              onChange={setProviderFilter}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'local', label: 'Local' },
+                { value: 'oidc', label: 'OIDC' },
+              ]}
+            />
+          </div>
+          {hasActiveFilter ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setEmailQuery('');
+                setRoleFilter('all');
+                setProviderFilter('all');
+              }}
+            >
+              Clear
+            </Button>
+          ) : null}
+          <div className="ml-auto flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">{status}</span>
+            <Button onClick={add}>Add user</Button>
+          </div>
         </div>
-        <table className="text-sm w-full">
-          <thead className="text-left text-xs uppercase text-muted-foreground">
-            <tr>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Provider</th>
-              <th>Last login</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {users?.map((u) => (
-              <tr key={u.id} className="border-t">
-                <td>{u.email}</td>
-                <td>
-                  <select
-                    value={u.role}
-                    onChange={(e) => setRole(u.id, e.target.value as 'admin' | 'viewer')}
-                    className="border rounded px-1 py-0.5"
-                  >
-                    <option value="admin">admin</option>
-                    <option value="viewer">viewer</option>
-                  </select>
-                </td>
-                <td>
-                  <span className="rounded bg-muted px-2 py-0.5 text-xs">{u.provider}</span>
-                </td>
-                <td>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('sv-SE') : '-'}</td>
-                <td className="flex gap-2 justify-end py-1">
-                  <Button variant="outline" size="sm" onClick={() => resetPassword(u.id)}>
-                    Reset pw
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => del(u.id)}>
-                    Delete
-                  </Button>
-                </td>
-              </tr>
+
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort();
+                  const sortDir = header.column.getIsSorted();
+                  return (
+                    <TableHead key={header.id}>
+                      {canSort ? (
+                        <button
+                          type="button"
+                          onClick={header.column.getToggleSortingHandler()}
+                          className="inline-flex items-center gap-1 text-left font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {sortDir === 'asc' ? (
+                            <ArrowUp className="size-3" />
+                          ) : sortDir === 'desc' ? (
+                            <ArrowDown className="size-3" />
+                          ) : (
+                            <ArrowUpDown className="size-3 opacity-40" />
+                          )}
+                        </button>
+                      ) : (
+                        flexRender(header.column.columnDef.header, header.getContext())
+                      )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableHeader>
+          <TableBody>
+            {users === null ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="py-6 text-center text-muted-foreground"
+                >
+                  Loading users…
+                </TableCell>
+              </TableRow>
+            ) : totalFiltered === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="py-6 text-center text-muted-foreground"
+                >
+                  {users.length === 0 ? 'No users yet.' : 'No users match the current filters.'}
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
+  );
+}
+
+function Segmented<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="inline-flex items-center rounded-md border border-border bg-background p-0.5">
+      {options.map((opt) => {
+        const active = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            aria-pressed={active}
+            className={cn(
+              'h-7 rounded-sm px-2 text-xs font-medium transition-colors',
+              active
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
