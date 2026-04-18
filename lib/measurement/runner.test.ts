@@ -1,11 +1,19 @@
 // lib/measurement/runner.test.ts
 import { Database } from 'bun:sqlite';
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '../db/schema';
 import type { EngineResult } from './types';
 
 const engineMock = mock<() => Promise<EngineResult>>();
+
+// Capture real modules BEFORE mocking so we can restore the process-global
+// module registry after this file's tests complete. bun:test's mock.module is
+// not file-scoped (unlike vitest's vi.mock), so without the afterAll restore,
+// the mocks leak into sibling test files (e.g. lib/alerts/handle.test.ts).
+const realCloudflare = { ...(await import('./cloudflare')) };
+const realBroadcast = { ...(await import('../ws/broadcast')) };
+const realHandle = { ...(await import('../alerts/handle')) };
 
 mock.module('./cloudflare', () => ({
   runCloudflareSpeedTest: () => engineMock(),
@@ -17,6 +25,12 @@ mock.module('../ws/broadcast', () => ({
 mock.module('../alerts/handle', () => ({
   handleAlertsForMeasurement: mock(),
 }));
+
+afterAll(() => {
+  mock.module('./cloudflare', () => realCloudflare);
+  mock.module('../ws/broadcast', () => realBroadcast);
+  mock.module('../alerts/handle', () => realHandle);
+});
 
 const { runMeasurement, runMeasurementSafe, MeasurementBusyError, isMeasurementRunning } =
   await import('./runner');

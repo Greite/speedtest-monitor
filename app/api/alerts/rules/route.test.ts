@@ -1,6 +1,6 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Database } from 'bun:sqlite';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '@/lib/db/schema';
 import { GET, PATCH } from './route';
 
