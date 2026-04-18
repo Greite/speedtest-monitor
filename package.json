@@ -16,8 +16,8 @@
   ],
   "scripts": {
     "dev": "bun server.ts",
-    "build": "bunx drizzle-kit generate && next build && tsup server.ts --format esm --out-dir dist --target node24 --external next --external ws --external bun:sqlite --external drizzle-orm --external execa --external node-cron --external zod --no-splitting",
-    "start": "NODE_ENV=production bun dist/server.js",
+    "build": "bunx drizzle-kit generate && next build",
+    "start": "NODE_ENV=production bun server.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
@@ -59,7 +59,6 @@
     "drizzle-kit": "^0.31.10",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
-    "tsup": "^8.5.1",
     "typescript": "^6.0.2"
   }
 }
