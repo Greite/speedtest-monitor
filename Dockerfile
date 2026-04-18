@@ -111,7 +111,8 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
     FASTCOM_DB_PATH=/data/fastcom.db \
-    FASTCOM_INTERVAL_MINUTES=15
+    FASTCOM_INTERVAL_MINUTES=15 \
+    AUTH_TRUST_HOST=true
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
