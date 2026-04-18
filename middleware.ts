@@ -8,6 +8,7 @@ export default auth(async (req) => {
 
   const isPublic =
     (pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/auth/setup')) ||
+    pathname === '/login' ||
     pathname.startsWith('/_next/') ||
     pathname === '/favicon.ico' ||
     pathname.startsWith('/icons/');
