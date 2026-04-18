@@ -1,5 +1,6 @@
 'use client';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export function SetupForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -36,7 +38,14 @@ export function SetupForm() {
       setPending(false);
       return;
     }
-    await signIn('credentials', { email, password, redirect: true, callbackUrl: '/' });
+    const signInRes = await signIn('credentials', { email, password, redirect: false });
+    if (signInRes?.error) {
+      setError('Account created but sign-in failed. Go to /login.');
+      setPending(false);
+      return;
+    }
+    router.replace('/');
+    router.refresh();
   }
 
   return (

@@ -1,8 +1,10 @@
 'use client';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export function UserMenu() {
+  const router = useRouter();
   const { data } = useSession();
   if (!data?.user?.email) return null;
   return (
@@ -14,7 +16,11 @@ export function UserMenu() {
       </Link>
       <button
         type="button"
-        onClick={() => signOut({ callbackUrl: '/login' })}
+        onClick={async () => {
+          await signOut({ redirect: false });
+          router.replace('/login');
+          router.refresh();
+        }}
         className="underline"
       >
         Logout

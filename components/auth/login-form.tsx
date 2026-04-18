@@ -1,5 +1,6 @@
 'use client';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ export function LoginForm({
   oidcName: string;
   callbackUrl: string;
 }) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,14 +30,14 @@ export function LoginForm({
       email,
       password,
       redirect: false,
-      callbackUrl,
     });
     if (res?.error) {
       setError('Invalid email or password');
       setPending(false);
       return;
     }
-    window.location.href = res?.url ?? callbackUrl;
+    router.replace(callbackUrl);
+    router.refresh();
   }
 
   return (
