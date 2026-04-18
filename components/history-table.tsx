@@ -20,6 +20,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -224,20 +231,21 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
             {totalFiltered === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalFiltered}`}
           </div>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
-              Rows per page
-              <select
-                value={pageSize}
-                onChange={(e) => table.setPageSize(Number(e.target.value))}
-                className="h-7 rounded-md border bg-background px-2 text-xs"
-              >
-                {PAGE_SIZES.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="flex items-center gap-2">
+              <span>Rows per page</span>
+              <Select value={String(pageSize)} onValueChange={(v) => table.setPageSize(Number(v))}>
+                <SelectTrigger size="sm" className="h-7 w-[72px] text-xs" aria-label="Rows per page">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZES.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center gap-2">
               <span>
                 Page {table.getPageCount() === 0 ? 0 : pageIndex + 1} of {table.getPageCount()}

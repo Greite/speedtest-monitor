@@ -19,6 +19,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -151,14 +158,18 @@ export function UsersCard() {
         accessorKey: 'role',
         header: 'Role',
         cell: ({ row }) => (
-          <select
+          <Select
             value={row.original.role}
-            onChange={(e) => setRole(row.original.id, e.target.value as 'admin' | 'viewer')}
-            className="h-7 rounded-md border bg-background px-2 text-xs"
+            onValueChange={(v) => setRole(row.original.id, v as 'admin' | 'viewer')}
           >
-            <option value="admin">admin</option>
-            <option value="viewer">viewer</option>
-          </select>
+            <SelectTrigger size="sm" className="w-[110px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">admin</SelectItem>
+              <SelectItem value="viewer">viewer</SelectItem>
+            </SelectContent>
+          </Select>
         ),
         filterFn: (row, _id, value: RoleFilter) =>
           value === 'all' ? true : row.original.role === value,
