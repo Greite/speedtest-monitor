@@ -33,7 +33,9 @@ export function cutoffForRetentionDays(retentionDays: number, now: Date = new Da
 
 export function purgeMeasurementsOlderThan(cutoff: Date): number {
   const db = getDb();
-  const m = db.delete(measurements).where(lt(measurements.timestamp, cutoff)).run();
+  const m = db.delete(measurements).where(lt(measurements.timestamp, cutoff)).run() as unknown as {
+    changes: number;
+  };
   db.delete(alerts).where(lt(alerts.timestamp, cutoff)).run();
   return m.changes;
 }

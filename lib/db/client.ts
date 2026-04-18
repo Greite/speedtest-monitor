@@ -1,12 +1,12 @@
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { Database } from 'bun:sqlite';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from './schema';
 
 declare global {
   // eslint-disable-next-line no-var
-  var __fastcomDb: { sqlite: Database.Database; db: ReturnType<typeof drizzle> } | undefined;
+  var __fastcomDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
 }
 
 function getDbPath(): string {
@@ -16,10 +16,10 @@ function getDbPath(): string {
 function openDatabase() {
   const path = getDbPath();
   mkdirSync(dirname(path), { recursive: true });
-  const sqlite = new Database(path);
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
-  sqlite.pragma('synchronous = NORMAL');
+  const sqlite = new Database(path, { create: true });
+  sqlite.exec('PRAGMA journal_mode = WAL');
+  sqlite.exec('PRAGMA foreign_keys = ON');
+  sqlite.exec('PRAGMA synchronous = NORMAL');
   const db = drizzle(sqlite, { schema });
   return { sqlite, db };
 }
