@@ -15,21 +15,20 @@
     "@biomejs/biome"
   ],
   "scripts": {
-    "dev": "tsx watch --clear-screen=false server.ts",
-    "build": "bunx drizzle-kit generate && next build && tsup server.ts --format esm --out-dir dist --target node24 --external next --external ws --external better-sqlite3 --external drizzle-orm --external execa --external node-cron --external zod --no-splitting",
+    "dev": "bun --hot server.ts",
+    "build": "bunx drizzle-kit generate && next build && tsup server.ts --format esm --out-dir dist --target node24 --external next --external ws --external bun:sqlite --external drizzle-orm --external execa --external node-cron --external zod --no-splitting",
     "start": "NODE_ENV=production node dist/server.js",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
     "db:generate": "bunx drizzle-kit generate",
-    "db:migrate": "tsx scripts/migrate.ts"
+    "db:migrate": "bun scripts/migrate.ts"
   },
   "dependencies": {
     "@node-rs/argon2": "^2",
     "@tanstack/react-table": "^8.21.3",
-    "better-sqlite3": "^12.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
@@ -52,7 +51,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
     "@tailwindcss/postcss": "^4.1.16",
-    "@types/better-sqlite3": "^7.6.13",
+    "@types/bun": "^1.3.12",
     "@types/node": "^24.12.2",
     "@types/nodemailer": "^6",
     "@types/react": "^19.2.14",
@@ -62,8 +61,6 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
     "tsup": "^8.5.1",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.4"
+    "typescript": "^6.0.2"
   }
 }

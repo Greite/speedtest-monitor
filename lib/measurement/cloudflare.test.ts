@@ -1,8 +1,8 @@
 // lib/measurement/cloudflare.test.ts
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { fetchCloudflareMeta, probeLatency, probeUpload } from './cloudflare';
 
-const fetchMock = vi.fn();
+const fetchMock = mock();
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -10,7 +10,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
+  mock.restore();
 });
 
 function body(bytes: number) {

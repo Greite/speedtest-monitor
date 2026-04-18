@@ -1,12 +1,12 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Database } from 'bun:sqlite';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '../db/schema';
 import { alerts, measurements } from '../db/schema';
 import { handleAlertsForMeasurement } from './handle';
 import { setAlertRules } from './rules';
 
-vi.mock('./destinations', () => ({
+mock.module('./destinations', () => ({
   buildDestinations: () => [{ name: 'webhook', send: async () => ({ ok: true }) }],
   configuredNames: () => ({
     webhook: true,
@@ -16,9 +16,9 @@ vi.mock('./destinations', () => ({
     smtp: false,
   }),
 }));
-vi.mock('../ws/broadcast', () => ({ broadcastAlert: vi.fn() }));
+mock.module('../ws/broadcast', () => ({ broadcastAlert: mock() }));
 
-let sqlite: Database.Database;
+let sqlite: Database;
 beforeEach(() => {
   sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });

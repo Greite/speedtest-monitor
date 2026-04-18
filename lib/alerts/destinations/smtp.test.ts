@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, mock } from 'bun:test';
 import type { AlertPayload } from '../types';
 
-const sendMailMock = vi.fn();
-vi.mock('nodemailer', () => ({
+const sendMailMock = mock();
+mock.module('nodemailer', () => ({
   default: { createTransport: () => ({ sendMail: sendMailMock }) },
   createTransport: () => ({ sendMail: sendMailMock }),
 }));
@@ -39,7 +39,7 @@ describe('destinations/smtp', () => {
     );
     const result = await d.send(payload);
     expect(result.ok).toBe(true);
-    expect(sendMailMock).toHaveBeenCalledOnce();
+    expect(sendMailMock).toHaveBeenCalledTimes(1);
     const opts = sendMailMock.mock.calls[0][0];
     expect(opts.subject).toBe('[Fastcom] t');
     expect(opts.from).toBe('Fastcom <a@b>');

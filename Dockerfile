@@ -1,12 +1,8 @@
-ARG BUN_IMAGE=oven/bun:1.3.12-debian
-ARG NODE_IMAGE=node:24-trixie-slim
+ARG BUN_IMAGE=oven/bun:1-slim
 
 # ---------- deps ----------
 FROM ${BUN_IMAGE} AS deps
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates python3 make g++ \
- && rm -rf /var/lib/apt/lists/*
 COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
@@ -53,19 +49,15 @@ RUN set -eux \
 FROM ${BUN_IMAGE} AS runtime-deps
 ARG TARGETARCH
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 make g++ binutils \
- && rm -rf /var/lib/apt/lists/*
 RUN set -eux \
  && case "$TARGETARCH" in \
-      amd64) KEEP_NODEARCH=x64; KEEP_PREBUILD=linux-x64 ;; \
-      arm64) KEEP_NODEARCH=arm64; KEEP_PREBUILD=linux-arm64 ;; \
+      amd64) KEEP_NODEARCH=x64 ;; \
+      arm64) KEEP_NODEARCH=arm64 ;; \
       *) echo "unsupported TARGETARCH: $TARGETARCH"; exit 1 ;; \
     esac \
- && echo '{"name":"runtime","version":"0.0.0","trustedDependencies":["better-sqlite3"]}' > package.json \
+ && echo '{"name":"runtime","version":"0.0.0"}' > package.json \
  && bun add \
       @node-rs/argon2@^2 \
-      better-sqlite3@^12.9.0 \
       drizzle-orm@^0.45.2 \
       next@^16.2.4 \
       next-auth@beta \
@@ -85,11 +77,6 @@ RUN set -eux \
  # dev compilation / next build, not for serving pre-built pages.
  && find node_modules/@next -mindepth 1 -maxdepth 1 -type d \
       -name 'swc-*' -exec rm -rf {} + \
- # better-sqlite3 prebuilds: keep only the target platform.
- && find node_modules/better-sqlite3/prebuilds -mindepth 1 -maxdepth 1 -type d \
-      ! -name "$KEEP_PREBUILD" -exec rm -rf {} + 2>/dev/null || true \
- && find node_modules/better-sqlite3 -name '*.node' -exec strip --strip-unneeded {} + 2>/dev/null || true \
- && find node_modules/@img -name '*.so*' -exec strip --strip-unneeded {} + 2>/dev/null || true \
  # Dev-only tooling/cache.
  && rm -rf \
       node_modules/typescript \
@@ -119,7 +106,7 @@ RUN set -eux \
       -prune -exec rm -rf {} + 2>/dev/null || true
 
 # ---------- runtime (Debian slim) ----------
-FROM ${NODE_IMAGE} AS runner
+FROM ${BUN_IMAGE} AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
@@ -155,7 +142,7 @@ COPY --from=runtime-deps --chown=nodejs:nodejs /app/node_modules     ./node_modu
 USER nodejs
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:3000/api/settings').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD bun -e "fetch('http://127.0.0.1:3000/api/settings').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/server.js"]
+CMD ["bun", "dist/server.js"]

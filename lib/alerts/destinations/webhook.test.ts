@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { AlertPayload } from '../types';
 import { createWebhookDestination } from './webhook';
 
@@ -14,12 +14,12 @@ const payload: AlertPayload = {
   alertId: 7,
 };
 
-const fetchMock = vi.fn();
+const fetchMock = mock();
 beforeEach(() => {
   fetchMock.mockReset();
   globalThis.fetch = fetchMock as never;
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => mock.restore());
 
 describe('destinations/webhook', () => {
   it('POSTs the payload as JSON to the configured URL with merged headers', async () => {
@@ -29,7 +29,7 @@ describe('destinations/webhook', () => {
       headers: { Authorization: 'Bearer k' },
     });
     const result = await dest.send(payload);
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://h/x');
     expect(init.method).toBe('POST');

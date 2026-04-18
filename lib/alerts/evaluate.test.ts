@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import type { Measurement } from '../db/schema';
 import { evaluateAlerts } from './evaluate';
 import { type AlertRules, type AlertState, DEFAULT_RULES } from './types';
