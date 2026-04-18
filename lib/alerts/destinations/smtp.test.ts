@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, mock } from 'bun:test';
 import type { AlertPayload } from '../types';
 
-const sendMailMock = vi.fn();
-vi.mock('nodemailer', () => ({
+const sendMailMock = mock();
+mock.module('nodemailer', () => ({
   default: { createTransport: () => ({ sendMail: sendMailMock }) },
   createTransport: () => ({ sendMail: sendMailMock }),
 }));

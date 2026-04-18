@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { AlertPayload } from '../types';
 import { createDiscordDestination } from './discord';
 
@@ -14,12 +14,12 @@ const payload: AlertPayload = {
   alertId: 7,
 };
 
-const fetchMock = vi.fn();
+const fetchMock = mock();
 beforeEach(() => {
   fetchMock.mockReset();
   globalThis.fetch = fetchMock as never;
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => mock.restore());
 
 describe('destinations/discord', () => {
   it('POSTs an embed with red color for fired', async () => {

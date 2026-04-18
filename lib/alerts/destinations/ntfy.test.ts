@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { AlertPayload } from '../types';
 import { createNtfyDestination } from './ntfy';
 
@@ -14,12 +14,12 @@ const basePayload: AlertPayload = {
   alertId: 7,
 };
 
-const fetchMock = vi.fn();
+const fetchMock = mock();
 beforeEach(() => {
   fetchMock.mockReset();
   globalThis.fetch = fetchMock as never;
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => mock.restore());
 
 describe('destinations/ntfy', () => {
   it('sets X-Title/Priority/Tags for fired + includes Bearer when token set', async () => {
