@@ -1,14 +1,14 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Database } from 'bun:sqlite';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '@/lib/db/schema';
 
-const authMock = vi.fn();
-vi.mock('@/lib/auth/handler', () => ({
+const authMock = mock();
+mock.module('@/lib/auth/handler', () => ({
   auth: authMock,
-  signIn: vi.fn(),
-  signOut: vi.fn(),
-  handlers: { GET: vi.fn(), POST: vi.fn() },
+  signIn: mock(),
+  signOut: mock(),
+  handlers: { GET: mock(), POST: mock() },
 }));
 
 const { GET, POST } = await import('./route');
