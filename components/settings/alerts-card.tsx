@@ -3,6 +3,7 @@
 import { AlertCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { parseApiError } from '@/lib/api-client';
 
 type Configured = {
   webhook: boolean;
@@ -115,15 +117,22 @@ export function AlertsCard() {
         }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `HTTP ${res.status}`);
+        const apiErr = await parseApiError(res);
+        setStatus(null);
+        if (res.status >= 500) {
+          toast.error(apiErr.message);
+        } else {
+          setError(apiErr.message);
+        }
+        return;
       }
       const updated = (await res.json()) as Rules;
       setRules(updated);
       setStatus('Saved');
+      toast.success('Alerts saved');
     } catch (err) {
       setStatus(null);
-      setError(err instanceof Error ? err.message : 'save failed');
+      toast.error(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
     }

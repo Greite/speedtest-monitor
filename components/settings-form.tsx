@@ -3,12 +3,14 @@
 import { AlertCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { parseApiError } from '@/lib/api-client';
 
 type Props = {
   initialMinutes: number;
@@ -63,14 +65,20 @@ function IntervalCard({
         body: JSON.stringify({ intervalMinutes: parsed }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `HTTP ${res.status}`);
+        const apiErr = await parseApiError(res);
+        if (res.status >= 500) {
+          toast.error(apiErr.message);
+        } else {
+          setError(apiErr.message);
+        }
+        return;
       }
       const body = (await res.json()) as { intervalMinutes: number };
       setSaved(body.intervalMinutes);
       setValue(String(body.intervalMinutes));
+      toast.success('Interval saved');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'save failed');
+      toast.error(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -154,14 +162,20 @@ function RetentionCard({
         body: JSON.stringify({ retentionDays: parsed }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `HTTP ${res.status}`);
+        const apiErr = await parseApiError(res);
+        if (res.status >= 500) {
+          toast.error(apiErr.message);
+        } else {
+          setError(apiErr.message);
+        }
+        return;
       }
       const body = (await res.json()) as { retentionDays: number };
       setSaved(body.retentionDays);
       setValue(String(body.retentionDays));
+      toast.success('Retention saved');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'save failed');
+      toast.error(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
     }

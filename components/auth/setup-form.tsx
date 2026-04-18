@@ -2,10 +2,11 @@
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
-
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { parseApiError } from '@/lib/api-client';
 
 export function SetupForm() {
   const router = useRouter();
@@ -13,11 +14,13 @@ export function SetupForm() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     if (password !== confirm) {
       setError('Passwords do not match');
       return;
@@ -33,8 +36,11 @@ export function SetupForm() {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError(String(body.error ?? `HTTP ${res.status}`));
+      const apiErr = await parseApiError(res);
+      if (apiErr.code === 'validation_failed' && apiErr.fields) {
+        setFieldErrors(apiErr.fields);
+      }
+      setError(apiErr.message);
       setPending(false);
       return;
     }
@@ -63,7 +69,11 @@ export function SetupForm() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={fieldErrors.email ? true : undefined}
         />
+        {fieldErrors.email ? (
+          <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p>
+        ) : null}
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">Password (min 10 chars)</Label>
@@ -74,7 +84,11 @@ export function SetupForm() {
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          aria-invalid={fieldErrors.password ? true : undefined}
         />
+        {fieldErrors.password ? (
+          <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p>
+        ) : null}
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="confirm">Confirm password</Label>
@@ -87,7 +101,11 @@ export function SetupForm() {
           onChange={(e) => setConfirm(e.target.value)}
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
       <Button type="submit" disabled={pending}>
         {pending ? 'Creating...' : 'Create admin'}
       </Button>

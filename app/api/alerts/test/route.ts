@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { apiValidationError } from '@/lib/api-errors';
 import { loadAlertConfig } from '@/lib/alerts/config';
 import { buildDestinations } from '@/lib/alerts/destinations';
 import type { AlertPayload, DestinationName } from '@/lib/alerts/types';
+import { apiValidationError } from '@/lib/api-errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

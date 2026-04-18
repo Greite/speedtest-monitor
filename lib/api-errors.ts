@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 export type ApiErrorBody = {
   error: {
@@ -15,16 +15,10 @@ export function apiError(
   status: number,
   fields?: Record<string, string[]>,
 ): NextResponse<ApiErrorBody> {
-  return NextResponse.json(
-    { error: { code, message, ...(fields ? { fields } : {}) } },
-    { status },
-  );
+  return NextResponse.json({ error: { code, message, ...(fields ? { fields } : {}) } }, { status });
 }
 
-export function apiValidationError(
-  err: z.ZodError,
-  status = 400,
-): NextResponse<ApiErrorBody> {
+export function apiValidationError(err: z.ZodError, status = 400): NextResponse<ApiErrorBody> {
   const fields: Record<string, string[]> = {};
   for (const issue of err.issues) {
     const key = issue.path.join('.') || '_';

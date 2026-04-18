@@ -14,7 +14,6 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { parseApiError } from '@/lib/api-client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { parseApiError } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { AddUserDialog } from './add-user-dialog';
 import { DeleteUserDialog } from './delete-user-dialog';
