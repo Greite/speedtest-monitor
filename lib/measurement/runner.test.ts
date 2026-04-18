@@ -3,7 +3,6 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as schema from '../db/schema';
-import { measurements } from '../db/schema';
 import type { EngineResult } from './types';
 
 const engineMock = vi.fn<() => Promise<EngineResult>>();
