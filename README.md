@@ -142,12 +142,19 @@ users. The last remaining admin cannot be demoted or deleted.
 ```bash
 bun install
 bun run db:generate        # generate drizzle migrations
-bun run dev                # tsx watch server.ts → http://localhost:3000
+bun run dev                # tsx watch server.ts -> http://localhost:3000
 bun run test               # vitest unit tests
 bun run lint               # biome check
 bun run typecheck          # tsc --noEmit
 bun run build              # next build + tsup bundle for server.ts
 ```
+
+> **Use `bun run test`, not `bun test`.** Bun's native test runner cannot
+> load `better-sqlite3` (tracked at [oven-sh/bun#4290][bun-4290]), and most
+> of the suite is DB-backed. `bun test` is blocked via `bunfig.toml` with a
+> hint message pointing here; the full suite runs under vitest (Node).
+>
+> [bun-4290]: https://github.com/oven-sh/bun/issues/4290
 
 ### End-to-end check
 
