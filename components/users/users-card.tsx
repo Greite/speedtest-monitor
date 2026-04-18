@@ -34,6 +34,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { AddUserDialog } from './add-user-dialog';
+import { DeleteUserDialog } from './delete-user-dialog';
+import { ResetPasswordDialog } from './reset-password-dialog';
 
 type UserRow = {
   id: number;
@@ -62,6 +65,10 @@ export function UsersCard() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
   const [sorting, setSorting] = useState<SortingState>([{ id: 'email', desc: false }]);
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<{ id: number; email: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; email: string } | null>(null);
 
   const refresh = useCallback(async () => {
     const res = await fetch('/api/users');
@@ -95,53 +102,15 @@ export function UsersCard() {
     [refresh],
   );
 
-  const del = useCallback(
-    async (id: number) => {
-      if (!confirm('Delete this user?')) return;
-      const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
-      if (!res.ok && res.status !== 204) {
-        const body = await res.json().catch(() => ({}));
-        setStatus(String(body.error ?? `HTTP ${res.status}`));
-        return;
-      }
-      await refresh();
-    },
-    [refresh],
-  );
-
-  const add = useCallback(async () => {
-    const email = window.prompt('Email?');
-    if (!email) return;
-    const password = window.prompt('Temporary password (min 10 chars)?');
-    if (!password) return;
-    const res = await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setStatus(String(body.error ?? `HTTP ${res.status}`));
-      return;
-    }
+  const onAdded = useCallback(async () => {
     await refresh();
+    setStatus('User created');
   }, [refresh]);
 
-  const resetPassword = useCallback(async (id: number) => {
-    const newPassword = window.prompt('New password (min 10 chars)?');
-    if (!newPassword) return;
-    const res = await fetch(`/api/users/${id}/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newPassword }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setStatus(String(body.error ?? `HTTP ${res.status}`));
-      return;
-    }
-    setStatus('Password reset');
-  }, []);
+  const onDeleted = useCallback(async () => {
+    await refresh();
+    setStatus('User deleted');
+  }, [refresh]);
 
   const columns = useMemo<ColumnDef<UserRow>[]>(
     () => [
@@ -206,17 +175,25 @@ export function UsersCard() {
         enableColumnFilter: false,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2 py-1">
-            <Button variant="outline" size="sm" onClick={() => resetPassword(row.original.id)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setResetTarget({ id: row.original.id, email: row.original.email })}
+            >
               Reset pw
             </Button>
-            <Button variant="destructive" size="sm" onClick={() => del(row.original.id)}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteTarget({ id: row.original.id, email: row.original.email })}
+            >
               Delete
             </Button>
           </div>
         ),
       },
     ],
-    [setRole, resetPassword, del],
+    [setRole],
   );
 
   const columnFilters = useMemo<ColumnFiltersState>(() => {
@@ -307,7 +284,7 @@ export function UsersCard() {
           ) : null}
           <div className="ml-auto flex items-center gap-3">
             <span className="text-xs text-muted-foreground">{status}</span>
-            <Button onClick={add}>Add user</Button>
+            <Button onClick={() => setAddOpen(true)}>Add user</Button>
           </div>
         </div>
 
@@ -377,6 +354,20 @@ export function UsersCard() {
           </TableBody>
         </Table>
       </CardContent>
+
+      <AddUserDialog open={addOpen} onOpenChange={setAddOpen} onCreated={onAdded} />
+      <ResetPasswordDialog
+        open={resetTarget !== null}
+        onOpenChange={(v) => !v && setResetTarget(null)}
+        user={resetTarget}
+        onDone={setStatus}
+      />
+      <DeleteUserDialog
+        open={deleteTarget !== null}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+        user={deleteTarget}
+        onDeleted={onDeleted}
+      />
     </Card>
   );
 }
