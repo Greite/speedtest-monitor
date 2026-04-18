@@ -234,7 +234,11 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
             <div className="flex items-center gap-2">
               <span>Rows per page</span>
               <Select value={String(pageSize)} onValueChange={(v) => table.setPageSize(Number(v))}>
-                <SelectTrigger size="sm" className="h-7 w-[72px] text-xs" aria-label="Rows per page">
+                <SelectTrigger
+                  size="sm"
+                  className="h-7 w-[72px] text-xs"
+                  aria-label="Rows per page"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
