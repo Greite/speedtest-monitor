@@ -13,6 +13,9 @@ export type MeasurementDto = {
   serverLocations: string[] | null;
   userLocation: string | null;
   userIp: string | null;
+  jitterMs: number | null;
+  packetLossPct: number | null;
+  userIsp: string | null;
 };
 
 export function toMeasurementDto(row: Measurement): MeasurementDto {
@@ -29,6 +32,9 @@ export function toMeasurementDto(row: Measurement): MeasurementDto {
     serverLocations: row.serverLocations ?? null,
     userLocation: row.userLocation ?? null,
     userIp: row.userIp ?? null,
+    jitterMs: row.jitterMs,
+    packetLossPct: row.packetLossPct,
+    userIsp: row.userIsp,
   };
 }
 

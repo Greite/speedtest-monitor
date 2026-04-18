@@ -31,7 +31,8 @@ beforeEach(() => {
       buffer_bloat_ms REAL,
       status TEXT NOT NULL,
       error TEXT, server_locations TEXT,
-      user_location TEXT, user_ip TEXT
+      user_location TEXT, user_ip TEXT,
+      jitter_ms REAL, packet_loss_pct REAL, user_isp TEXT
     );
     CREATE TABLE alerts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,6 +63,9 @@ describe('handleAlertsForMeasurement', () => {
       serverLocations: null,
       userLocation: null,
       userIp: null,
+      jitterMs: null,
+      packetLossPct: null,
+      userIsp: null,
     });
     const db = drizzle(sqlite, { schema });
     expect(db.select().from(alerts).all()).toEqual([]);
