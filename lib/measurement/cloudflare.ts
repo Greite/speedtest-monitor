@@ -35,15 +35,22 @@ function join(parts: (string | undefined)[]): string | null {
 
 // `@cloudflare/speedtest` does not expose client metadata on its Results class;
 // the browser bundle fetches https://speed.cloudflare.com/meta separately. We
-// replicate that here. Failures are soft — metadata fields fall back to null.
+// replicate that here. The endpoint returns 403 + `{}` when called without a
+// speed.cloudflare.com referrer, so we always fall back to scraping CF-RAY for
+// the colo code (e.g. "CDG" from "9ee313620b019eb9-CDG"). Failures are soft -
+// metadata fields fall back to null.
 export async function fetchCloudflareMeta(): Promise<Meta> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), META_TIMEOUT_MS);
   try {
     const res = await fetch(META_URL, { signal: ctrl.signal });
-    if (!res.ok) return {};
-    const body = (await res.json()) as Meta;
-    return body ?? {};
+    const body = res.ok ? ((await res.json().catch(() => ({}))) as Meta) : {};
+    if (!body.colo) {
+      const ray = res.headers.get('cf-ray');
+      const colo = ray?.split('-')[1];
+      if (colo) body.colo = colo;
+    }
+    return body;
   } catch {
     return {};
   } finally {
@@ -52,6 +59,11 @@ export async function fetchCloudflareMeta(): Promise<Meta> {
 }
 
 export function runCloudflareSpeedTest(): Promise<EngineResult> {
+  // Note: `packetLoss` intentionally omitted. The Cloudflare engine
+  // implements it via `RTCPeerConnection`, which is a browser-only API and
+  // is not available in Node.js. Running it server-side rejects with
+  // "ReferenceError: RTCPeerConnection is not defined" and aborts the rest
+  // of the run. We surface `packetLossPct: null` instead.
   const engine = new Speedtest({
     autoStart: false,
     measurements: [
@@ -63,7 +75,6 @@ export function runCloudflareSpeedTest(): Promise<EngineResult> {
       { type: 'upload', bytes: 1e5, count: 1 },
       { type: 'upload', bytes: 1e6, count: 8 },
       { type: 'upload', bytes: 1e7, count: 6 },
-      { type: 'packetLoss', numPackets: 1000, responsesWaitTime: 3000 },
     ],
   }) as unknown as {
     play: () => void;
