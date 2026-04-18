@@ -56,8 +56,8 @@ describe('dispatchAlert', () => {
     const ntfy = mk('ntfy', Promise.resolve({ ok: true }));
     const slack = mk('slack', Promise.resolve({ ok: true }));
     const result = await dispatchAlert({ payload, destinations: [webhook, ntfy, slack], rules });
-    expect(result.webhook.ok).toBe(false);
-    expect(result.ntfy.ok).toBe(true);
+    expect(result.webhook?.ok).toBe(false);
+    expect(result.ntfy?.ok).toBe(true);
   });
 
   it('times out a slow destination', async () => {
@@ -70,6 +70,6 @@ describe('dispatchAlert', () => {
       timeoutMs: 50,
     });
     expect(result.webhook).toEqual({ ok: false, error: 'timeout' });
-    expect(result.ntfy.ok).toBe(true);
+    expect(result.ntfy?.ok).toBe(true);
   });
 });

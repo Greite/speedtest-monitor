@@ -19,7 +19,7 @@ type Input = {
 
 export async function dispatchAlert(
   input: Input,
-): Promise<Record<DestinationName, DeliveryResult>> {
+): Promise<Partial<Record<DestinationName, DeliveryResult>>> {
   const { payload, destinations, rules, timeoutMs = DEFAULT_TIMEOUT_MS } = input;
   const active = destinations.filter((d) => rules.destinations[d.name]);
   const results = await Promise.all(
@@ -35,5 +35,5 @@ export async function dispatchAlert(
       return [d.name, r] as const;
     }),
   );
-  return Object.fromEntries(results) as Record<DestinationName, DeliveryResult>;
+  return Object.fromEntries(results) as Partial<Record<DestinationName, DeliveryResult>>;
 }

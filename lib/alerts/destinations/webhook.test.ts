@@ -29,7 +29,7 @@ describe('destinations/webhook', () => {
       headers: { Authorization: 'Bearer k' },
     });
     const result = await dest.send(payload);
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://h/x');
     expect(init.method).toBe('POST');
