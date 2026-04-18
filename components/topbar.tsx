@@ -125,6 +125,19 @@ export function Topbar() {
     };
   }, [menuOpen]);
 
+  // Auto-close the mobile sheet when crossing the md breakpoint (the panel is
+  // `md:hidden` in CSS, but menuOpen state and the body scroll lock would stay
+  // on otherwise).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setMenuOpen(false);
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   async function handleRun() {
     if (running || running2 || !connected) return;
     setRunning2(true);
