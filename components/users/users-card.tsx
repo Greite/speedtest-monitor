@@ -13,6 +13,8 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { parseApiError } from '@/lib/api-client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,7 +61,6 @@ function formatLastLogin(ts: number | null): string {
 export function UsersCard() {
   const { data: session } = useSession();
   const [users, setUsers] = useState<UserRow[] | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
 
   const [emailQuery, setEmailQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
@@ -73,7 +74,8 @@ export function UsersCard() {
   const refresh = useCallback(async () => {
     const res = await fetch('/api/users');
     if (!res.ok) {
-      setStatus(`Load failed: HTTP ${res.status}`);
+      const err = await parseApiError(res);
+      toast.error(`Load failed: ${err.message}`);
       return;
     }
     const body = await res.json();
@@ -92,24 +94,22 @@ export function UsersCard() {
         body: JSON.stringify({ role }),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setStatus(String(body.error ?? `HTTP ${res.status}`));
+        const err = await parseApiError(res);
+        toast.error(err.message);
         return;
       }
       await refresh();
-      setStatus('Role updated');
+      toast.success('Role updated');
     },
     [refresh],
   );
 
   const onAdded = useCallback(async () => {
     await refresh();
-    setStatus('User created');
   }, [refresh]);
 
   const onDeleted = useCallback(async () => {
     await refresh();
-    setStatus('User deleted');
   }, [refresh]);
 
   const columns = useMemo<ColumnDef<UserRow>[]>(
@@ -283,7 +283,6 @@ export function UsersCard() {
             </Button>
           ) : null}
           <div className="ml-auto flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">{status}</span>
             <Button onClick={() => setAddOpen(true)}>Add user</Button>
           </div>
         </div>
@@ -360,7 +359,6 @@ export function UsersCard() {
         open={resetTarget !== null}
         onOpenChange={(v) => !v && setResetTarget(null)}
         user={resetTarget}
-        onDone={setStatus}
       />
       <DeleteUserDialog
         open={deleteTarget !== null}

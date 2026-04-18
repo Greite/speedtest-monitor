@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { parseApiError } from '@/lib/api-client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,21 +21,22 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: { id: number; email: string } | null;
-  onDone: (message: string) => void;
 };
 
 const MIN_PASSWORD_LEN = 10;
 
-export function ResetPasswordDialog({ open, onOpenChange, user, onDone }: Props) {
+export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [pending, setPending] = useState(false);
 
   function reset() {
     setPassword('');
     setConfirm('');
     setError(null);
+    setFieldErrors({});
     setPending(false);
   }
 
@@ -46,6 +49,7 @@ export function ResetPasswordDialog({ open, onOpenChange, user, onDone }: Props)
     e.preventDefault();
     if (!user) return;
     setError(null);
+    setFieldErrors({});
     if (password.length < MIN_PASSWORD_LEN) {
       setError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
       return;
@@ -55,19 +59,32 @@ export function ResetPasswordDialog({ open, onOpenChange, user, onDone }: Props)
       return;
     }
     setPending(true);
-    const res = await fetch(`/api/users/${user.id}/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newPassword: password }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      const msg = body.error?.message ?? body.error ?? `HTTP ${res.status}`;
-      setError(typeof msg === 'string' ? msg : `HTTP ${res.status}`);
+    let res: Response;
+    try {
+      res = await fetch(`/api/users/${user.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: password }),
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Network error.');
       setPending(false);
       return;
     }
-    onDone(`Password reset for ${user.email}`);
+    if (!res.ok) {
+      const apiErr = await parseApiError(res);
+      if (res.status >= 500) {
+        toast.error(apiErr.message);
+      } else if (apiErr.code === 'validation_failed' && apiErr.fields) {
+        setFieldErrors(apiErr.fields);
+        setError(apiErr.message);
+      } else {
+        setError(apiErr.message);
+      }
+      setPending(false);
+      return;
+    }
+    toast.success(`Password reset for ${user.email}`);
     handleOpenChange(false);
   }
 
@@ -100,7 +117,11 @@ export function ResetPasswordDialog({ open, onOpenChange, user, onDone }: Props)
               placeholder={`At least ${MIN_PASSWORD_LEN} characters`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={fieldErrors.newPassword ? true : undefined}
             />
+            {fieldErrors.newPassword ? (
+              <p className="text-xs text-destructive">{fieldErrors.newPassword.join(' ')}</p>
+            ) : null}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="reset-pw-confirm">Confirm password</Label>

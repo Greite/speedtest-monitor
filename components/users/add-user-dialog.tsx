@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { parseApiError } from '@/lib/api-client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +37,7 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'admin' | 'viewer'>('viewer');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [pending, setPending] = useState(false);
 
   function reset() {
@@ -42,6 +45,7 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
     setPassword('');
     setRole('viewer');
     setError(null);
+    setFieldErrors({});
     setPending(false);
   }
 
@@ -53,26 +57,38 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     if (password.length < MIN_PASSWORD_LEN) {
       setError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
       return;
     }
     setPending(true);
-    const res = await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), password, role }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      const msg =
-        res.status === 409
-          ? 'An account with this email already exists.'
-          : (body.error?.message ?? body.error ?? `HTTP ${res.status}`);
-      setError(typeof msg === 'string' ? msg : `HTTP ${res.status}`);
+    let res: Response;
+    try {
+      res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password, role }),
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Network error.');
       setPending(false);
       return;
     }
+    if (!res.ok) {
+      const apiErr = await parseApiError(res);
+      if (res.status >= 500) {
+        toast.error(apiErr.message);
+      } else if (apiErr.code === 'validation_failed' && apiErr.fields) {
+        setFieldErrors(apiErr.fields);
+        setError(apiErr.message);
+      } else {
+        setError(apiErr.message);
+      }
+      setPending(false);
+      return;
+    }
+    toast.success('User created');
     await onCreated();
     handleOpenChange(false);
   }
@@ -98,7 +114,11 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
               placeholder="jane@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={fieldErrors.email ? true : undefined}
             />
+            {fieldErrors.email ? (
+              <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p>
+            ) : null}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="add-user-password">Temporary password</Label>
@@ -111,7 +131,11 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
               placeholder={`At least ${MIN_PASSWORD_LEN} characters`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={fieldErrors.password ? true : undefined}
             />
+            {fieldErrors.password ? (
+              <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p>
+            ) : null}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="add-user-role">Role</Label>

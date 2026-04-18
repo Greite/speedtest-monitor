@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { parseApiError } from '@/lib/api-client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,17 +38,25 @@ export function DeleteUserDialog({ open, onOpenChange, user, onDeleted }: Props)
     if (!user) return;
     setError(null);
     setPending(true);
-    const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
-    if (!res.ok && res.status !== 204) {
-      const body = await res.json().catch(() => ({}));
-      const msg =
-        body.error === 'last admin'
-          ? 'This is the last admin account and cannot be deleted.'
-          : (body.error?.message ?? body.error ?? `HTTP ${res.status}`);
-      setError(typeof msg === 'string' ? msg : `HTTP ${res.status}`);
+    let res: Response;
+    try {
+      res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Network error.');
       setPending(false);
       return;
     }
+    if (!res.ok && res.status !== 204) {
+      const apiErr = await parseApiError(res);
+      if (res.status >= 500) {
+        toast.error(apiErr.message);
+      } else {
+        setError(apiErr.message);
+      }
+      setPending(false);
+      return;
+    }
+    toast.success('User deleted');
     await onDeleted();
     handleOpenChange(false);
   }
