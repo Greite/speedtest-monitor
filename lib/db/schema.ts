@@ -16,6 +16,9 @@ export const measurements = sqliteTable('measurements', {
   serverLocations: text('server_locations', { mode: 'json' }).$type<string[]>(),
   userLocation: text('user_location'),
   userIp: text('user_ip'),
+  jitterMs: real('jitter_ms'),
+  packetLossPct: real('packet_loss_pct'),
+  userIsp: text('user_isp'),
 });
 
 export const settings = sqliteTable('settings', {
