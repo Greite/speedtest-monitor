@@ -18,11 +18,17 @@ type Summary = {
 
 type Meta = {
   clientIp?: string;
-  colo?: string;
+  colo?: string | { iata?: string } | null;
   city?: string;
   country?: string;
   asOrganization?: string;
 };
+
+function coloIata(colo: Meta['colo']): string | null {
+  if (!colo) return null;
+  if (typeof colo === 'string') return colo;
+  return colo.iata ?? null;
+}
 
 type ResultsLike = {
   getSummary: () => Summary;
@@ -35,17 +41,20 @@ function join(parts: (string | undefined)[]): string | null {
 
 // `@cloudflare/speedtest` does not expose client metadata on its Results class;
 // the browser bundle fetches https://speed.cloudflare.com/meta separately. We
-// replicate that here. The endpoint returns 403 + `{}` when called without a
-// speed.cloudflare.com referrer, so we always fall back to scraping CF-RAY for
-// the colo code (e.g. "CDG" from "9ee313620b019eb9-CDG"). Failures are soft -
-// metadata fields fall back to null.
+// replicate that here. The endpoint gates access on Referer: without it it
+// returns 403 + `{}`; with `https://speed.cloudflare.com/` it returns the full
+// payload. We also keep a CF-RAY colo fallback as a last resort. Failures are
+// soft - metadata fields fall back to null.
 export async function fetchCloudflareMeta(): Promise<Meta> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), META_TIMEOUT_MS);
   try {
-    const res = await fetch(META_URL, { signal: ctrl.signal });
+    const res = await fetch(META_URL, {
+      signal: ctrl.signal,
+      headers: { Referer: 'https://speed.cloudflare.com/' },
+    });
     const body = res.ok ? ((await res.json().catch(() => ({}))) as Meta) : {};
-    if (!body.colo) {
+    if (coloIata(body.colo) === null) {
       const ray = res.headers.get('cf-ray');
       const colo = ray?.split('-')[1];
       if (colo) body.colo = colo;
@@ -108,7 +117,7 @@ export function runCloudflareSpeedTest(): Promise<EngineResult> {
           : null;
       const bufferBloat =
         loaded != null && unloaded != null ? Math.max(0, Math.round(loaded - unloaded)) : null;
-      const colo = meta.colo ?? null;
+      const colo = coloIata(meta.colo);
       resolve({
         downloadMbps: downMbps,
         uploadMbps: upMbps,

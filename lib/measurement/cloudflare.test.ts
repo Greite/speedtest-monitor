@@ -132,6 +132,35 @@ describe('runCloudflareSpeedTest', () => {
     expect(res.serverLocations).toBeNull();
   });
 
+  it('sends Referer and parses object-shaped colo from real /meta payload', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          clientIp: '1.2.3.4',
+          city: 'Paris',
+          country: 'FR',
+          asOrganization: 'Proxad / Free SAS',
+          colo: { iata: 'CDG', lat: 49, lon: 2.55 },
+        }),
+        { status: 200 },
+      ),
+    );
+    const p = runCloudflareSpeedTest();
+    await Promise.resolve();
+    await FakeSpeedtest.lastInstance!.finishWith({
+      download: 100_000_000,
+      upload: 50_000_000,
+      latency: 10,
+    });
+    const res = await p;
+    expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({
+      Referer: 'https://speed.cloudflare.com/',
+    });
+    expect(res.serverLocations).toEqual(['CDG']);
+    expect(res.userIsp).toBe('Proxad / Free SAS');
+    expect(res.userIp).toBe('1.2.3.4');
+  });
+
   it('survives meta-endpoint failure (soft fallback to nulls)', async () => {
     fetchMock.mockRejectedValueOnce(new Error('meta fetch failed'));
     const p = runCloudflareSpeedTest();
