@@ -6,23 +6,37 @@ export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
-  const isPublic =
+  if (
     (pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/auth/setup')) ||
-    pathname === '/login' ||
     pathname.startsWith('/_next/') ||
     pathname === '/favicon.ico' ||
-    pathname.startsWith('/icons/');
-  if (isPublic) return NextResponse.next();
+    pathname.startsWith('/icons/')
+  ) {
+    return NextResponse.next();
+  }
+
+  const noUsers = countUsers() === 0;
 
   if (pathname === '/setup' || pathname === '/api/auth/setup') {
-    if (countUsers() === 0) return NextResponse.next();
+    if (noUsers) return NextResponse.next();
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
-    return new NextResponse(null, { status: 404 });
+    return NextResponse.redirect(new URL('/login', req.nextUrl));
+  }
+
+  if (pathname === '/login') {
+    if (noUsers) return NextResponse.redirect(new URL('/setup', req.nextUrl));
+    return NextResponse.next();
   }
 
   if (!session?.user) {
+    if (noUsers) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'setup required' }, { status: 503 });
+      }
+      return NextResponse.redirect(new URL('/setup', req.nextUrl));
+    }
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
