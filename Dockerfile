@@ -4,11 +4,10 @@ ARG NODE_IMAGE=node:24-trixie-slim
 # ---------- deps ----------
 FROM ${BUN_IMAGE} AS deps
 WORKDIR /app
-ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates python3 make g++ \
  && rm -rf /var/lib/apt/lists/*
-COPY package.json bun.lock* .puppeteerrc.cjs ./
+COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
 # ---------- build ----------
@@ -16,7 +15,6 @@ FROM ${BUN_IMAGE} AS builder
 ARG TARGETARCH
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PUPPETEER_SKIP_DOWNLOAD=true
 # Next.js page-data collection evaluates the next-auth route at build time,
 # which imports handler.ts → loadAuthConfig() and throws without AUTH_SECRET.
 # Inject a dummy value used only during `next build`; runtime requires a real
@@ -55,11 +53,9 @@ RUN set -eux \
 FROM ${BUN_IMAGE} AS runtime-deps
 ARG TARGETARCH
 WORKDIR /app
-ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 make g++ binutils \
  && rm -rf /var/lib/apt/lists/*
-COPY .puppeteerrc.cjs ./
 RUN set -eux \
  && case "$TARGETARCH" in \
       amd64) KEEP_NODEARCH=x64; KEEP_PREBUILD=linux-x64 ;; \
@@ -68,11 +64,11 @@ RUN set -eux \
     esac \
  && echo '{"name":"runtime","version":"0.0.0","trustedDependencies":["better-sqlite3"]}' > package.json \
  && bun add \
+      @cloudflare/speedtest@^1 \
       @node-rs/argon2@^2 \
       better-sqlite3@^12.9.0 \
       drizzle-orm@^0.45.2 \
       execa@^9.6.1 \
-      fast-cli@^5.2.0 \
       next@^16.2.4 \
       next-auth@beta \
       node-cron@^4.2.1 \
@@ -96,8 +92,7 @@ RUN set -eux \
       ! -name "$KEEP_PREBUILD" -exec rm -rf {} + 2>/dev/null || true \
  && find node_modules/better-sqlite3 -name '*.node' -exec strip --strip-unneeded {} + 2>/dev/null || true \
  && find node_modules/@img -name '*.so*' -exec strip --strip-unneeded {} + 2>/dev/null || true \
- # Dev-only tooling/cache. DO NOT touch node_modules/.bin — it holds the
- # `fast` binary that execa('fast', ...) in lib/fastcli/runner.ts spawns.
+ # Dev-only tooling/cache.
  && rm -rf \
       node_modules/typescript \
       node_modules/.cache \
@@ -125,7 +120,7 @@ RUN set -eux \
          -o -name 'docs' -o -name '.github' -o -name '.vscode' -o -name 'coverage' \) \
       -prune -exec rm -rf {} + 2>/dev/null || true
 
-# ---------- runtime (Debian slim + system Chromium) ----------
+# ---------- runtime (Debian slim) ----------
 FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
@@ -133,39 +128,18 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
     FASTCOM_DB_PATH=/data/fastcom.db \
-    FASTCOM_INTERVAL_MINUTES=15 \
-    PUPPETEER_SKIP_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    FASTCOM_INTERVAL_MINUTES=15
 
-# Install Chromium + purge locales / docs / icons inside the SAME layer so
-# the deleted bytes never land in history. Create the runtime user here too.
-# The `chromium` Debian package is available for amd64 AND arm64 so this
-# stage is arch-agnostic.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      ca-certificates dumb-init chromium fonts-liberation \
+      ca-certificates dumb-init \
  && rm -rf /var/lib/apt/lists/* \
- # Chromium-side pruning: Vulkan validation layer (21 MB, dev-only) + mock ICD.
- # We run headless with software rasterizer via swiftshader (kept).
- && rm -f \
-      /usr/lib/chromium/libVkLayer_khronos_validation.so \
-      /usr/lib/chromium/libVkLayer_khronos_validation.so.TOC \
-      /usr/lib/chromium/libVkICD_mock_icd.so \
-      /usr/lib/chromium/libVkICD_mock_icd.so.TOC \
- && for d in /usr/lib/chromium/locales /usr/share/chromium/locales; do \
-      if [ -d "$d" ]; then \
-        find "$d" -type f ! -name 'en-US.pak' ! -name 'en.pak' ! -name 'fr.pak' -delete; \
-      fi; \
-    done \
  && rm -rf \
       /usr/share/doc/* \
       /usr/share/man/* \
       /usr/share/info/* \
       /usr/share/locale/* \
-      /usr/share/icons/hicolor \
       /var/cache/apt/archives/* \
-      /var/cache/debconf/*-old \
-      /var/lib/dpkg/info/*.md5sums \
  && groupadd --system --gid 1001 nodejs \
  && useradd  --system --uid 1001 --gid nodejs --create-home --home /home/nodejs nodejs \
  && mkdir -p /data \
