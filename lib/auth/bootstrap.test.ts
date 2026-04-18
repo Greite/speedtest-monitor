@@ -1,6 +1,6 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { Database } from 'bun:sqlite';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import * as schema from '../db/schema';
 import { ensureSeededAdmin } from './bootstrap';
 import { verifyPassword } from './hash';

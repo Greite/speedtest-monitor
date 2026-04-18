@@ -1,12 +1,12 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { Database } from 'bun:sqlite';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import * as schema from '../db/schema';
 import { alerts } from '../db/schema';
 import { readAlertState } from './state';
 import { ALL_KINDS } from './types';
 
-let sqlite: Database.Database;
+let sqlite: Database;
 beforeEach(() => {
   sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });
