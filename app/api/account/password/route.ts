@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireSession } from '@/lib/auth/authorize';
 import { hashPassword, verifyPassword } from '@/lib/auth/hash';
 import { findUserById, updateUser } from '@/lib/auth/users';
@@ -18,18 +19,18 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'invalid JSON' }, { status: 400 });
+    return apiError('invalid_json', 'Request body is not valid JSON.', 400);
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
   const user = findUserById(Number(session.id));
   if (!user?.passwordHash) {
-    return NextResponse.json({ error: 'not a local user' }, { status: 400 });
+    return apiError('not_local', 'This account uses SSO and has no local password.', 400);
   }
   if (!(await verifyPassword(user.passwordHash, parsed.data.currentPassword))) {
-    return NextResponse.json({ error: 'current password incorrect' }, { status: 400 });
+    return apiError('wrong_password', 'Current password is incorrect.', 400);
   }
   updateUser(user.id, { passwordHash: await hashPassword(parsed.data.newPassword) });
   return NextResponse.json({ ok: true });

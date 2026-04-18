@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-errors';
 import { auth } from './handler';
 import type { SessionUser } from './types';
 
@@ -32,7 +33,10 @@ export async function requireAdmin(): Promise<SessionUser> {
 
 export function authErrorResponse(err: unknown): NextResponse | null {
   if (err instanceof AuthError) {
-    return NextResponse.json({ error: err.message }, { status: err.status });
+    if (err.status === 401) {
+      return apiError('unauthorized', 'You must be signed in.', 401);
+    }
+    return apiError('forbidden', 'You do not have permission.', 403);
   }
   return null;
 }

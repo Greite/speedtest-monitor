@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { apiValidationError } from '@/lib/api-errors';
 import { loadAlertConfig } from '@/lib/alerts/config';
 import { buildDestinations } from '@/lib/alerts/destinations';
 import type { AlertPayload, DestinationName } from '@/lib/alerts/types';
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
   }
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const cfg = loadAlertConfig();

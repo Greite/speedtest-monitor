@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { apiError, apiValidationError } from '@/lib/api-errors';
 import { rescheduleFromSettings } from '@/lib/scheduler';
 import {
   getEnvDefaultIntervalMinutes,
@@ -37,11 +38,11 @@ export async function PATCH(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
+    return apiError('invalid_json', 'Request body is not valid JSON.', 400);
   }
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   let intervalChanged = false;

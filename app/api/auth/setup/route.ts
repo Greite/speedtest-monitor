@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { apiError, apiValidationError } from '@/lib/api-errors';
 import { signIn } from '@/lib/auth/handler';
 import { hashPassword } from '@/lib/auth/hash';
 import { countUsers, createUser } from '@/lib/auth/users';
@@ -14,17 +15,17 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   if (countUsers() !== 0) {
-    return NextResponse.json({ error: 'not found' }, { status: 404 });
+    return apiError('not_found', 'Setup is no longer available.', 404);
   }
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'invalid JSON' }, { status: 400 });
+    return apiError('invalid_json', 'Request body is not valid JSON.', 400);
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
   const email = parsed.data.email.toLowerCase().trim();
   const passwordHash = await hashPassword(parsed.data.password);

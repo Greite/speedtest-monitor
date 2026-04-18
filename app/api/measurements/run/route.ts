@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-errors';
 import { MeasurementBusyError, runMeasurement } from '@/lib/fastcli/runner';
 import { toMeasurementDto } from '@/lib/types';
 
@@ -12,9 +13,9 @@ export async function POST() {
     return NextResponse.json({ measurement: toMeasurementDto(row) });
   } catch (err) {
     if (err instanceof MeasurementBusyError) {
-      return NextResponse.json({ error: 'Already running' }, { status: 409 });
+      return apiError('already_running', 'A measurement is already in progress.', 409);
     }
     const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('measurement_failed', message, 500);
   }
 }

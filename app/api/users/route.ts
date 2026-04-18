@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
 import { hashPassword } from '@/lib/auth/hash';
 import { createUser, findUserByEmail, listUsers } from '@/lib/auth/users';
@@ -35,15 +36,15 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'invalid JSON' }, { status: 400 });
+    return apiError('invalid_json', 'Request body is not valid JSON.', 400);
   }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
   const email = parsed.data.email.toLowerCase().trim();
   if (findUserByEmail(email)) {
-    return NextResponse.json({ error: 'email already in use' }, { status: 409 });
+    return apiError('email_in_use', 'An account with this email already exists.', 409);
   }
   const user = createUser({
     email,

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-errors';
 import { auth } from '@/lib/auth/handler';
 import { countUsers } from '@/lib/auth/users';
 
@@ -20,7 +21,7 @@ export default auth(async (req) => {
   if (pathname === '/setup' || pathname === '/api/auth/setup') {
     if (noUsers) return NextResponse.next();
     if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'not found' }, { status: 404 });
+      return apiError('not_found', 'Setup is no longer available.', 404);
     }
     return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
@@ -34,12 +35,12 @@ export default auth(async (req) => {
   if (!session?.user) {
     if (noUsers) {
       if (pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'setup required' }, { status: 503 });
+        return apiError('setup_required', 'Initial setup is required.', 503);
       }
       return NextResponse.redirect(new URL('/setup', req.nextUrl));
     }
     if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+      return apiError('unauthorized', 'You must be signed in.', 401);
     }
     const url = req.nextUrl.clone();
     url.pathname = '/login';
@@ -54,7 +55,7 @@ export default auth(async (req) => {
 
   if (role !== 'admin' && (isMutation || isUsersApi || isAlertsTest)) {
     if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+      return apiError('forbidden', 'You do not have permission.', 403);
     }
     return NextResponse.redirect(new URL('/', req.nextUrl));
   }
