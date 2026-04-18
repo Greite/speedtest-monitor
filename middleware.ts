@@ -27,6 +27,7 @@ export default auth(async (req) => {
 
   if (pathname === '/login') {
     if (noUsers) return NextResponse.redirect(new URL('/setup', req.nextUrl));
+    if (session?.user) return NextResponse.redirect(new URL('/', req.nextUrl));
     return NextResponse.next();
   }
 

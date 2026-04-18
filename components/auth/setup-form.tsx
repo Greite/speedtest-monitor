@@ -1,4 +1,5 @@
 'use client';
+import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -35,8 +36,7 @@ export function SetupForm() {
       setPending(false);
       return;
     }
-    // Hard-navigate so the server reads the new session cookie.
-    window.location.href = '/login?callbackUrl=/';
+    await signIn('credentials', { email, password, redirect: true, callbackUrl: '/' });
   }
 
   return (
