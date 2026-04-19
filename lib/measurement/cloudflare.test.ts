@@ -67,21 +67,25 @@ describe('probeLatency', () => {
 });
 
 describe('probeUpload', () => {
-  it('POSTs 4 parallel streams of 10 MB each and computes aggregate Mbps', async () => {
+  it('POSTs parallel streams of 25 MB each and computes aggregate Mbps', async () => {
     fetchMock.mockImplementation(async () => {
       await new Promise((r) => setTimeout(r, 10));
       return new Response(null, { status: 200 });
     });
-    const r = await probeUpload();
+    const r = await probeUpload({ durationMs: 150, parallel: 4 });
     expect(r.mbps).toBeGreaterThan(0);
-    expect(fetchMock).toHaveBeenCalledTimes(4);
-    const [, init] = fetchMock.mock.calls[0];
+    // Time-based: at least one POST per stream, usually more.
+    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(4);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain('/__up');
     expect(init.method).toBe('POST');
-    expect((init.body as Uint8Array).byteLength).toBe(10_000_000);
+    expect((init.body as Uint8Array).byteLength).toBe(25_000_000);
   });
 
   it('throws when a stream responds non-2xx', async () => {
     fetchMock.mockImplementation(async () => new Response(null, { status: 500 }));
-    await expect(probeUpload()).rejects.toThrow(/upload failed.*500/);
+    await expect(probeUpload({ durationMs: 150, parallel: 2 })).rejects.toThrow(
+      /upload failed.*500/,
+    );
   });
 });

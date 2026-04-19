@@ -27,6 +27,8 @@ Configuration:
 |---|---|---|
 | `SPEEDTEST_INTERVAL_MINUTES` | `15` | Default interval used if the DB has no override |
 | `SPEEDTEST_DB_PATH` | `/data/speedtest.db` | SQLite file path (volume-persisted) |
+| `SPEEDTEST_TEST_DURATION_S` | `10` | Duration of each download/upload phase (seconds). Raise for multi-Gbps links so TCP can ramp up and the sample is not dominated by slow-start. |
+| `SPEEDTEST_PARALLEL_STREAMS` | `8` | Parallel HTTP streams per phase. More streams help saturate high-bandwidth links (try `16` on 10 Gbps). |
 | `PORT` | `3000` | HTTP + WebSocket port |
 | `TZ` | — | Display timezone inside the container |
 

@@ -22,16 +22,38 @@ const UP = `${ORIGIN}/__up`;
 
 const META_TIMEOUT_MS = 5_000;
 const LATENCY_PROBES = 10;
-const PHASE_TIMEOUT_MS = 30_000;
 
-// Download / upload recipes modelled on @cloudflare/speedtest's defaults.
-// Parallel streams are essential: a single HTTP stream caps well below the
-// real throughput because of TCP slow-start + bandwidth-delay product.
-// Running 4 concurrent streams saturates typical residential 1 Gbps links.
-const DOWNLOAD_PARALLEL = 4;
-const DOWNLOAD_BYTES_PER_STREAM = 25_000_000; // 25 MB × 4 = 100 MB aggregate
-const UPLOAD_PARALLEL = 4;
-const UPLOAD_BYTES_PER_STREAM = 10_000_000; //  10 MB × 4 =  40 MB aggregate
+// Time-based probing: each phase runs for `durationMs`, every parallel stream
+// loops fixed-size requests until the time budget expires. This scales from
+// 10 Mbps links to multi-Gbps fibre without reconfiguration — the faster the
+// link, the more bytes we transfer in the same window.
+//
+// Defaults chosen for a ~20-second full test on high-speed connections while
+// remaining reasonable on slower links (gigabit saturates in ~10 s).
+// Override via env: SPEEDTEST_TEST_DURATION_S, SPEEDTEST_PARALLEL_STREAMS.
+const DEFAULT_DURATION_S = 10;
+const DEFAULT_PARALLEL = 8;
+const DOWNLOAD_BYTES_PER_REQUEST = 100_000_000; // 100 MB per /__down request
+const UPLOAD_BYTES_PER_REQUEST = 25_000_000; //    25 MB per /__up request
+// Absolute ceiling per fetch call — protects against a stuck request hanging
+// the phase. Generous because 100 MB can take ~10 s on a 100 Mbps link.
+const REQUEST_TIMEOUT_MS = 30_000;
+
+function envInt(name: string, fallback: number, min: number, max: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const n = Number.parseInt(raw, 10);
+  if (Number.isNaN(n) || n < min || n > max) return fallback;
+  return n;
+}
+
+function testDurationMs(): number {
+  return envInt('SPEEDTEST_TEST_DURATION_S', DEFAULT_DURATION_S, 2, 120) * 1000;
+}
+
+function parallelStreams(): number {
+  return envInt('SPEEDTEST_PARALLEL_STREAMS', DEFAULT_PARALLEL, 1, 32);
+}
 
 type Meta = {
   clientIp?: string;
@@ -120,9 +142,17 @@ export async function probeLatency(): Promise<{ min: number; mean: number; jitte
   return { min, mean, jitter };
 }
 
-export async function probeDownload(): Promise<{ mbps: number; loadedLatencyMs: number }> {
-  // Run N parallel downloads and concurrently ping latency probes to measure
-  // loaded latency / bufferbloat.
+export type ProbeOpts = { durationMs?: number; parallel?: number };
+
+export async function probeDownload(
+  opts: ProbeOpts = {},
+): Promise<{ mbps: number; loadedLatencyMs: number }> {
+  const durationMs = opts.durationMs ?? testDurationMs();
+  const parallel = opts.parallel ?? parallelStreams();
+
+  // Parallel latency loop runs during the download to measure loaded latency
+  // / bufferbloat. Starts after 300 ms so the download streams have time to
+  // saturate the pipe first.
   const loadedSamples: number[] = [];
   let stopLatency = false;
   const latencyLoop = (async () => {
@@ -135,58 +165,89 @@ export async function probeDownload(): Promise<{ mbps: number; loadedLatencyMs: 
   })();
 
   const start = performance.now();
-  const results = await Promise.all(
-    Array.from({ length: DOWNLOAD_PARALLEL }, () =>
-      timedFetch(
-        DOWN(DOWNLOAD_BYTES_PER_STREAM),
-        { headers: COMMON_HEADERS },
-        PHASE_TIMEOUT_MS,
-      ),
-    ),
+  const deadline = start + durationMs;
+  let totalBytes = 0;
+  const failures: { status: number; bytes: number }[] = [];
+
+  await Promise.all(
+    Array.from({ length: parallel }, async () => {
+      while (performance.now() < deadline && failures.length === 0) {
+        const r = await timedFetch(
+          DOWN(DOWNLOAD_BYTES_PER_REQUEST),
+          { headers: COMMON_HEADERS },
+          REQUEST_TIMEOUT_MS,
+        ).catch(() => null);
+        if (!r) continue;
+        if (r.status !== 200 || r.bytes === 0) {
+          failures.push({ status: r.status, bytes: r.bytes });
+          return;
+        }
+        totalBytes += r.bytes;
+      }
+    }),
   );
+
   const wallDurationMs = performance.now() - start;
   stopLatency = true;
   await latencyLoop;
 
-  const failed = results.find((r) => r.status !== 200 || r.bytes === 0);
-  if (failed) {
-    throw new Error(`download failed: status=${failed.status} bytes=${failed.bytes}`);
+  if (failures.length > 0) {
+    const f = failures[0];
+    throw new Error(`download failed: status=${f.status} bytes=${f.bytes}`);
   }
-  const totalBytes = results.reduce((acc, r) => acc + r.bytes, 0);
-  // Aggregate bandwidth over wall clock: all streams run concurrently, so
-  // total throughput = sum(bytes) / wall duration, not per-stream average.
+  if (totalBytes === 0) {
+    throw new Error('download produced no bytes');
+  }
+  // All streams run concurrently; aggregate throughput = sum(bytes) / wall.
   const mbps = (totalBytes * 8) / (wallDurationMs / 1000) / 1_000_000;
   const loadedLatencyMs =
     loadedSamples.length > 0 ? loadedSamples.reduce((a, b) => a + b, 0) / loadedSamples.length : 0;
   return { mbps, loadedLatencyMs };
 }
 
-export async function probeUpload(): Promise<{ mbps: number }> {
-  const body = new Uint8Array(UPLOAD_BYTES_PER_STREAM);
+export async function probeUpload(opts: ProbeOpts = {}): Promise<{ mbps: number }> {
+  const durationMs = opts.durationMs ?? testDurationMs();
+  const parallel = opts.parallel ?? parallelStreams();
+
+  const body = new Uint8Array(UPLOAD_BYTES_PER_REQUEST);
   // Fill with non-zero so compression-aware proxies can't collapse the
   // payload (Cloudflare does not compress but be safe).
   for (let i = 0; i < body.length; i += 4) body[i] = (i * 2654435761) & 0xff;
 
   const start = performance.now();
-  const results = await Promise.all(
-    Array.from({ length: UPLOAD_PARALLEL }, () =>
-      timedFetch(
-        UP,
-        {
-          method: 'POST',
-          headers: { ...COMMON_HEADERS, 'Content-Type': 'application/octet-stream' },
-          body,
-        },
-        PHASE_TIMEOUT_MS,
-      ),
-    ),
+  const deadline = start + durationMs;
+  let totalBytes = 0;
+  const failures: number[] = [];
+
+  await Promise.all(
+    Array.from({ length: parallel }, async () => {
+      while (performance.now() < deadline && failures.length === 0) {
+        const r = await timedFetch(
+          UP,
+          {
+            method: 'POST',
+            headers: { ...COMMON_HEADERS, 'Content-Type': 'application/octet-stream' },
+            body,
+          },
+          REQUEST_TIMEOUT_MS,
+        ).catch(() => null);
+        if (!r) continue;
+        if (r.status !== 200 && r.status !== 204) {
+          failures.push(r.status);
+          return;
+        }
+        totalBytes += UPLOAD_BYTES_PER_REQUEST;
+      }
+    }),
   );
+
   const wallDurationMs = performance.now() - start;
-  const failed = results.find((r) => r.status !== 200 && r.status !== 204);
-  if (failed) {
-    throw new Error(`upload failed: status=${failed.status}`);
+  if (failures.length > 0) {
+    throw new Error(`upload failed: status=${failures[0]}`);
   }
-  const totalBytes = UPLOAD_BYTES_PER_STREAM * UPLOAD_PARALLEL;
+  if (totalBytes === 0) {
+    throw new Error('upload produced no bytes');
+  }
   const mbps = (totalBytes * 8) / (wallDurationMs / 1000) / 1_000_000;
   return { mbps };
 }
