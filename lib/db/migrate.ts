@@ -6,10 +6,7 @@ import { getDb } from './client';
 // so Next's Node build workers don't try to resolve it during page data
 // collection. Deferred to runMigrations() so the require only runs at boot.
 const cjsRequire = createRequire(import.meta.url);
-const lazyRequire = new Function('r', 's', 'return r(s)') as <T>(
-  r: NodeJS.Require,
-  s: string,
-) => T;
+const lazyRequire = new Function('r', 's', 'return r(s)') as <T>(r: NodeJS.Require, s: string) => T;
 
 export function runMigrations() {
   const db = getDb();

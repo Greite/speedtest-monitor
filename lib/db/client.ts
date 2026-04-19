@@ -1,7 +1,7 @@
+import type { Database } from 'bun:sqlite';
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
-import type { Database } from 'bun:sqlite';
 import type { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from './schema';
 
@@ -23,10 +23,7 @@ function getDbPath(): string {
 // happens; `createRequire` provides the CJS require in this ESM module
 // (package.json sets "type": "module").
 const cjsRequire = createRequire(import.meta.url);
-const lazyRequire = new Function('r', 's', 'return r(s)') as <T>(
-  r: NodeJS.Require,
-  s: string,
-) => T;
+const lazyRequire = new Function('r', 's', 'return r(s)') as <T>(r: NodeJS.Require, s: string) => T;
 
 function openDatabase() {
   const { Database: BunDatabase } = lazyRequire<{ Database: typeof Database }>(
