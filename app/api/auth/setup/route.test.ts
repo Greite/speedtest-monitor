@@ -28,7 +28,7 @@ beforeEach(() => {
       last_login_at INTEGER
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
   process.env.AUTH_SECRET = 'test';
 });
 

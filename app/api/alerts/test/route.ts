@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const payload: AlertPayload = {
     event: 'fired',
     kind: 'download_below',
-    title: 'Fastcom: Test alert',
+    title: 'Speedtest: Test alert',
     body: 'This is a test alert dispatched from /api/alerts/test - your configuration is working.',
     observed: null,
     threshold: null,

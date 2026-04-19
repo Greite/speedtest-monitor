@@ -496,7 +496,7 @@ const fullResult: EngineResult = {
 let sqlite: Database.Database;
 beforeEach(() => {
   engineMock.mockReset();
-  delete (globalThis as { __fastcomRunning?: boolean }).__fastcomRunning;
+  delete (globalThis as { __speedtestRunning?: boolean }).__speedtestRunning;
   sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });
   sqlite.exec(`
@@ -512,7 +512,7 @@ beforeEach(() => {
       jitter_ms REAL, packet_loss_pct REAL, user_isp TEXT
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
 });
 
 describe('runMeasurement', () => {
@@ -548,13 +548,13 @@ describe('runMeasurement', () => {
   });
 
   it('throws MeasurementBusyError when another run is in flight', async () => {
-    globalThis.__fastcomRunning = true;
+    globalThis.__speedtestRunning = true;
     await expect(runMeasurement()).rejects.toBeInstanceOf(MeasurementBusyError);
     expect(isMeasurementRunning()).toBe(true);
   });
 
   it('runMeasurementSafe returns null instead of throwing busy', async () => {
-    globalThis.__fastcomRunning = true;
+    globalThis.__speedtestRunning = true;
     expect(await runMeasurementSafe()).toBeNull();
   });
 });
@@ -577,7 +577,7 @@ import { runCloudflareSpeedTest } from './cloudflare';
 
 declare global {
   // eslint-disable-next-line no-var
-  var __fastcomRunning: boolean | undefined;
+  var __speedtestRunning: boolean | undefined;
 }
 
 export class MeasurementBusyError extends Error {
@@ -599,8 +599,8 @@ function insertMeasurement(
 }
 
 export async function runMeasurement(): Promise<Measurement> {
-  if (globalThis.__fastcomRunning) throw new MeasurementBusyError();
-  globalThis.__fastcomRunning = true;
+  if (globalThis.__speedtestRunning) throw new MeasurementBusyError();
+  globalThis.__speedtestRunning = true;
   const startedAt = Date.now();
   broadcastRunning(startedAt);
 
@@ -651,7 +651,7 @@ export async function runMeasurement(): Promise<Measurement> {
     void handleAlertsForMeasurement(row);
     return row;
   } finally {
-    globalThis.__fastcomRunning = false;
+    globalThis.__speedtestRunning = false;
   }
 }
 
@@ -665,7 +665,7 @@ export async function runMeasurementSafe(): Promise<Measurement | null> {
 }
 
 export function isMeasurementRunning(): boolean {
-  return Boolean(globalThis.__fastcomRunning);
+  return Boolean(globalThis.__speedtestRunning);
 }
 ```
 
@@ -779,8 +779,8 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
-    FASTCOM_DB_PATH=/data/fastcom.db \
-    FASTCOM_INTERVAL_MINUTES=15 \
+    SPEEDTEST_DB_PATH=/data/speedtest.db \
+    SPEEDTEST_INTERVAL_MINUTES=15 \
     PUPPETEER_SKIP_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ```
@@ -791,8 +791,8 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
-    FASTCOM_DB_PATH=/data/fastcom.db \
-    FASTCOM_INTERVAL_MINUTES=15
+    SPEEDTEST_DB_PATH=/data/speedtest.db \
+    SPEEDTEST_INTERVAL_MINUTES=15
 ```
 
 Replace the full `RUN apt-get update \` block in the `runner` stage with a minimal one:
@@ -818,28 +818,28 @@ This deletes: the `chromium` + `fonts-liberation` apt packages, the Vulkan valid
 
 - [ ] **Step 4: Build**
 
-Run: `docker build -t fastcom-cf-test . 2>&1 | tail -5`
+Run: `docker build -t speedtest-cf-test . 2>&1 | tail -5`
 Expected: build succeeds.
 
-Run: `docker images fastcom-cf-test --format "{{.Size}}"`
+Run: `docker images speedtest-cf-test --format "{{.Size}}"`
 Expected: roughly `350MB`–`450MB` (vs. ~1.13 GB before).
 
 - [ ] **Step 5: Smoke-test container boot**
 
 ```bash
-docker rm -f fastcom-cf 2>/dev/null || true
+docker rm -f speedtest-cf 2>/dev/null || true
 SECRET=$(openssl rand -base64 32)
-docker run -d --name fastcom-cf -p 13010:3000 \
+docker run -d --name speedtest-cf -p 13010:3000 \
   -e AUTH_SECRET="$SECRET" \
-  -e FASTCOM_ADMIN_EMAIL=admin@example.com \
-  -e FASTCOM_ADMIN_PASSWORD=hunter2hunter2 \
-  fastcom-cf-test
+  -e SPEEDTEST_ADMIN_EMAIL=admin@example.com \
+  -e SPEEDTEST_ADMIN_PASSWORD=hunter2hunter2 \
+  speedtest-cf-test
 sleep 8
-docker logs fastcom-cf 2>&1 | tail -10
-# should see: "[scheduler] scheduled ..." and "fastcom-monitor ready on http://0.0.0.0:3000"
+docker logs speedtest-cf 2>&1 | tail -10
+# should see: "[scheduler] scheduled ..." and "speedtest-monitor ready on http://0.0.0.0:3000"
 curl -sS -o /dev/null -w "settings HTTP %{http_code}\n" http://localhost:13010/api/settings
-docker rm -f fastcom-cf
-docker rmi fastcom-cf-test
+docker rm -f speedtest-cf
+docker rmi speedtest-cf-test
 ```
 
 Expected: `settings HTTP 401` (unauth is normal, auth enabled on that route).
@@ -954,14 +954,14 @@ git commit -m "style: biome format post-Cloudflare swap"
 - [ ] **Step 3: E2E real measurement**
 
 ```bash
-docker build -t fastcom-cf-final . 2>&1 | tail -3
-docker rm -f fastcom-cf-final 2>/dev/null || true
+docker build -t speedtest-cf-final . 2>&1 | tail -3
+docker rm -f speedtest-cf-final 2>/dev/null || true
 SECRET=$(openssl rand -base64 32)
-docker run -d --name fastcom-cf-final -p 13011:3000 \
+docker run -d --name speedtest-cf-final -p 13011:3000 \
   -e AUTH_SECRET="$SECRET" \
-  -e FASTCOM_ADMIN_EMAIL=admin@example.com \
-  -e FASTCOM_ADMIN_PASSWORD=hunter2hunter2 \
-  fastcom-cf-final
+  -e SPEEDTEST_ADMIN_EMAIL=admin@example.com \
+  -e SPEEDTEST_ADMIN_PASSWORD=hunter2hunter2 \
+  speedtest-cf-final
 sleep 8
 
 # sign in via next-auth credentials to get a cookie
@@ -978,8 +978,8 @@ curl -sS -L -c /tmp/fc-cookies.txt -b /tmp/fc-cookies.txt \
 # trigger a real measurement (hits Cloudflare)
 time curl -sS -b /tmp/fc-cookies.txt -X POST http://localhost:13011/api/measurements/run | head -c 400
 echo
-docker rm -f fastcom-cf-final
-docker rmi fastcom-cf-final
+docker rm -f speedtest-cf-final
+docker rmi speedtest-cf-final
 rm -f /tmp/fc-cookies.txt
 ```
 
@@ -987,7 +987,7 @@ Expected:
 - `login: HTTP 302`
 - The `curl` returns JSON with a `measurement` object containing non-null `downloadMbps`, `uploadMbps`, `latencyUnloadedMs`, and `serverLocations: ["<ColoCode>"]`
 - `time` total around 20–40 seconds (was ~90s with fast-cli)
-- Image size inspected via `docker images | grep fastcom-cf-final` shows ~400 MB or less
+- Image size inspected via `docker images | grep speedtest-cf-final` shows ~400 MB or less
 
 - [ ] **Step 4: Commit any fixes**
 

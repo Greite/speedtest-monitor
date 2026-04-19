@@ -5,6 +5,6 @@ export default {
   out: './drizzle',
   dialect: 'sqlite',
   dbCredentials: {
-    url: process.env.FASTCOM_DB_PATH ?? './fastcom.db',
+    url: process.env.SPEEDTEST_DB_PATH ?? './speedtest.db',
   },
 } satisfies Config;

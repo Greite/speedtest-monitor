@@ -17,12 +17,12 @@ export function formatMessage({ transition, timestamp }: Input): {
   if (kind === 'failure_streak') {
     if (event === 'fired') {
       return {
-        title: `Fastcom: ${observed} consecutive measurement failures`,
+        title: `Speedtest: ${observed} consecutive measurement failures`,
         body: `${observed} consecutive failures as of ${when} (threshold: ${threshold}).`,
       };
     }
     return {
-      title: 'Fastcom: Connection recovered',
+      title: 'Speedtest: Connection recovered',
       body: `Measurements are succeeding again as of ${when}.`,
     };
   }
@@ -41,12 +41,12 @@ export function formatMessage({ transition, timestamp }: Input): {
 
   if (event === 'fired') {
     return {
-      title: `Fastcom: ${metric} ${direction} ${threshold} ${unit}`,
+      title: `Speedtest: ${metric} ${direction} ${threshold} ${unit}`,
       body: `Observed ${observed} ${unit} at ${when} — threshold ${threshold} ${unit}.`,
     };
   }
   return {
-    title: `Fastcom: ${metric} recovered`,
+    title: `Speedtest: ${metric} recovered`,
     body: `Back to ${observed} ${unit} at ${when} — threshold ${threshold} ${unit}.`,
   };
 }

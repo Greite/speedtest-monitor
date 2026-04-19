@@ -18,7 +18,7 @@ bun run db:generate        # generate drizzle migrations from the schema
 bun run dev                # tsx watch server.ts -> http://localhost:3000
 ```
 
-A fresh SQLite database is created at `./fastcom.db` on the first run. Delete it if you want to start from scratch.
+A fresh SQLite database is created at `./speedtest.db` on the first run. Delete it if you want to start from scratch.
 
 ## Required checks
 
@@ -44,7 +44,7 @@ Unit tests live next to the code they cover (`**/*.test.ts`). Pure helpers go un
 
 - `server.ts` - custom Node server. Hosts Next.js and a `ws` WebSocket on the same port. Routes `/ws` upgrades to the app broadcaster and delegates every other upgrade to Next's HMR.
 - `lib/scheduler/` - `node-cron` scheduler. Reprogrammable at runtime via `rescheduleFromSettings()` when the interval changes.
-- `lib/fastcli/runner.ts` - spawns `fast-cli` (`fast --upload --json`) inside a `globalThis.__fastcomRunning` mutex.
+- `lib/fastcli/runner.ts` - spawns `fast-cli` (`fast --upload --json`) inside a `globalThis.__speedtestRunning` mutex.
 - `lib/db/` - Drizzle schema + singleton client with WAL enabled.
 - `lib/ws/` - WebSocket server + typed broadcasters consumed by the React hook in `components/use-live-measurements.ts`.
 - `lib/types.ts` - single `toMeasurementDto()` serialiser used by the page SSR, the API routes, and the WS broadcaster so the client always receives the same shape.
@@ -74,7 +74,7 @@ Open a GitHub issue with:
 
 - What you expected and what happened
 - `bun --version`, `node --version`, OS/arch
-- Relevant logs (`bun run dev` output, browser console, `docker compose logs fastcom`)
+- Relevant logs (`bun run dev` output, browser console, `docker compose logs speedtest`)
 - A minimal repro if possible
 
 ## License

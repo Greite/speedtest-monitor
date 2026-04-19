@@ -23,7 +23,7 @@ beforeEach(() => {
     );
     CREATE INDEX alerts_kind_timestamp_idx ON alerts(kind, timestamp);
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
 });
 
 describe('alerts/state', () => {

@@ -43,7 +43,7 @@ export function LoginForm({
 
   return (
     <form onSubmit={onSubmit} className="mx-auto mt-24 flex max-w-sm flex-col gap-4">
-      <h1 className="text-center text-2xl font-semibold">Sign in to Fastcom</h1>
+      <h1 className="text-center text-2xl font-semibold">Sign in to Speedtest</h1>
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
         <Input

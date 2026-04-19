@@ -3,14 +3,14 @@ import { loadAuthConfig } from './config';
 
 const KEYS = [
   'AUTH_SECRET',
-  'FASTCOM_OIDC_ISSUER',
-  'FASTCOM_OIDC_CLIENT_ID',
-  'FASTCOM_OIDC_CLIENT_SECRET',
-  'FASTCOM_OIDC_DISPLAY_NAME',
-  'FASTCOM_OIDC_ADMIN_EMAIL',
-  'FASTCOM_OIDC_ALLOW_NEW_USERS',
-  'FASTCOM_ADMIN_EMAIL',
-  'FASTCOM_ADMIN_PASSWORD',
+  'SPEEDTEST_OIDC_ISSUER',
+  'SPEEDTEST_OIDC_CLIENT_ID',
+  'SPEEDTEST_OIDC_CLIENT_SECRET',
+  'SPEEDTEST_OIDC_DISPLAY_NAME',
+  'SPEEDTEST_OIDC_ADMIN_EMAIL',
+  'SPEEDTEST_OIDC_ALLOW_NEW_USERS',
+  'SPEEDTEST_ADMIN_EMAIL',
+  'SPEEDTEST_ADMIN_PASSWORD',
 ];
 
 beforeEach(() => {
@@ -31,12 +31,12 @@ describe('auth/config', () => {
 
   it('parses full OIDC', () => {
     process.env.AUTH_SECRET = 's';
-    process.env.FASTCOM_OIDC_ISSUER = 'https://idp';
-    process.env.FASTCOM_OIDC_CLIENT_ID = 'cid';
-    process.env.FASTCOM_OIDC_CLIENT_SECRET = 'csec';
-    process.env.FASTCOM_OIDC_DISPLAY_NAME = 'Auth';
-    process.env.FASTCOM_OIDC_ADMIN_EMAIL = 'me@x';
-    process.env.FASTCOM_OIDC_ALLOW_NEW_USERS = 'false';
+    process.env.SPEEDTEST_OIDC_ISSUER = 'https://idp';
+    process.env.SPEEDTEST_OIDC_CLIENT_ID = 'cid';
+    process.env.SPEEDTEST_OIDC_CLIENT_SECRET = 'csec';
+    process.env.SPEEDTEST_OIDC_DISPLAY_NAME = 'Auth';
+    process.env.SPEEDTEST_OIDC_ADMIN_EMAIL = 'me@x';
+    process.env.SPEEDTEST_OIDC_ALLOW_NEW_USERS = 'false';
     expect(loadAuthConfig().oidc).toEqual({
       issuer: 'https://idp',
       clientId: 'cid',
@@ -49,15 +49,15 @@ describe('auth/config', () => {
 
   it('disables OIDC silently when only some vars are set', () => {
     process.env.AUTH_SECRET = 's';
-    process.env.FASTCOM_OIDC_ISSUER = 'https://idp';
+    process.env.SPEEDTEST_OIDC_ISSUER = 'https://idp';
     // client id/secret missing
     expect(loadAuthConfig().oidc).toBeNull();
   });
 
   it('parses seed admin', () => {
     process.env.AUTH_SECRET = 's';
-    process.env.FASTCOM_ADMIN_EMAIL = 'A@B.c';
-    process.env.FASTCOM_ADMIN_PASSWORD = 'hunter2hunter2';
+    process.env.SPEEDTEST_ADMIN_EMAIL = 'A@B.c';
+    process.env.SPEEDTEST_ADMIN_PASSWORD = 'hunter2hunter2';
     expect(loadAuthConfig().seed).toEqual({ email: 'a@b.c', password: 'hunter2hunter2' });
   });
 

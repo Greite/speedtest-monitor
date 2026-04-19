@@ -103,7 +103,7 @@ pass unchanged because the public API is unchanged.
 Optional addition: one test that verifies a hard-coded hash known to
 have been produced by `@node-rs/argon2@2`, to guard against accidental
 PHC parser drift. The hash is generated once locally by running the old
-impl against `"fastcom-phase3-check"`.
+impl against `"speedtest-phase3-check"`.
 
 ## Rollback
 

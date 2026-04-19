@@ -21,11 +21,11 @@ export type WsEvent =
 
 declare global {
   // eslint-disable-next-line no-var
-  var __fastcomWss: WebSocketServer | undefined;
+  var __speedtestWss: WebSocketServer | undefined;
 }
 
 export function attachWsBroadcaster(wss: WebSocketServer) {
-  globalThis.__fastcomWss = wss;
+  globalThis.__speedtestWss = wss;
 
   wss.on('connection', (ws, req) => {
     console.log(`[ws] connected from ${req.socket.remoteAddress} (${wss.clients.size} clients)`);
@@ -44,7 +44,7 @@ export function attachWsBroadcaster(wss: WebSocketServer) {
 }
 
 export function broadcast(event: WsEvent) {
-  const wss = globalThis.__fastcomWss;
+  const wss = globalThis.__speedtestWss;
   if (!wss) return;
   const data = JSON.stringify(event);
   for (const client of wss.clients as Set<WebSocket>) {

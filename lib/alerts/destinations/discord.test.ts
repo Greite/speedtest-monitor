@@ -5,7 +5,7 @@ import { createDiscordDestination } from './discord';
 const payload: AlertPayload = {
   event: 'fired',
   kind: 'download_below',
-  title: 'Fastcom: X',
+  title: 'Speedtest: X',
   body: 'body',
   observed: 1,
   threshold: 2,
@@ -28,7 +28,7 @@ describe('destinations/discord', () => {
     await d.send(payload);
     const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
     expect(body.embeds[0].color).toBe(15548997);
-    expect(body.embeds[0].title).toBe('Fastcom: X');
+    expect(body.embeds[0].title).toBe('Speedtest: X');
     expect(body.embeds[0].description).toBe('body');
     expect(body.embeds[0].timestamp).toBe(new Date(1_000_000).toISOString());
   });

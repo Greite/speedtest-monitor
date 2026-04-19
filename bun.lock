@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "fastcom-docker",
+      "name": "speedtest-monitor",
       "dependencies": {
         "@tanstack/react-table": "^8.21.3",
         "class-variance-authority": "^0.7.1",

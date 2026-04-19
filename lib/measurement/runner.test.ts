@@ -52,7 +52,7 @@ const fullResult: EngineResult = {
 let sqlite: Database;
 beforeEach(() => {
   engineMock.mockReset();
-  delete (globalThis as { __fastcomRunning?: boolean }).__fastcomRunning;
+  delete (globalThis as { __speedtestRunning?: boolean }).__speedtestRunning;
   sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });
   sqlite.exec(`
@@ -68,7 +68,7 @@ beforeEach(() => {
       jitter_ms REAL, packet_loss_pct REAL, user_isp TEXT
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
 });
 
 describe('runMeasurement', () => {
@@ -104,13 +104,13 @@ describe('runMeasurement', () => {
   });
 
   it('throws MeasurementBusyError when another run is in flight', async () => {
-    globalThis.__fastcomRunning = true;
+    globalThis.__speedtestRunning = true;
     await expect(runMeasurement()).rejects.toBeInstanceOf(MeasurementBusyError);
     expect(isMeasurementRunning()).toBe(true);
   });
 
   it('runMeasurementSafe returns null instead of throwing busy', async () => {
-    globalThis.__fastcomRunning = true;
+    globalThis.__speedtestRunning = true;
     expect(await runMeasurementSafe()).toBeNull();
   });
 });

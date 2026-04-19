@@ -110,8 +110,8 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
-    FASTCOM_DB_PATH=/data/fastcom.db \
-    FASTCOM_INTERVAL_MINUTES=15 \
+    SPEEDTEST_DB_PATH=/data/speedtest.db \
+    SPEEDTEST_INTERVAL_MINUTES=15 \
     AUTH_TRUST_HOST=true
 
 RUN apt-get update \

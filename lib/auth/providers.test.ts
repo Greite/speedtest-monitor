@@ -22,13 +22,13 @@ beforeEach(() => {
       last_login_at INTEGER
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
   process.env.AUTH_SECRET = 'test';
-  delete process.env.FASTCOM_OIDC_ISSUER;
-  delete process.env.FASTCOM_OIDC_CLIENT_ID;
-  delete process.env.FASTCOM_OIDC_CLIENT_SECRET;
-  delete process.env.FASTCOM_OIDC_ADMIN_EMAIL;
-  delete process.env.FASTCOM_OIDC_ALLOW_NEW_USERS;
+  delete process.env.SPEEDTEST_OIDC_ISSUER;
+  delete process.env.SPEEDTEST_OIDC_CLIENT_ID;
+  delete process.env.SPEEDTEST_OIDC_CLIENT_SECRET;
+  delete process.env.SPEEDTEST_OIDC_ADMIN_EMAIL;
+  delete process.env.SPEEDTEST_OIDC_ALLOW_NEW_USERS;
 });
 afterEach(() => {
   delete process.env.AUTH_SECRET;
@@ -41,9 +41,9 @@ describe('auth/providers buildProviders', () => {
   });
 
   it('contains credentials + oidc when OIDC env is set', () => {
-    process.env.FASTCOM_OIDC_ISSUER = 'https://idp';
-    process.env.FASTCOM_OIDC_CLIENT_ID = 'cid';
-    process.env.FASTCOM_OIDC_CLIENT_SECRET = 'csec';
+    process.env.SPEEDTEST_OIDC_ISSUER = 'https://idp';
+    process.env.SPEEDTEST_OIDC_CLIENT_ID = 'cid';
+    process.env.SPEEDTEST_OIDC_CLIENT_SECRET = 'csec';
     expect(buildProviders()).toHaveLength(2);
   });
 });

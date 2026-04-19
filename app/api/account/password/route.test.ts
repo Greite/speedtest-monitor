@@ -31,7 +31,7 @@ beforeEach(async () => {
       last_login_at INTEGER
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
   const u = createUser({
     email: 'me@x',
     passwordHash: await hashPassword('oldpassword1'),

@@ -22,9 +22,9 @@ beforeEach(() => {
       last_login_at INTEGER
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
-  delete process.env.FASTCOM_ADMIN_EMAIL;
-  delete process.env.FASTCOM_ADMIN_PASSWORD;
+  globalThis.__speedtestDb = { sqlite, db };
+  delete process.env.SPEEDTEST_ADMIN_EMAIL;
+  delete process.env.SPEEDTEST_ADMIN_PASSWORD;
   process.env.AUTH_SECRET = 'test';
 });
 
@@ -35,8 +35,8 @@ describe('ensureSeededAdmin', () => {
   });
 
   it('creates the admin with hashed password', async () => {
-    process.env.FASTCOM_ADMIN_EMAIL = 'A@B.c';
-    process.env.FASTCOM_ADMIN_PASSWORD = 'hunter2hunter2';
+    process.env.SPEEDTEST_ADMIN_EMAIL = 'A@B.c';
+    process.env.SPEEDTEST_ADMIN_PASSWORD = 'hunter2hunter2';
     await ensureSeededAdmin();
     const u = findUserByEmail('a@b.c');
     expect(u?.role).toBe('admin');
@@ -44,8 +44,8 @@ describe('ensureSeededAdmin', () => {
   });
 
   it('upserts role to admin and keeps a valid hash when already exists', async () => {
-    process.env.FASTCOM_ADMIN_EMAIL = 'a@x';
-    process.env.FASTCOM_ADMIN_PASSWORD = 'hunter2hunter2';
+    process.env.SPEEDTEST_ADMIN_EMAIL = 'a@x';
+    process.env.SPEEDTEST_ADMIN_PASSWORD = 'hunter2hunter2';
     await ensureSeededAdmin();
     const before = findUserByEmail('a@x');
     // Demote by hand, then re-run: should promote back to admin.

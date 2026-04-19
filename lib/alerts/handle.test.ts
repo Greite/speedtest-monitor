@@ -45,7 +45,7 @@ beforeEach(() => {
       key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
 });
 
 describe('handleAlertsForMeasurement', () => {

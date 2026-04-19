@@ -41,16 +41,16 @@ In-scope (v1):
 - Timeout reduced from 180 s to 60 s.
 
 Out of scope (v2+):
-- Pluggable multi-engine support (`FASTCOM_ENGINE=cloudflare|…`).
+- Pluggable multi-engine support (`SPEEDTEST_ENGINE=cloudflare|…`).
 - UI surfacing of the new fields (jitter / packet loss / ISP / colo);
   they are stored now and can be rendered in a follow-up without another
   migration.
-- Renaming "Fastcom Monitor" brand / repo / env vars.
+- Renaming "Speedtest Monitor" brand / repo / env vars.
 - Rewriting history (no attempt to re-measure past rows).
 
 ## Conditions / correctness
 
-- Concurrency is gated by the existing `globalThis.__fastcomRunning`
+- Concurrency is gated by the existing `globalThis.__speedtestRunning`
   flag. Second callers get `MeasurementBusyError`.
 - Status mapping after a run:
   - `success` iff both `downloadMbps` and `uploadMbps` are non-null

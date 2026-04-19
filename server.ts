@@ -38,7 +38,7 @@ async function main() {
   await bootScheduler();
 
   httpServer.listen(port, hostname, () => {
-    console.log(`> fastcom-monitor ready on http://${hostname}:${port}`);
+    console.log(`> speedtest-monitor ready on http://${hostname}:${port}`);
   });
 
   const shutdown = (signal: string) => {

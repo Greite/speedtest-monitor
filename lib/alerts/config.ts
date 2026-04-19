@@ -29,20 +29,20 @@ function parseHeadersJson(raw: string | undefined): Record<string, string> {
       return Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, String(v)]));
     }
   } catch {
-    console.warn('[alerts] FASTCOM_WEBHOOK_HEADERS is not valid JSON; ignoring');
+    console.warn('[alerts] SPEEDTEST_WEBHOOK_HEADERS is not valid JSON; ignoring');
   }
   return {};
 }
 
 function parseSmtp(): SmtpConfig | null {
-  const host = process.env.FASTCOM_SMTP_HOST;
-  const from = process.env.FASTCOM_SMTP_FROM;
-  const toRaw = process.env.FASTCOM_SMTP_TO;
+  const host = process.env.SPEEDTEST_SMTP_HOST;
+  const from = process.env.SPEEDTEST_SMTP_FROM;
+  const toRaw = process.env.SPEEDTEST_SMTP_TO;
   if (!host || !from || !toRaw) return null;
-  const portRaw = process.env.FASTCOM_SMTP_PORT ?? '587';
+  const portRaw = process.env.SPEEDTEST_SMTP_PORT ?? '587';
   const port = Number.parseInt(portRaw, 10);
   if (Number.isNaN(port)) return null;
-  const secureRaw = process.env.FASTCOM_SMTP_SECURE ?? 'auto';
+  const secureRaw = process.env.SPEEDTEST_SMTP_SECURE ?? 'auto';
   const secure = secureRaw === 'true' ? true : secureRaw === 'false' ? false : port === 465;
   const to = toRaw
     .split(',')
@@ -52,26 +52,26 @@ function parseSmtp(): SmtpConfig | null {
     host,
     port,
     secure,
-    user: process.env.FASTCOM_SMTP_USER || undefined,
-    pass: process.env.FASTCOM_SMTP_PASS || undefined,
+    user: process.env.SPEEDTEST_SMTP_USER || undefined,
+    pass: process.env.SPEEDTEST_SMTP_PASS || undefined,
     from,
     to,
   };
 }
 
 export function loadAlertConfig(): AlertConfig {
-  const webhookUrl = process.env.FASTCOM_WEBHOOK_URL;
-  const ntfyUrl = process.env.FASTCOM_NTFY_URL;
-  const discordUrl = process.env.FASTCOM_DISCORD_WEBHOOK;
-  const slackUrl = process.env.FASTCOM_SLACK_WEBHOOK;
+  const webhookUrl = process.env.SPEEDTEST_WEBHOOK_URL;
+  const ntfyUrl = process.env.SPEEDTEST_NTFY_URL;
+  const discordUrl = process.env.SPEEDTEST_DISCORD_WEBHOOK;
+  const slackUrl = process.env.SPEEDTEST_SLACK_WEBHOOK;
   return {
     webhook: webhookUrl
-      ? { url: webhookUrl, headers: parseHeadersJson(process.env.FASTCOM_WEBHOOK_HEADERS) }
+      ? { url: webhookUrl, headers: parseHeadersJson(process.env.SPEEDTEST_WEBHOOK_HEADERS) }
       : null,
-    ntfy: ntfyUrl ? { url: ntfyUrl, token: process.env.FASTCOM_NTFY_TOKEN || undefined } : null,
+    ntfy: ntfyUrl ? { url: ntfyUrl, token: process.env.SPEEDTEST_NTFY_TOKEN || undefined } : null,
     discord: discordUrl ? { url: discordUrl } : null,
     slack: slackUrl ? { url: slackUrl } : null,
     smtp: parseSmtp(),
-    publicUrl: process.env.FASTCOM_PUBLIC_URL || null,
+    publicUrl: process.env.SPEEDTEST_PUBLIC_URL || null,
   };
 }

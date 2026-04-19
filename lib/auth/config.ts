@@ -23,27 +23,27 @@ export function loadAuthConfig(): AuthConfig {
     );
   }
 
-  const issuer = process.env.FASTCOM_OIDC_ISSUER?.trim();
-  const clientId = process.env.FASTCOM_OIDC_CLIENT_ID?.trim();
-  const clientSecret = process.env.FASTCOM_OIDC_CLIENT_SECRET?.trim();
+  const issuer = process.env.SPEEDTEST_OIDC_ISSUER?.trim();
+  const clientId = process.env.SPEEDTEST_OIDC_CLIENT_ID?.trim();
+  const clientSecret = process.env.SPEEDTEST_OIDC_CLIENT_SECRET?.trim();
   let oidc: OidcConfig | null = null;
   if (issuer && clientId && clientSecret) {
     oidc = {
       issuer,
       clientId,
       clientSecret,
-      displayName: process.env.FASTCOM_OIDC_DISPLAY_NAME?.trim() || 'SSO',
-      adminEmail: process.env.FASTCOM_OIDC_ADMIN_EMAIL?.toLowerCase().trim() || null,
-      allowNewUsers: process.env.FASTCOM_OIDC_ALLOW_NEW_USERS !== 'false',
+      displayName: process.env.SPEEDTEST_OIDC_DISPLAY_NAME?.trim() || 'SSO',
+      adminEmail: process.env.SPEEDTEST_OIDC_ADMIN_EMAIL?.toLowerCase().trim() || null,
+      allowNewUsers: process.env.SPEEDTEST_OIDC_ALLOW_NEW_USERS !== 'false',
     };
   } else if (issuer || clientId || clientSecret) {
     console.warn(
-      '[auth] OIDC partially configured - set all of FASTCOM_OIDC_ISSUER/CLIENT_ID/CLIENT_SECRET or none. OIDC disabled.',
+      '[auth] OIDC partially configured - set all of SPEEDTEST_OIDC_ISSUER/CLIENT_ID/CLIENT_SECRET or none. OIDC disabled.',
     );
   }
 
-  const seedEmail = process.env.FASTCOM_ADMIN_EMAIL?.toLowerCase().trim();
-  const seedPass = process.env.FASTCOM_ADMIN_PASSWORD;
+  const seedEmail = process.env.SPEEDTEST_ADMIN_EMAIL?.toLowerCase().trim();
+  const seedPass = process.env.SPEEDTEST_ADMIN_PASSWORD;
   const seed: SeedAdmin | null =
     seedEmail && seedPass ? { email: seedEmail, password: seedPass } : null;
 

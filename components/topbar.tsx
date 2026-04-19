@@ -157,8 +157,8 @@ export function Topbar() {
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Activity className="size-5 text-chart-1" aria-hidden />
             <span className="text-lg font-bold tracking-tight">
-              <span className="hidden md:inline">Fastcom Monitor</span>
-              <span className="md:hidden">Fastcom</span>
+              <span className="hidden md:inline">Speedtest Monitor</span>
+              <span className="md:hidden">Speedtest</span>
             </span>
           </Link>
 
@@ -255,7 +255,7 @@ export function Topbar() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="size-5 text-chart-1" aria-hidden />
-                <span className="text-lg font-bold tracking-tight">Fastcom Monitor</span>
+                <span className="text-lg font-bold tracking-tight">Speedtest Monitor</span>
               </div>
               <Button
                 variant="ghost"

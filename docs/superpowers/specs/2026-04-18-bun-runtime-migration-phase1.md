@@ -70,7 +70,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from './schema';
 
 declare global {
-  var __fastcomDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
+  var __speedtestDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
 }
 
 function openDatabase() {
@@ -123,7 +123,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 
 const sqlite = new Database(':memory:');
 const db = drizzle(sqlite, { schema });
-globalThis.__fastcomDb = { sqlite, db };
+globalThis.__speedtestDb = { sqlite, db };
 ```
 
 becomes:
@@ -134,7 +134,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 
 const sqlite = new Database(':memory:');
 const db = drizzle(sqlite, { schema });
-globalThis.__fastcomDb = { sqlite, db };
+globalThis.__speedtestDb = { sqlite, db };
 ```
 
 No other semantic change - the fixtures already work with in-memory DBs
@@ -248,8 +248,8 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
-    FASTCOM_DB_PATH=/data/fastcom.db \
-    FASTCOM_INTERVAL_MINUTES=15
+    SPEEDTEST_DB_PATH=/data/speedtest.db \
+    SPEEDTEST_INTERVAL_MINUTES=15
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -298,7 +298,7 @@ on Bun. Phase 2 will rewrite this file against `Bun.serve`.
 ## Backwards compat
 
 - SQLite file format is byte-identical between `better-sqlite3` and
-  `bun:sqlite`. Existing `fastcom.db` files mount and load unchanged.
+  `bun:sqlite`. Existing `speedtest.db` files mount and load unchanged.
 - WAL mode stays enabled; Bun respects it.
 - API, WebSocket, and env-var surface are unchanged.
 - No Drizzle migration added.

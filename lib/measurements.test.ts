@@ -53,7 +53,7 @@ describe('purgeByRetention extended to alerts', () => {
         measurement_id INTEGER, threshold REAL, observed REAL, delivery_status TEXT
       );
     `);
-    globalThis.__fastcomDb = { sqlite, db };
+    globalThis.__speedtestDb = { sqlite, db };
   });
 
   it('purges old alerts too', () => {

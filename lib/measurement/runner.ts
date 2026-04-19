@@ -7,7 +7,7 @@ import { runCloudflareSpeedTest } from './cloudflare';
 
 declare global {
   // eslint-disable-next-line no-var
-  var __fastcomRunning: boolean | undefined;
+  var __speedtestRunning: boolean | undefined;
 }
 
 export class MeasurementBusyError extends Error {
@@ -29,8 +29,8 @@ function insertMeasurement(
 }
 
 export async function runMeasurement(): Promise<Measurement> {
-  if (globalThis.__fastcomRunning) throw new MeasurementBusyError();
-  globalThis.__fastcomRunning = true;
+  if (globalThis.__speedtestRunning) throw new MeasurementBusyError();
+  globalThis.__speedtestRunning = true;
   const startedAt = Date.now();
   broadcastRunning(startedAt);
 
@@ -81,7 +81,7 @@ export async function runMeasurement(): Promise<Measurement> {
     void handleAlertsForMeasurement(row);
     return row;
   } finally {
-    globalThis.__fastcomRunning = false;
+    globalThis.__speedtestRunning = false;
   }
 }
 
@@ -95,5 +95,5 @@ export async function runMeasurementSafe(): Promise<Measurement | null> {
 }
 
 export function isMeasurementRunning(): boolean {
-  return Boolean(globalThis.__fastcomRunning);
+  return Boolean(globalThis.__speedtestRunning);
 }

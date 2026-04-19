@@ -25,8 +25,8 @@ Configuration:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `FASTCOM_INTERVAL_MINUTES` | `15` | Default interval used if the DB has no override |
-| `FASTCOM_DB_PATH` | `/data/fastcom.db` | SQLite file path (volume-persisted) |
+| `SPEEDTEST_INTERVAL_MINUTES` | `15` | Default interval used if the DB has no override |
+| `SPEEDTEST_DB_PATH` | `/data/speedtest.db` | SQLite file path (volume-persisted) |
 | `PORT` | `3000` | HTTP + WebSocket port |
 | `TZ` | — | Display timezone inside the container |
 
@@ -34,7 +34,7 @@ Change the interval at any time via the UI (`/settings`) — it is persisted in 
 
 ## Alerts
 
-fastcom-monitor can notify you when your connection degrades or fails, and
+speedtest-monitor can notify you when your connection degrades or fails, and
 again when it recovers. Alerts are fully opt-in - nothing fires until you
 enable them and set at least one threshold.
 
@@ -45,12 +45,12 @@ env vars are set.
 
 | Destination | Required env | Optional env |
 |---|---|---|
-| Webhook (generic) | `FASTCOM_WEBHOOK_URL` | `FASTCOM_WEBHOOK_HEADERS` (JSON) |
-| ntfy | `FASTCOM_NTFY_URL` (full URL incl. topic) | `FASTCOM_NTFY_TOKEN` |
-| Discord | `FASTCOM_DISCORD_WEBHOOK` | - |
-| Slack | `FASTCOM_SLACK_WEBHOOK` | - |
-| Email (SMTP) | `FASTCOM_SMTP_HOST`, `FASTCOM_SMTP_FROM`, `FASTCOM_SMTP_TO` | `FASTCOM_SMTP_PORT` (587), `FASTCOM_SMTP_SECURE` (auto), `FASTCOM_SMTP_USER`, `FASTCOM_SMTP_PASS` |
-| - | - | `FASTCOM_PUBLIC_URL` (dashboard link in emails) |
+| Webhook (generic) | `SPEEDTEST_WEBHOOK_URL` | `SPEEDTEST_WEBHOOK_HEADERS` (JSON) |
+| ntfy | `SPEEDTEST_NTFY_URL` (full URL incl. topic) | `SPEEDTEST_NTFY_TOKEN` |
+| Discord | `SPEEDTEST_DISCORD_WEBHOOK` | - |
+| Slack | `SPEEDTEST_SLACK_WEBHOOK` | - |
+| Email (SMTP) | `SPEEDTEST_SMTP_HOST`, `SPEEDTEST_SMTP_FROM`, `SPEEDTEST_SMTP_TO` | `SPEEDTEST_SMTP_PORT` (587), `SPEEDTEST_SMTP_SECURE` (auto), `SPEEDTEST_SMTP_USER`, `SPEEDTEST_SMTP_PASS` |
+| - | - | `SPEEDTEST_PUBLIC_URL` (dashboard link in emails) |
 
 ### Configure rules (UI)
 
@@ -73,7 +73,7 @@ wiring without waiting for a real incident.
 
 ## Authentication
 
-fastcom-monitor requires authentication for all routes. Two roles exist:
+speedtest-monitor requires authentication for all routes. Two roles exist:
 
 - **admin** - full access, can manage users, change settings, configure alerts, trigger manual measurements
 - **viewer** - read-only access: dashboard, history, settings in read-only mode
@@ -94,8 +94,8 @@ Pick one of the following three paths. They are independent; the most recent wri
 **Path A: env seed (recommended for docker-compose)**
 
 ```
-FASTCOM_ADMIN_EMAIL=admin@example.com
-FASTCOM_ADMIN_PASSWORD=<at least 10 chars>
+SPEEDTEST_ADMIN_EMAIL=admin@example.com
+SPEEDTEST_ADMIN_PASSWORD=<at least 10 chars>
 ```
 
 The seed runs at every boot and is idempotent: the admin is created if absent, promoted
@@ -108,18 +108,18 @@ create your admin account from the form.
 
 **Path C: OIDC admin claim**
 
-Set `FASTCOM_OIDC_ADMIN_EMAIL=you@example.com` in addition to the OIDC env vars below.
+Set `SPEEDTEST_OIDC_ADMIN_EMAIL=you@example.com` in addition to the OIDC env vars below.
 On first OIDC sign-in with that email, the account is auto-promoted to admin.
 
 ### OIDC single sign-on (optional)
 
 ```
-FASTCOM_OIDC_ISSUER=https://auth.example.com
-FASTCOM_OIDC_CLIENT_ID=fastcom
-FASTCOM_OIDC_CLIENT_SECRET=...
-FASTCOM_OIDC_DISPLAY_NAME=SSO           # label on the sign-in button
-FASTCOM_OIDC_ADMIN_EMAIL=you@example.com
-FASTCOM_OIDC_ALLOW_NEW_USERS=true       # "false" = only admin-created users may sign in via OIDC
+SPEEDTEST_OIDC_ISSUER=https://auth.example.com
+SPEEDTEST_OIDC_CLIENT_ID=speedtest
+SPEEDTEST_OIDC_CLIENT_SECRET=...
+SPEEDTEST_OIDC_DISPLAY_NAME=SSO           # label on the sign-in button
+SPEEDTEST_OIDC_ADMIN_EMAIL=you@example.com
+SPEEDTEST_OIDC_ALLOW_NEW_USERS=true       # "false" = only admin-created users may sign in via OIDC
 ```
 
 Tested with Authelia, Authentik, and Keycloak (any OIDC-compliant provider should work).
@@ -212,7 +212,7 @@ The WebSocket lives on `/ws`. Make sure your proxy forwards the `Upgrade` header
 
 ```nginx
 location /ws {
-  proxy_pass http://fastcom:3000;
+  proxy_pass http://speedtest:3000;
   proxy_http_version 1.1;
   proxy_set_header Upgrade $http_upgrade;
   proxy_set_header Connection "upgrade";

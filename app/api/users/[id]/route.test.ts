@@ -30,7 +30,7 @@ beforeEach(() => {
       last_login_at INTEGER
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
   authMock.mockResolvedValue({ user: { id: '1', email: 'admin@x.y', role: 'admin' } });
 });
 

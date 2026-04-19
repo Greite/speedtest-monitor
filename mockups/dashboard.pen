@@ -1983,7 +1983,7 @@
                       "id": "8Z0ys",
                       "name": "vaTitle",
                       "fill": "#F8FAFC",
-                      "content": "Fastcom Monitor",
+                      "content": "Speedtest Monitor",
                       "fontFamily": "Inter",
                       "fontSize": 18,
                       "fontWeight": "700"
@@ -2221,7 +2221,7 @@
                       "id": "ET1Hw",
                       "name": "vbTitle",
                       "fill": "#F8FAFC",
-                      "content": "Fastcom Monitor",
+                      "content": "Speedtest Monitor",
                       "fontFamily": "Inter",
                       "fontSize": 18,
                       "fontWeight": "700"
@@ -2525,7 +2525,7 @@
                           "id": "W4Spq",
                           "name": "vcTitle",
                           "fill": "#F8FAFC",
-                          "content": "Fastcom Monitor",
+                          "content": "Speedtest Monitor",
                           "fontFamily": "Inter",
                           "fontSize": 18,
                           "fontWeight": "700"
@@ -2745,7 +2745,7 @@
                       "id": "ozUL4",
                       "name": "vdTitle",
                       "fill": "#F8FAFC",
-                      "content": "Fastcom",
+                      "content": "Speedtest",
                       "fontFamily": "Inter",
                       "fontSize": 15,
                       "fontWeight": "700"
@@ -3043,7 +3043,7 @@
                           "id": "sTt9r",
                           "name": "dtTitle",
                           "fill": "#F8FAFC",
-                          "content": "Fastcom Monitor",
+                          "content": "Speedtest Monitor",
                           "fontFamily": "Inter",
                           "fontSize": 18,
                           "fontWeight": "700"
@@ -3377,7 +3377,7 @@
                                   "id": "SuQ3E",
                                   "name": "mobTitle",
                                   "fill": "#F8FAFC",
-                                  "content": "Fastcom",
+                                  "content": "Speedtest",
                                   "fontFamily": "Inter",
                                   "fontSize": 16,
                                   "fontWeight": "700"
@@ -3529,7 +3529,7 @@
                                       "id": "iE9Ys",
                                       "name": "mobOTitle",
                                       "fill": "#F8FAFC",
-                                      "content": "Fastcom",
+                                      "content": "Speedtest",
                                       "fontFamily": "Inter",
                                       "fontSize": 16,
                                       "fontWeight": "700"
@@ -4013,7 +4013,7 @@
                           "id": "lOgja",
                           "name": "tabTitle",
                           "fill": "#F8FAFC",
-                          "content": "Fastcom Monitor",
+                          "content": "Speedtest Monitor",
                           "fontFamily": "Inter",
                           "fontSize": 17,
                           "fontWeight": "700"

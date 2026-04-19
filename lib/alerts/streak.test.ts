@@ -23,7 +23,7 @@ beforeEach(() => {
       jitter_ms REAL, packet_loss_pct REAL, user_isp TEXT
     );
   `);
-  globalThis.__fastcomDb = { sqlite, db };
+  globalThis.__speedtestDb = { sqlite, db };
 });
 
 const insert = (status: 'success' | 'error' | 'timeout', ts: number) => {

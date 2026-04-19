@@ -5,7 +5,7 @@ Status: approved — ready for implementation plan
 
 ## Goal
 
-Turn fastcom-monitor from a "nice dashboard" into a monitoring brick that actually tells the user when their connection degrades. First-class requirement for open-source adoption with r/selfhosted audience.
+Turn speedtest-monitor from a "nice dashboard" into a monitoring brick that actually tells the user when their connection degrades. First-class requirement for open-source adoption with r/selfhosted audience.
 
 ## Scope
 
@@ -151,15 +151,15 @@ type AlertPayload = {
 
 Per-destination mapping:
 
-**webhook** — `POST $FASTCOM_WEBHOOK_URL` with `Content-Type: application/json`, headers merged from `FASTCOM_WEBHOOK_HEADERS` (JSON string, zod-validated, invalid → warn + destination treated as unconfigured). Body = the full `AlertPayload`.
+**webhook** — `POST $SPEEDTEST_WEBHOOK_URL` with `Content-Type: application/json`, headers merged from `SPEEDTEST_WEBHOOK_HEADERS` (JSON string, zod-validated, invalid → warn + destination treated as unconfigured). Body = the full `AlertPayload`.
 
-**ntfy** — `POST $FASTCOM_NTFY_URL` (URL includes the topic). Headers: `X-Title: <title>`, `X-Priority: urgent` (fired) or `default` (resolved), `X-Tags: warning,rotating_light` (fired) or `white_check_mark` (resolved), `Authorization: Bearer $FASTCOM_NTFY_TOKEN` when set. Body = plain text `<body>`.
+**ntfy** — `POST $SPEEDTEST_NTFY_URL` (URL includes the topic). Headers: `X-Title: <title>`, `X-Priority: urgent` (fired) or `default` (resolved), `X-Tags: warning,rotating_light` (fired) or `white_check_mark` (resolved), `Authorization: Bearer $SPEEDTEST_NTFY_TOKEN` when set. Body = plain text `<body>`.
 
-**discord** — `POST $FASTCOM_DISCORD_WEBHOOK`. Body: `{ embeds: [{ title, description: body, color: 15548997 (red, fired) | 5763719 (green, resolved), timestamp: ISO, footer: { text: "fastcom-monitor" } }] }`.
+**discord** — `POST $SPEEDTEST_DISCORD_WEBHOOK`. Body: `{ embeds: [{ title, description: body, color: 15548997 (red, fired) | 5763719 (green, resolved), timestamp: ISO, footer: { text: "speedtest-monitor" } }] }`.
 
-**slack** — `POST $FASTCOM_SLACK_WEBHOOK`. Body: `{ text: title (fallback for mobile), blocks: [header + mrkdwn section with observed/threshold/at] }`.
+**slack** — `POST $SPEEDTEST_SLACK_WEBHOOK`. Body: `{ text: title (fallback for mobile), blocks: [header + mrkdwn section with observed/threshold/at] }`.
 
-**smtp** — nodemailer `createTransport({ host, port, secure, auth })` where `secure` is `true` if port=465 else `false` unless `FASTCOM_SMTP_SECURE` overrides. Subject: `[Fastcom] <title>`. Plain-text body with observed/threshold/at + optional dashboard link from `FASTCOM_PUBLIC_URL`.
+**smtp** — nodemailer `createTransport({ host, port, secure, auth })` where `secure` is `true` if port=465 else `false` unless `SPEEDTEST_SMTP_SECURE` overrides. Subject: `[Speedtest] <title>`. Plain-text body with observed/threshold/at + optional dashboard link from `SPEEDTEST_PUBLIC_URL`.
 
 Dispatch logic:
 
@@ -179,30 +179,30 @@ All optional. A destination is "configured" iff its required vars are present.
 
 ```
 # Generic webhook
-FASTCOM_WEBHOOK_URL
-FASTCOM_WEBHOOK_HEADERS       # JSON string, e.g. {"Authorization":"Bearer xxx"}
+SPEEDTEST_WEBHOOK_URL
+SPEEDTEST_WEBHOOK_HEADERS       # JSON string, e.g. {"Authorization":"Bearer xxx"}
 
 # ntfy
-FASTCOM_NTFY_URL              # https://ntfy.sh/my-topic or self-hosted
-FASTCOM_NTFY_TOKEN            # optional, for private instances
+SPEEDTEST_NTFY_URL              # https://ntfy.sh/my-topic or self-hosted
+SPEEDTEST_NTFY_TOKEN            # optional, for private instances
 
 # Discord
-FASTCOM_DISCORD_WEBHOOK
+SPEEDTEST_DISCORD_WEBHOOK
 
 # Slack
-FASTCOM_SLACK_WEBHOOK
+SPEEDTEST_SLACK_WEBHOOK
 
 # SMTP
-FASTCOM_SMTP_HOST
-FASTCOM_SMTP_PORT             # default 587
-FASTCOM_SMTP_SECURE           # auto (default: true if port=465) | true | false
-FASTCOM_SMTP_USER             # optional (no-auth relays supported)
-FASTCOM_SMTP_PASS
-FASTCOM_SMTP_FROM             # e.g. "Fastcom <alerts@example.com>"
-FASTCOM_SMTP_TO               # comma-separated recipients
+SPEEDTEST_SMTP_HOST
+SPEEDTEST_SMTP_PORT             # default 587
+SPEEDTEST_SMTP_SECURE           # auto (default: true if port=465) | true | false
+SPEEDTEST_SMTP_USER             # optional (no-auth relays supported)
+SPEEDTEST_SMTP_PASS
+SPEEDTEST_SMTP_FROM             # e.g. "Speedtest <alerts@example.com>"
+SPEEDTEST_SMTP_TO               # comma-separated recipients
 
 # Common
-FASTCOM_PUBLIC_URL            # optional, used in SMTP body as dashboard link
+SPEEDTEST_PUBLIC_URL            # optional, used in SMTP body as dashboard link
 ```
 
 Parsed at boot by `loadAlertConfig()` with zod. Invalid values log a warning and mark the destination unconfigured; they never crash the server.
@@ -256,7 +256,7 @@ Colocated `.test.ts` files, vitest. Pure modules first, then adapters, then inte
 |---|---|
 | `lib/alerts/evaluate.test.ts` | Table-driven: 5 kinds × {OK→ALERTING, ALERTING→OK, OK→OK, ALERTING→ALERTING} + edge cases (status=error, threshold=null, null measurement values) |
 | `lib/alerts/format.test.ts` | title + body per kind, fired vs resolved, TZ-correct timestamps |
-| `lib/alerts/destinations/webhook.test.ts` | URL, header merge from FASTCOM_WEBHOOK_HEADERS, body shape, non-2xx → DeliveryResult.ok=false |
+| `lib/alerts/destinations/webhook.test.ts` | URL, header merge from SPEEDTEST_WEBHOOK_HEADERS, body shape, non-2xx → DeliveryResult.ok=false |
 | `lib/alerts/destinations/ntfy.test.ts` | X-Title/X-Priority/X-Tags correctness, optional auth |
 | `lib/alerts/destinations/discord.test.ts` | embed color/timestamp/description shape |
 | `lib/alerts/destinations/slack.test.ts` | blocks + text fallback shape |

@@ -54,7 +54,7 @@ function join(parts: (string | undefined)[]): string | null {
 
 const COMMON_HEADERS = {
   Referer: 'https://speed.cloudflare.com/',
-  'User-Agent': 'fastcom-monitor/1.0 (+https://github.com/gpainteaux/fastcom-docker)',
+  'User-Agent': 'speedtest-monitor/1.0 (+https://github.com/Greite/speedtest-monitor)',
 };
 
 export async function fetchCloudflareMeta(): Promise<Meta> {

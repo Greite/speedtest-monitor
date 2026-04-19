@@ -12,7 +12,7 @@ describe('formatMessage', () => {
       },
       timestamp: Date.UTC(2026, 3, 17, 14, 32, 15),
     });
-    expect(title).toBe('Fastcom: Download dropped below 100 Mbps');
+    expect(title).toBe('Speedtest: Download dropped below 100 Mbps');
     expect(body).toContain('Observed 50 Mbps');
     expect(body).toContain('threshold 100 Mbps');
   });
@@ -27,7 +27,7 @@ describe('formatMessage', () => {
       },
       timestamp: 0,
     });
-    expect(title).toBe('Fastcom: Latency recovered');
+    expect(title).toBe('Speedtest: Latency recovered');
   });
 
   it('failure_streak fired uses count in title', () => {
@@ -40,6 +40,6 @@ describe('formatMessage', () => {
       },
       timestamp: 0,
     });
-    expect(title).toBe('Fastcom: 3 consecutive measurement failures');
+    expect(title).toBe('Speedtest: 3 consecutive measurement failures');
   });
 });

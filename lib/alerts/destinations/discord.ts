@@ -15,7 +15,7 @@ export function createDiscordDestination(cfg: DiscordConfig) {
             description: payload.body,
             color: payload.event === 'fired' ? RED : GREEN,
             timestamp: new Date(payload.timestamp).toISOString(),
-            footer: { text: 'fastcom-monitor' },
+            footer: { text: 'speedtest-monitor' },
           },
         ],
       };

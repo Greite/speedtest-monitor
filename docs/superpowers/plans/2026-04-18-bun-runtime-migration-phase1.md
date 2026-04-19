@@ -40,11 +40,11 @@ import * as schema from './schema';
 
 declare global {
   // eslint-disable-next-line no-var
-  var __fastcomDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
+  var __speedtestDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
 }
 
 function getDbPath(): string {
-  return process.env.FASTCOM_DB_PATH ?? './fastcom.db';
+  return process.env.SPEEDTEST_DB_PATH ?? './speedtest.db';
 }
 
 function openDatabase() {
@@ -59,16 +59,16 @@ function openDatabase() {
 }
 
 export function getDb() {
-  if (!globalThis.__fastcomDb) {
-    globalThis.__fastcomDb = openDatabase();
+  if (!globalThis.__speedtestDb) {
+    globalThis.__speedtestDb = openDatabase();
   }
-  return globalThis.__fastcomDb.db;
+  return globalThis.__speedtestDb.db;
 }
 
 export function closeDb() {
-  if (globalThis.__fastcomDb) {
-    globalThis.__fastcomDb.sqlite.close();
-    globalThis.__fastcomDb = undefined;
+  if (globalThis.__speedtestDb) {
+    globalThis.__speedtestDb.sqlite.close();
+    globalThis.__speedtestDb = undefined;
   }
 }
 
@@ -607,25 +607,25 @@ CMD ["bun", "dist/server.js"]
 - [ ] **Step 6: Build + smoke**
 
 ```bash
-docker build -t fastcom-bun1 .
-docker images fastcom-bun1 --format "{{.Size}}"
+docker build -t speedtest-bun1 .
+docker images speedtest-bun1 --format "{{.Size}}"
 SECRET=$(openssl rand -base64 32)
-docker rm -f fastcom-bun1-test 2>/dev/null || true
-docker run -d --name fastcom-bun1-test -p 13020:3000 \
+docker rm -f speedtest-bun1-test 2>/dev/null || true
+docker run -d --name speedtest-bun1-test -p 13020:3000 \
   -e AUTH_SECRET="$SECRET" \
-  -e FASTCOM_ADMIN_EMAIL=admin@example.com \
-  -e FASTCOM_ADMIN_PASSWORD=hunter2hunter2 \
-  fastcom-bun1
+  -e SPEEDTEST_ADMIN_EMAIL=admin@example.com \
+  -e SPEEDTEST_ADMIN_PASSWORD=hunter2hunter2 \
+  speedtest-bun1
 sleep 8
-docker logs fastcom-bun1-test 2>&1 | tail -10
+docker logs speedtest-bun1-test 2>&1 | tail -10
 curl -sS -o /dev/null -w "settings HTTP %{http_code}\n" http://localhost:13020/api/settings
-docker rm -f fastcom-bun1-test
-docker rmi fastcom-bun1
+docker rm -f speedtest-bun1-test
+docker rmi speedtest-bun1
 ```
 
 Expected:
 - Build succeeds.
-- Logs show `fastcom-monitor ready on http://0.0.0.0:3000` and the scheduler boot lines with no `bun:sqlite` error.
+- Logs show `speedtest-monitor ready on http://0.0.0.0:3000` and the scheduler boot lines with no `bun:sqlite` error.
 - `settings HTTP 401` (unauth; correct behaviour).
 - Image size reported; record it.
 
@@ -701,14 +701,14 @@ Expected: `root HTTP 307` (redirect to /login if no user, /setup if 0 user). No 
 - [ ] **Step 3: Final Docker E2E**
 
 ```bash
-docker build -t fastcom-bun-final .
+docker build -t speedtest-bun-final .
 SECRET=$(openssl rand -base64 32)
-docker rm -f fastcom-bun-final-c 2>/dev/null || true
-docker run -d --name fastcom-bun-final-c -p 13021:3000 \
+docker rm -f speedtest-bun-final-c 2>/dev/null || true
+docker run -d --name speedtest-bun-final-c -p 13021:3000 \
   -e AUTH_SECRET="$SECRET" \
-  -e FASTCOM_ADMIN_EMAIL=admin@example.com \
-  -e FASTCOM_ADMIN_PASSWORD=hunter2hunter2 \
-  fastcom-bun-final
+  -e SPEEDTEST_ADMIN_EMAIL=admin@example.com \
+  -e SPEEDTEST_ADMIN_PASSWORD=hunter2hunter2 \
+  speedtest-bun-final
 sleep 8
 
 CSRF=$(curl -sS -c /tmp/fc-cookies.txt http://localhost:13021/api/auth/csrf | grep -o '"csrfToken":"[^"]*"' | sed 's/.*"csrfToken":"\(.*\)"/\1/')
@@ -723,8 +723,8 @@ curl -sS -L -c /tmp/fc-cookies.txt -b /tmp/fc-cookies.txt \
 
 time curl -sS -b /tmp/fc-cookies.txt -X POST http://localhost:13021/api/measurements/run | head -c 400
 
-docker rm -f fastcom-bun-final-c
-docker rmi fastcom-bun-final
+docker rm -f speedtest-bun-final-c
+docker rmi speedtest-bun-final
 rm -f /tmp/fc-cookies.txt
 ```
 

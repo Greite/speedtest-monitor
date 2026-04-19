@@ -17,7 +17,7 @@ LICENSE
 data
 *.sqlite
 *.sqlite-*
-fastcom.db*
+speedtest.db*
 .env
 .env.local
 .claude

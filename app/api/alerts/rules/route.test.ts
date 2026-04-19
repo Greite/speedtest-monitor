@@ -9,15 +9,15 @@ beforeEach(() => {
   sqlite.exec(
     `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
   );
-  globalThis.__fastcomDb = { sqlite, db: drizzle(sqlite, { schema }) };
+  globalThis.__speedtestDb = { sqlite, db: drizzle(sqlite, { schema }) };
 });
 afterEach(() => {
-  delete process.env.FASTCOM_WEBHOOK_URL;
+  delete process.env.SPEEDTEST_WEBHOOK_URL;
 });
 
 describe('api/alerts/rules', () => {
   it('GET returns defaults with destinationsConfigured reflecting env', async () => {
-    process.env.FASTCOM_WEBHOOK_URL = 'https://h/x';
+    process.env.SPEEDTEST_WEBHOOK_URL = 'https://h/x';
     const res = await GET();
     const body = await res.json();
     expect(body.enabled).toBe(false);

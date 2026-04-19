@@ -1,15 +1,16 @@
 services:
-  fastcom:
+  speedtest:
     build: .
-    container_name: fastcom-monitor
+    container_name: speedtest-monitor
     ports:
       - "3000:3000"
     environment:
-      FASTCOM_INTERVAL_MINUTES: "15"
+      SPEEDTEST_INTERVAL_MINUTES: "15"
       TZ: "Europe/Paris"
+      AUTH_SECRET: ${AUTH_SECRET:-}
     volumes:
-      - fastcom-data:/data
+      - speedtest-data:/data
     restart: unless-stopped
 
 volumes:
-  fastcom-data:
+  speedtest-data:

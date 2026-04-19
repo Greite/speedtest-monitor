@@ -6,11 +6,11 @@ import * as schema from './schema';
 
 declare global {
   // eslint-disable-next-line no-var
-  var __fastcomDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
+  var __speedtestDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
 }
 
 function getDbPath(): string {
-  return process.env.FASTCOM_DB_PATH ?? './fastcom.db';
+  return process.env.SPEEDTEST_DB_PATH ?? './speedtest.db';
 }
 
 function openDatabase() {
@@ -25,16 +25,16 @@ function openDatabase() {
 }
 
 export function getDb() {
-  if (!globalThis.__fastcomDb) {
-    globalThis.__fastcomDb = openDatabase();
+  if (!globalThis.__speedtestDb) {
+    globalThis.__speedtestDb = openDatabase();
   }
-  return globalThis.__fastcomDb.db;
+  return globalThis.__speedtestDb.db;
 }
 
 export function closeDb() {
-  if (globalThis.__fastcomDb) {
-    globalThis.__fastcomDb.sqlite.close();
-    globalThis.__fastcomDb = undefined;
+  if (globalThis.__speedtestDb) {
+    globalThis.__speedtestDb.sqlite.close();
+    globalThis.__speedtestDb = undefined;
   }
 }
 

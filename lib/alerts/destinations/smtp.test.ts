@@ -32,7 +32,7 @@ describe('destinations/smtp', () => {
         secure: false,
         user: 'u',
         pass: 'p',
-        from: 'Fastcom <a@b>',
+        from: 'Speedtest <a@b>',
         to: ['c@d', 'e@f'],
       },
       'https://dash',
@@ -41,8 +41,8 @@ describe('destinations/smtp', () => {
     expect(result.ok).toBe(true);
     expect(sendMailMock).toHaveBeenCalledTimes(1);
     const opts = sendMailMock.mock.calls[0][0];
-    expect(opts.subject).toBe('[Fastcom] t');
-    expect(opts.from).toBe('Fastcom <a@b>');
+    expect(opts.subject).toBe('[Speedtest] t');
+    expect(opts.from).toBe('Speedtest <a@b>');
     expect(opts.to).toBe('c@d, e@f');
     expect(opts.text).toContain('b');
     expect(opts.text).toContain('https://dash');

@@ -10,7 +10,7 @@ data
 *.sqlite-journal
 *.sqlite-shm
 *.sqlite-wal
-fastcom.db*
+speedtest.db*
 .DS_Store
 .claude/
 tsconfig.tsbuildinfo

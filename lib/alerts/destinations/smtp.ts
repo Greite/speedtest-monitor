@@ -24,7 +24,7 @@ export function createSmtpDestination(cfg: SmtpConfig, publicUrl: string | null)
         await transporter.sendMail({
           from: cfg.from,
           to: cfg.to.join(', '),
-          subject: `[Fastcom] ${payload.title}`,
+          subject: `[Speedtest] ${payload.title}`,
           text: lines.join('\n'),
         });
         return { ok: true };

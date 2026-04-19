@@ -5,7 +5,7 @@ Status: approved — ready for implementation plan
 
 ## Goal
 
-Add local + OIDC authentication to fastcom-monitor with two roles (admin, viewer), protecting the entire UI and API. Make the app safe to expose beyond the LAN and compatible with homelab SSO stacks (Authelia, Authentik, Keycloak).
+Add local + OIDC authentication to speedtest-monitor with two roles (admin, viewer), protecting the entire UI and API. Make the app safe to expose beyond the LAN and compatible with homelab SSO stacks (Authelia, Authentik, Keycloak).
 
 ## Scope
 
@@ -116,8 +116,8 @@ Three paths, all supported simultaneously. The most recent write wins (`ensureSe
 ### Env seed (boot)
 
 ```
-FASTCOM_ADMIN_EMAIL=admin@example.com
-FASTCOM_ADMIN_PASSWORD=<cleartext, single-use at boot>
+SPEEDTEST_ADMIN_EMAIL=admin@example.com
+SPEEDTEST_ADMIN_PASSWORD=<cleartext, single-use at boot>
 ```
 
 `ensureSeededAdmin()`:
@@ -140,7 +140,7 @@ The form posts to `POST /api/auth/setup` which:
 
 ### OIDC admin claim
 
-When a user signs in via OIDC and their email matches `FASTCOM_OIDC_ADMIN_EMAIL` (case-insensitive, trimmed), the profile callback sets their role to `admin` on first sign-in, or promotes them on subsequent sign-ins if they are currently `viewer`.
+When a user signs in via OIDC and their email matches `SPEEDTEST_OIDC_ADMIN_EMAIL` (case-insensitive, trimmed), the profile callback sets their role to `admin` on first sign-in, or promotes them on subsequent sign-ins if they are currently `viewer`.
 
 ## Authentication providers
 
@@ -163,22 +163,22 @@ Credentials({
 })
 ```
 
-**OIDC** (enabled iff `FASTCOM_OIDC_ISSUER` is set):
+**OIDC** (enabled iff `SPEEDTEST_OIDC_ISSUER` is set):
 
 ```ts
 {
   id: 'oidc',
-  name: process.env.FASTCOM_OIDC_DISPLAY_NAME ?? 'SSO',
+  name: process.env.SPEEDTEST_OIDC_DISPLAY_NAME ?? 'SSO',
   type: 'oidc',
-  issuer: process.env.FASTCOM_OIDC_ISSUER!,
-  clientId: process.env.FASTCOM_OIDC_CLIENT_ID!,
-  clientSecret: process.env.FASTCOM_OIDC_CLIENT_SECRET!,
+  issuer: process.env.SPEEDTEST_OIDC_ISSUER!,
+  clientId: process.env.SPEEDTEST_OIDC_CLIENT_ID!,
+  clientSecret: process.env.SPEEDTEST_OIDC_CLIENT_SECRET!,
   authorization: { params: { scope: 'openid email profile' } },
   async profile(claims) {
     const email = String(claims.email).toLowerCase().trim();
     const sub = String(claims.sub);
-    const adminEmail = process.env.FASTCOM_OIDC_ADMIN_EMAIL?.toLowerCase().trim();
-    const allowNew = process.env.FASTCOM_OIDC_ALLOW_NEW_USERS !== 'false';
+    const adminEmail = process.env.SPEEDTEST_OIDC_ADMIN_EMAIL?.toLowerCase().trim();
+    const allowNew = process.env.SPEEDTEST_OIDC_ALLOW_NEW_USERS !== 'false';
     let user = findUserByOidcSubject(sub) ?? findUserByEmail(email);
     if (!user) {
       if (!allowNew) throw new Error('OIDC_USER_NOT_ALLOWED');
@@ -255,7 +255,7 @@ Server-side invariants enforced in handlers beyond the middleware:
 
 **New pages**: `/login`, `/setup`.
 
-**Login** — credentials form (email + password) plus a secondary "Sign in with `<FASTCOM_OIDC_DISPLAY_NAME>`" button rendered only if OIDC is configured. The `callbackUrl` query param is preserved. Invalid credentials show an inline error; rate-limiting is delegated to the reverse proxy.
+**Login** — credentials form (email + password) plus a secondary "Sign in with `<SPEEDTEST_OIDC_DISPLAY_NAME>`" button rendered only if OIDC is configured. The `callbackUrl` query param is preserved. Invalid credentials show an inline error; rate-limiting is delegated to the reverse proxy.
 
 **Setup wizard** — email + password + confirm-password (min 10 chars, client-side parity check). POSTs to `/api/auth/setup`. On success the response sets the session cookie and the client redirects to `/`.
 
@@ -280,20 +280,20 @@ All optional except `AUTH_SECRET`.
 AUTH_SECRET                    # `openssl rand -base64 32`
 
 # Reverse-proxy setup
-AUTH_URL                       # optional, e.g. https://fastcom.example.com
+AUTH_URL                       # optional, e.g. https://speedtest.example.com
 AUTH_TRUST_HOST                # "true" when behind Traefik/Caddy/Nginx
 
 # First-admin env seed
-FASTCOM_ADMIN_EMAIL
-FASTCOM_ADMIN_PASSWORD
+SPEEDTEST_ADMIN_EMAIL
+SPEEDTEST_ADMIN_PASSWORD
 
 # OIDC
-FASTCOM_OIDC_ISSUER
-FASTCOM_OIDC_CLIENT_ID
-FASTCOM_OIDC_CLIENT_SECRET
-FASTCOM_OIDC_DISPLAY_NAME      # default "SSO"
-FASTCOM_OIDC_ADMIN_EMAIL
-FASTCOM_OIDC_ALLOW_NEW_USERS   # default "true", set "false" to require admin-created records
+SPEEDTEST_OIDC_ISSUER
+SPEEDTEST_OIDC_CLIENT_ID
+SPEEDTEST_OIDC_CLIENT_SECRET
+SPEEDTEST_OIDC_DISPLAY_NAME      # default "SSO"
+SPEEDTEST_OIDC_ADMIN_EMAIL
+SPEEDTEST_OIDC_ALLOW_NEW_USERS   # default "true", set "false" to require admin-created records
 ```
 
 `loadAuthConfig()` parses the above with zod and logs a single warning (not an error) if OIDC vars are partially set (e.g. issuer without client secret); in that case OIDC is silently disabled.
@@ -331,7 +331,7 @@ Both added to `package.json` `dependencies` and to the `bun add` list in the `ru
 Backwards compat:
 - Schema change is additive (`users` table only); no changes to `measurements`, `settings`, `alerts`.
 - **Breaking UX**: after upgrade, all `/api/*` calls require auth. Scripts/curl commands that worked anonymously will 401. This is the point of the feature.
-- First-run UX: if the upgrade deployment does not set `FASTCOM_ADMIN_EMAIL`/`FASTCOM_ADMIN_PASSWORD` and does not visit `/setup`, the app remains inaccessible beyond `/setup` itself. Documented prominently in README.
+- First-run UX: if the upgrade deployment does not set `SPEEDTEST_ADMIN_EMAIL`/`SPEEDTEST_ADMIN_PASSWORD` and does not visit `/setup`, the app remains inaccessible beyond `/setup` itself. Documented prominently in README.
 - `AUTH_SECRET` **must** be set before the app boots. Missing `AUTH_SECRET` is a fatal boot error (loud, early, clear message pointing to README).
 
 Rollback: `DROP TABLE users; rm middleware.ts; git revert <commits>;` returns the app to its previous public state.
@@ -343,7 +343,7 @@ A new `## Authentication` section covering:
 - First-run (env-seed vs wizard)
 - Example OIDC configs for Authelia / Authentik / Keycloak
 - Roles: admin vs viewer
-- Upgrade guide: "Set `AUTH_SECRET` before upgrading. Either visit `/setup` on first run or pre-seed the admin with `FASTCOM_ADMIN_EMAIL` + `FASTCOM_ADMIN_PASSWORD`."
+- Upgrade guide: "Set `AUTH_SECRET` before upgrading. Either visit `/setup` on first run or pre-seed the admin with `SPEEDTEST_ADMIN_EMAIL` + `SPEEDTEST_ADMIN_PASSWORD`."
 
 ## Open questions
 

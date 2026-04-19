@@ -13,7 +13,7 @@ export const MIN_RETENTION_DAYS = 1;
 export const MAX_RETENTION_DAYS = 3650;
 
 function envIntervalMinutes(): number {
-  const raw = process.env.FASTCOM_INTERVAL_MINUTES;
+  const raw = process.env.SPEEDTEST_INTERVAL_MINUTES;
   if (!raw) return DEFAULT_INTERVAL;
   const n = Number.parseInt(raw, 10);
   if (Number.isNaN(n) || n < MIN_INTERVAL || n > MAX_INTERVAL) return DEFAULT_INTERVAL;
@@ -21,7 +21,7 @@ function envIntervalMinutes(): number {
 }
 
 function envRetentionDays(): number {
-  const raw = process.env.FASTCOM_RETENTION_DAYS;
+  const raw = process.env.SPEEDTEST_RETENTION_DAYS;
   if (!raw) return DEFAULT_RETENTION;
   const n = Number.parseInt(raw, 10);
   if (Number.isNaN(n) || n < MIN_RETENTION_DAYS || n > MAX_RETENTION_DAYS) return DEFAULT_RETENTION;
