@@ -13,7 +13,33 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # Skip the main-branch build when the commit is also tagged with v*:
+  # the tag-triggered run will handle it (and produces the semver tags).
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: check
+        name: Check if commit is tagged
+        run: |
+          git fetch origin --tags --force
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            if git tag --points-at HEAD | grep -Eq '^v[0-9]'; then
+              echo "Commit is tagged with v*; tag run will build it. Skipping."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: gate
+    if: needs.gate.outputs.skip != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
