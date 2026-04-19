@@ -6,7 +6,7 @@ import { SessionShell } from '@/components/auth/session-shell';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Fast.com Monitor',
+  title: 'Speedtest Monitor',
   description: 'Self-hosted internet speed monitor',
 };
 

@@ -1,4 +1,4 @@
-# Fast.com Monitor
+# Speedtest Monitor
 
 Self-hosted internet speed monitor. Runs [`@cloudflare/speedtest`](https://www.npmjs.com/package/@cloudflare/speedtest) on a configurable schedule, stores every measurement in SQLite, and serves a dashboard with live updates over WebSocket.
 
