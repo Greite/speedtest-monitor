@@ -143,6 +143,7 @@ COPY --from=builder      --chown=nodejs:nodejs /app/tsconfig.json    ./tsconfig.
 COPY --from=runtime-deps --chown=nodejs:nodejs /app/node_modules     ./node_modules
 
 USER nodejs
+VOLUME ["/data"]
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD bun -e "fetch('http://127.0.0.1:3000/api/settings').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
