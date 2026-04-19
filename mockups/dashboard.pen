@@ -4269,6 +4269,497 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "nLelM",
+      "x": 0,
+      "y": 2615,
+      "name": "Logo — Speedtest Monitor",
+      "width": 1200,
+      "height": 800,
+      "fill": "#F8FAFC",
+      "layout": "vertical",
+      "gap": 40,
+      "padding": 48,
+      "children": [
+        {
+          "type": "text",
+          "id": "p7AJ5",
+          "name": "title",
+          "fill": "#0F172A",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Speedtest Monitor — Logo",
+          "fontFamily": "Inter",
+          "fontSize": 28,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "a0X5v",
+          "name": "subtitle",
+          "fill": "#64748B",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Icon mark + horizontal wordmark + stacked. Light + dark variants.",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "1zbsO",
+          "name": "Light variants",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "gap": 48,
+          "padding": 32,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "VnNUw",
+              "name": "Icon Mark 192",
+              "width": 192,
+              "height": 192,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 135,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#2563EB",
+                    "position": 0
+                  },
+                  {
+                    "color": "#06B6D4",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 44,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#06B6D433",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 24
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "WfmAW",
+                  "name": "iconSymbol",
+                  "width": 112,
+                  "height": 112,
+                  "iconFontName": "activity",
+                  "iconFontFamily": "lucide",
+                  "fill": "#FFFFFF"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "5EIaS",
+              "name": "Horizontal Wordmark",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OzVet",
+                  "name": "Mark 72",
+                  "width": 72,
+                  "height": 72,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#2563EB",
+                        "position": 0
+                      },
+                      {
+                        "color": "#06B6D4",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 18,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "gFbjT",
+                      "name": "hIcon",
+                      "width": 42,
+                      "height": 42,
+                      "iconFontName": "activity",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vnQM1",
+                  "name": "hTextCol",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XxH8t",
+                      "name": "hTitle",
+                      "fill": "#0F172A",
+                      "content": "Speedtest",
+                      "fontFamily": "Inter",
+                      "fontSize": 34,
+                      "fontWeight": "800",
+                      "letterSpacing": -1
+                    },
+                    {
+                      "type": "text",
+                      "id": "wMOqq",
+                      "name": "hSubtitle",
+                      "fill": "#0F172A99",
+                      "content": "MONITOR",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                      "letterSpacing": 4
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "87tCy",
+              "name": "Stacked Wordmark",
+              "layout": "vertical",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "5O2VL",
+                  "name": "Mark 112",
+                  "width": 112,
+                  "height": 112,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#2563EB",
+                        "position": 0
+                      },
+                      {
+                        "color": "#06B6D4",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 26,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "j3vCk",
+                      "name": "sIcon",
+                      "width": 64,
+                      "height": 64,
+                      "iconFontName": "activity",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Z5REs",
+                  "name": "sTextCol",
+                  "layout": "vertical",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Un3qE",
+                      "name": "sTitle",
+                      "fill": "#0F172A",
+                      "content": "Speedtest",
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "800",
+                      "letterSpacing": -0.8
+                    },
+                    {
+                      "type": "text",
+                      "id": "eVqi6",
+                      "name": "sSubtitle",
+                      "fill": "#0F172A99",
+                      "content": "MONITOR",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600",
+                      "letterSpacing": 3.5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Rrj0g",
+          "name": "Dark variants",
+          "width": "fill_container",
+          "fill": "#0F172A",
+          "cornerRadius": 16,
+          "gap": 48,
+          "padding": 32,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "c8Ewt",
+              "name": "Icon Mark 192 dark",
+              "width": 192,
+              "height": 192,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 135,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#3B82F6",
+                    "position": 0
+                  },
+                  {
+                    "color": "#22D3EE",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 44,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#06B6D466",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 32
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "EcLEq",
+                  "name": "dIconSymbol",
+                  "width": 112,
+                  "height": 112,
+                  "iconFontName": "activity",
+                  "iconFontFamily": "lucide",
+                  "fill": "#FFFFFF"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Hczeh",
+              "name": "Horizontal Wordmark dark",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "89tco",
+                  "name": "dHMark",
+                  "width": 72,
+                  "height": 72,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#3B82F6",
+                        "position": 0
+                      },
+                      {
+                        "color": "#22D3EE",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 18,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Z3iZr",
+                      "name": "dHIcon",
+                      "width": 42,
+                      "height": 42,
+                      "iconFontName": "activity",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "h4eNT",
+                  "name": "dHText",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QsnB7",
+                      "name": "dHTitle",
+                      "fill": "#F8FAFC",
+                      "content": "Speedtest",
+                      "fontFamily": "Inter",
+                      "fontSize": 34,
+                      "fontWeight": "800",
+                      "letterSpacing": -1
+                    },
+                    {
+                      "type": "text",
+                      "id": "FEBUa",
+                      "name": "dHSub",
+                      "fill": "#94A3B8",
+                      "content": "MONITOR",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600",
+                      "letterSpacing": 4
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ElYwd",
+              "name": "Stacked Wordmark dark",
+              "layout": "vertical",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "h38hi",
+                  "name": "dSMark",
+                  "width": 112,
+                  "height": 112,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#3B82F6",
+                        "position": 0
+                      },
+                      {
+                        "color": "#22D3EE",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 26,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "SlDnu",
+                      "name": "dSIcon",
+                      "width": 64,
+                      "height": 64,
+                      "iconFontName": "activity",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "0O2we",
+                  "name": "dSText",
+                  "layout": "vertical",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gzEa6",
+                      "name": "dSTitle",
+                      "fill": "#F8FAFC",
+                      "content": "Speedtest",
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "800",
+                      "letterSpacing": -0.8
+                    },
+                    {
+                      "type": "text",
+                      "id": "V0vwv",
+                      "name": "dSSub",
+                      "fill": "#94A3B8",
+                      "content": "MONITOR",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600",
+                      "letterSpacing": 3.5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

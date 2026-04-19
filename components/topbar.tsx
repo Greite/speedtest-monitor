@@ -1,11 +1,12 @@
 'use client';
 
-import { Activity, LogOut, Menu, Monitor, Moon, Play, Settings, Sun, X } from 'lucide-react';
+import { LogOut, Menu, Monitor, Moon, Play, Settings, Sun, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { LogoMark } from '@/components/logo-mark';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLiveMeasurements } from './use-live-measurements';
@@ -155,7 +156,7 @@ export function Topbar() {
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:gap-4 md:px-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Activity className="size-5 text-chart-1" aria-hidden />
+            <LogoMark size={28} />
             <span className="text-lg font-bold tracking-tight">
               <span className="hidden md:inline">Speedtest Monitor</span>
               <span className="md:hidden">Speedtest</span>
@@ -254,7 +255,7 @@ export function Topbar() {
           <div className="relative ml-auto flex h-full w-full max-w-sm flex-col gap-4 border-l border-border bg-background p-4 shadow-xl animate-in slide-in-from-right">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="size-5 text-chart-1" aria-hidden />
+                <LogoMark size={28} />
                 <span className="text-lg font-bold tracking-tight">Speedtest Monitor</span>
               </div>
               <Button
