@@ -9,6 +9,7 @@ export default auth(async (req) => {
 
   if (
     (pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/auth/setup')) ||
+    pathname === '/api/health' ||
     pathname.startsWith('/_next/') ||
     pathname === '/favicon.ico' ||
     pathname.startsWith('/icons/')

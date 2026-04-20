@@ -59,4 +59,17 @@ export function closeDb() {
   }
 }
 
+export function pingDb(): { ok: true } | { ok: false; error: string } {
+  try {
+    getDb();
+    const row = globalThis.__speedtestDb?.sqlite.prepare('SELECT 1 AS ok').get() as
+      | { ok: number }
+      | undefined;
+    if (row?.ok === 1) return { ok: true };
+    return { ok: false, error: 'unexpected ping result' };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 export { schema };

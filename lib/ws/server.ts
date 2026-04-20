@@ -43,6 +43,12 @@ export function attachWsBroadcaster(wss: WebSocketServer) {
   });
 }
 
+export function isWsReady(): { ok: true; clients: number } | { ok: false; error: string } {
+  const wss = globalThis.__speedtestWss;
+  if (!wss) return { ok: false, error: 'ws server not attached' };
+  return { ok: true, clients: wss.clients.size };
+}
+
 export function broadcast(event: WsEvent) {
   const wss = globalThis.__speedtestWss;
   if (!wss) return;
