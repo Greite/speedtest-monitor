@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "dev": "bun server.ts",
-    "build": "bunx drizzle-kit generate && next build",
+    "build": "bunx drizzle-kit generate && bun scripts/fetch-releases.ts && next build",
+    "releases:fetch": "bun scripts/fetch-releases.ts",
     "start": "NODE_ENV=production bun server.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",

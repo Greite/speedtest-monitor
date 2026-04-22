@@ -16,4 +16,5 @@ speedtest.db*
 tsconfig.tsbuildinfo
 next-env.d.ts
 .worktrees/
+lib/generated/
 
