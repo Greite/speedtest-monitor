@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { LogoMark } from '@/components/logo-mark';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
+import { RequiredMark } from '@/components/ui/required-mark';
 
 export function LoginForm({
   oidcAvailable,
@@ -25,6 +26,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const errorRef = useRef<HTMLDivElement | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,6 +40,7 @@ export function LoginForm({
     if (res?.error) {
       setError('Invalid email or password');
       setPending(false);
+      requestAnimationFrame(() => errorRef.current?.focus());
       return;
     }
     setRedirecting(true);
@@ -48,15 +51,22 @@ export function LoginForm({
   return (
     <main
       id="main"
-      className="mx-auto flex min-h-[100dvh] max-w-sm flex-col justify-center px-4 py-8"
+      tabIndex={-1}
+      className="mx-auto flex min-h-[100dvh] max-w-sm scroll-mt-16 flex-col justify-center px-4 py-8 outline-none"
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <div className="mb-2 flex flex-col items-center gap-3">
           <LogoMark size={44} />
           <h1 className="text-2xl font-semibold tracking-tight">Sign in to Speedtest</h1>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Fields marked with <span className="text-destructive">*</span> are required.
+        </p>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">
+            Email
+            <RequiredMark />
+          </Label>
           <Input
             id="email"
             type="email"
@@ -69,7 +79,10 @@ export function LoginForm({
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">
+            Password
+            <RequiredMark />
+          </Label>
           <PasswordInput
             id="password"
             required
@@ -81,7 +94,14 @@ export function LoginForm({
           />
         </div>
         {error ? (
-          <Alert id="login-error" variant="destructive">
+          <Alert
+            id="login-error"
+            ref={errorRef}
+            tabIndex={-1}
+            role="alert"
+            variant="destructive"
+            className="outline-none"
+          >
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}

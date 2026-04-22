@@ -62,9 +62,11 @@ function speedLevel(value: number | null | undefined, average: number | null): L
 export function KpiCards({
   latest,
   averages,
+  busy = false,
 }: {
   latest: MeasurementDto | null;
   averages: Averages;
+  busy?: boolean;
 }) {
   const latencyCurrentLevel = latencyLevel(latest?.latencyLoadedMs ?? null);
   const downLevel = speedLevel(latest?.downloadMbps, averages.download);
@@ -74,8 +76,10 @@ export function KpiCards({
 
   return (
     <section
+      aria-label="Key performance indicators"
       aria-live="polite"
       aria-atomic="false"
+      aria-busy={busy || undefined}
       className="grid grid-cols-1 gap-4 md:grid-cols-3"
     >
       <Kpi

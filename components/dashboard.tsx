@@ -44,7 +44,7 @@ export function Dashboard({
     }
   }, []);
 
-  const { measurements } = useLiveMeasurements(initial, range);
+  const { measurements, running } = useLiveMeasurements(initial, range);
   const latest = measurements.find((m) => m.status === 'success') ?? null;
 
   const averages = useMemo(() => {
@@ -62,7 +62,7 @@ export function Dashboard({
         <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Overview</h1>
         <TimeRangePicker value={range} onChange={setRange} />
       </div>
-      <KpiCards latest={latest} averages={averages} />
+      <KpiCards latest={latest} averages={averages} busy={running} />
       <HistoryChart measurements={measurements} />
       <HistoryTable measurements={measurements.slice(0, 25)} />
     </div>

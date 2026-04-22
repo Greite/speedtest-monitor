@@ -29,6 +29,7 @@ import {
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -178,6 +179,9 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
       <CardContent>
         <TableFilters table={table} />
         <Table>
+          <TableCaption className="sr-only">
+            Recent speedtest measurements, sortable and filterable.
+          </TableCaption>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

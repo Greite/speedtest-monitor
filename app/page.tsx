@@ -17,7 +17,8 @@ export default async function Page({
   return (
     <main
       id="main"
-      className="mx-auto flex min-h-[100dvh] max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8"
+      tabIndex={-1}
+      className="mx-auto flex min-h-[100dvh] max-w-6xl scroll-mt-16 flex-col gap-6 px-4 py-6 outline-none md:px-6 md:py-8"
     >
       <Dashboard initial={initial} initialRange={range} />
     </main>

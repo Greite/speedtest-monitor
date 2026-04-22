@@ -23,6 +23,7 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "test:watch": "bun test --watch",
+    "test:a11y": "bunx @axe-core/cli http://localhost:3003 --tags wcag2a,wcag2aa,wcag21a,wcag21aa",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bun scripts/migrate.ts",
     "prepare": "husky"

@@ -1,7 +1,7 @@
 'use client';
 
-import { LineChartIcon } from 'lucide-react';
-import { useMemo } from 'react';
+import { LineChartIcon, TableIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -12,9 +12,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatTime, type LatencyLevel, latencyLevel } from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 type Point = {
   t: number;
@@ -35,6 +37,7 @@ const LEVEL_STROKE: Record<LatencyLevel, string> = {
 };
 
 export function HistoryChart({ measurements }: { measurements: MeasurementDto[] }) {
+  const [showTable, setShowTable] = useState(false);
   const data = useMemo<Point[]>(() => {
     return [...measurements]
       .sort((a, b) => a.timestamp - b.timestamp)
@@ -84,6 +87,17 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
           <Legend color="var(--color-speed-down)" label="Download" />
           <Legend color="var(--color-speed-up)" label="Upload" />
           <Legend color="var(--color-latency-ok)" label="Latency" dashed />
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            aria-pressed={showTable}
+            aria-controls="chart-data-table"
+            onClick={() => setShowTable((v) => !v)}
+          >
+            <TableIcon aria-hidden />
+            {showTable ? 'Hide table' : 'View as table'}
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -170,27 +184,43 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <table className="sr-only">
-          <caption>{summary}</caption>
-          <thead>
-            <tr>
-              <th scope="col">Time</th>
-              <th scope="col">Download (Mbps)</th>
-              <th scope="col">Upload (Mbps)</th>
-              <th scope="col">Latency (ms)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((p) => (
-              <tr key={p.t}>
-                <td>{p.label}</td>
-                <td>{p.download ?? 'n/a'}</td>
-                <td>{p.upload ?? 'n/a'}</td>
-                <td>{p.latency ?? 'n/a'}</td>
+        <div
+          id="chart-data-table"
+          className={cn(
+            'mt-4 max-h-64 overflow-auto rounded-md border border-border',
+            !showTable && 'sr-only',
+          )}
+        >
+          <table className="w-full text-xs tabular-nums">
+            <caption className="sr-only">{summary}</caption>
+            <thead className="bg-muted/40 text-left">
+              <tr>
+                <th scope="col" className="px-3 py-1.5 font-medium">
+                  Time
+                </th>
+                <th scope="col" className="px-3 py-1.5 font-medium">
+                  Download (Mbps)
+                </th>
+                <th scope="col" className="px-3 py-1.5 font-medium">
+                  Upload (Mbps)
+                </th>
+                <th scope="col" className="px-3 py-1.5 font-medium">
+                  Latency (ms)
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((p) => (
+                <tr key={p.t} className="border-t border-border/60">
+                  <td className="px-3 py-1">{p.label}</td>
+                  <td className="px-3 py-1">{p.download ?? 'n/a'}</td>
+                  <td className="px-3 py-1">{p.upload ?? 'n/a'}</td>
+                  <td className="px-3 py-1">{p.latency ?? 'n/a'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
   );

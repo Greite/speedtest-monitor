@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes';
 import type { ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { SessionShell } from '@/components/auth/session-shell';
+import { FocusMainOnNavigate } from '@/components/focus-main-on-navigate';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,12 +13,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <body>
         <a href="#main" className="skip-link">
           Skip to main content
         </a>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <FocusMainOnNavigate />
           <SessionShell>{children}</SessionShell>
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>

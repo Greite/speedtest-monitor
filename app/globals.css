@@ -165,3 +165,36 @@
     scroll-behavior: auto !important;
   }
 }
+
+@media (prefers-contrast: more) {
+  :root {
+    --muted-foreground: oklch(0.35 0 0);
+    --border: oklch(0.75 0 0);
+  }
+  .dark {
+    --muted-foreground: oklch(0.85 0 0);
+    --border: oklch(1 0 0 / 30%);
+  }
+  :focus-visible {
+    outline: 3px solid var(--ring) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+@media (forced-colors: active) {
+  *:focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 2px !important;
+  }
+  .skip-link {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+  [aria-pressed='true'],
+  [aria-checked='true'] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
