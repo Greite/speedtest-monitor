@@ -76,6 +76,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false

@@ -9,8 +9,13 @@ RUN bun install --frozen-lockfile
 # ---------- build: next build ----------
 FROM ${BUN_IMAGE} AS builder
 ARG TARGETARCH
+# Version baked into the client bundle (footer pill). `.git` is excluded from
+# the build context, so `next.config.ts` cannot derive it from `git describe`
+# here - CI must pass `--build-arg APP_VERSION=v1.x.y` on tag builds.
+ARG APP_VERSION=dev
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    APP_VERSION=${APP_VERSION}
 # Next's page-data collection evaluates route handlers at build time, which
 # imports handler.ts -> loadAuthConfig() and throws without AUTH_SECRET.
 # Dummy value used only during `next build`; runtime requires a real
