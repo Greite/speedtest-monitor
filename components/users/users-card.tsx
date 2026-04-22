@@ -228,7 +228,9 @@ export function UsersCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Users</CardTitle>
+        <CardTitle as="h2" className="text-base">
+          Users
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end gap-3">

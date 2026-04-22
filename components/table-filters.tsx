@@ -184,29 +184,37 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
           id="table-filters-panel"
           className="grid grid-cols-1 gap-4 border-t p-4 md:grid-cols-3"
         >
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Time</Label>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+              Time
+            </legend>
             <div className="flex flex-col gap-1">
+              <Label htmlFor="filter-time-from" className="sr-only">
+                From date and time
+              </Label>
               <Input
+                id="filter-time-from"
                 type="datetime-local"
                 value={toDateTimeLocal(timeVal.from)}
                 onChange={(e) =>
                   setTimeRange(timeCol, { from: parseTime(e.target.value), to: timeVal.to })
                 }
                 className="h-8 text-xs"
-                aria-label="From date and time"
               />
+              <Label htmlFor="filter-time-to" className="sr-only">
+                To date and time
+              </Label>
               <Input
+                id="filter-time-to"
                 type="datetime-local"
                 value={toDateTimeLocal(timeVal.to)}
                 onChange={(e) =>
                   setTimeRange(timeCol, { from: timeVal.from, to: parseTime(e.target.value) })
                 }
                 className="h-8 text-xs"
-                aria-label="To date and time"
               />
             </div>
-          </div>
+          </fieldset>
 
           <NumericBlock
             label="Download (Mbps)"
@@ -285,28 +293,34 @@ function NumericBlock({
   const minId = `${label}-min`.replace(/\s+/g, '-').toLowerCase();
   const maxId = `${label}-max`.replace(/\s+/g, '-').toLowerCase();
   return (
-    <div className="flex flex-col gap-2">
-      <Label className="text-xs uppercase tracking-wide text-muted-foreground">{label}</Label>
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </legend>
       <div className="flex items-center gap-2">
+        <Label htmlFor={minId} className="sr-only">
+          {`${label} minimum`}
+        </Label>
         <Input
           id={minId}
           type="number"
           value={value.min ?? ''}
           onChange={(e) => onChange({ min: parseNumber(e.target.value), max: value.max })}
           placeholder="min"
-          aria-label={`${label} minimum`}
           className="h-8 text-xs"
         />
+        <Label htmlFor={maxId} className="sr-only">
+          {`${label} maximum`}
+        </Label>
         <Input
           id={maxId}
           type="number"
           value={value.max ?? ''}
           onChange={(e) => onChange({ min: value.min, max: parseNumber(e.target.value) })}
           placeholder="max"
-          aria-label={`${label} maximum`}
           className="h-8 text-xs"
         />
       </div>
-    </div>
+    </fieldset>
   );
 }

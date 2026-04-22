@@ -60,7 +60,9 @@ export function PasswordChangeCard() {
   return (
     <Card id="account">
       <CardHeader>
-        <CardTitle className="text-base">Account</CardTitle>
+        <CardTitle as="h2" className="text-base">
+          Account
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={submit} className="flex max-w-sm flex-col gap-3">

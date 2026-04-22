@@ -129,29 +129,37 @@ function Kpi({
   deltaSuffix?: string;
   sub: string;
 }) {
+  const summary = level
+    ? `${label} ${value}, status ${levelLabel[level]}. ${sub}.`
+    : `${label} ${value}. ${sub}.`;
+
   return (
-    <Card>
+    <Card aria-label={summary}>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-2 text-sm font-normal text-muted-foreground">
+        <CardTitle
+          as="h2"
+          className="flex items-center justify-between gap-2 text-sm font-normal text-muted-foreground"
+        >
           <span className="flex items-center gap-2">
             {icon}
             {label}
           </span>
           {level ? (
-            <span className="inline-flex items-center gap-1.5 text-xs">
+            <span className="inline-flex items-center gap-1.5 text-xs" aria-hidden>
               <span
                 className={cn('inline-block size-2 rounded-full', levelColor[level])}
                 aria-hidden
               />
-              <span className="sr-only">Status:</span>
               <span>{levelLabel[level]}</span>
             </span>
           ) : null}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold tracking-tight tabular-nums">{value}</div>
-        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="text-3xl font-bold tracking-tight tabular-nums" aria-hidden>
+          {value}
+        </div>
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground" aria-hidden>
           {delta ? <DeltaBadge delta={delta} suffix={deltaSuffix} /> : null}
           <span>{sub}</span>
         </div>

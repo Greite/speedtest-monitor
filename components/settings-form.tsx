@@ -84,10 +84,14 @@ function IntervalCard({
     }
   };
 
+  const describedBy = [`interval-hint`, error ? `interval-error` : null].filter(Boolean).join(' ');
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Measurement interval</CardTitle>
+        <CardTitle as="h2" className="text-base">
+          Measurement interval
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -100,14 +104,16 @@ function IntervalCard({
             disabled={readOnly}
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            aria-invalid={!valid || !!error || undefined}
+            aria-describedby={describedBy || undefined}
           />
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div id="interval-hint" className="flex items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="secondary">env default: {envDefault}</Badge>
             between 1 and 1440 - changes apply immediately
           </div>
         </div>
         {error ? (
-          <Alert variant="destructive">
+          <Alert variant="destructive" id="interval-error">
             <AlertCircle />
             <AlertTitle>Save failed</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
@@ -181,10 +187,16 @@ function RetentionCard({
     }
   };
 
+  const describedBy = [`retention-hint`, error ? `retention-error` : null]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Data retention</CardTitle>
+        <CardTitle as="h2" className="text-base">
+          Data retention
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -197,14 +209,19 @@ function RetentionCard({
             disabled={readOnly}
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            aria-invalid={!valid || !!error || undefined}
+            aria-describedby={describedBy || undefined}
           />
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div
+            id="retention-hint"
+            className="flex items-center gap-2 text-xs text-muted-foreground"
+          >
             <Badge variant="secondary">env default: {envDefault}</Badge>
             between 1 and 3650 - purge runs daily at 03:00
           </div>
         </div>
         {error ? (
-          <Alert variant="destructive">
+          <Alert variant="destructive" id="retention-error">
             <AlertCircle />
             <AlertTitle>Save failed</AlertTitle>
             <AlertDescription>{error}</AlertDescription>

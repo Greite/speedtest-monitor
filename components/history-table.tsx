@@ -171,7 +171,9 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Recent measurements</CardTitle>
+        <CardTitle as="h2" className="text-base">
+          Recent measurements
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <TableFilters table={table} />
@@ -181,8 +183,10 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const sortDir = header.column.getIsSorted();
+                  const ariaSort =
+                    sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : 'none';
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} aria-sort={ariaSort}>
                       <button
                         type="button"
                         onClick={header.column.getToggleSortingHandler()}
@@ -190,11 +194,11 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {sortDir === 'asc' ? (
-                          <ArrowUp className="size-3" />
+                          <ArrowUp className="size-3" aria-hidden />
                         ) : sortDir === 'desc' ? (
-                          <ArrowDown className="size-3" />
+                          <ArrowDown className="size-3" aria-hidden />
                         ) : (
-                          <ArrowUpDown className="size-3 opacity-40" />
+                          <ArrowUpDown className="size-3 opacity-40" aria-hidden />
                         )}
                       </button>
                     </TableHead>
@@ -226,7 +230,11 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
             )}
           </TableBody>
         </Table>
-        <div className="mt-4 flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className="mt-4 flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <div>
             {totalFiltered === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalFiltered}`}
           </div>

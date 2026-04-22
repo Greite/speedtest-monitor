@@ -24,6 +24,7 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +40,7 @@ export function LoginForm({
       setPending(false);
       return;
     }
+    setRedirecting(true);
     router.replace(callbackUrl);
     router.refresh();
   }
@@ -62,6 +64,8 @@ export function LoginForm({
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'login-error' : undefined}
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -72,16 +76,21 @@ export function LoginForm({
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'login-error' : undefined}
           />
         </div>
         {error ? (
-          <Alert variant="destructive">
+          <Alert id="login-error" variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
         <Button type="submit" disabled={pending}>
           {pending ? 'Signing in...' : 'Sign in'}
         </Button>
+        <p className="sr-only" aria-live="polite" role="status">
+          {redirecting ? 'Signed in, redirecting…' : ''}
+        </p>
         {oidcAvailable && (
           <Button type="button" variant="outline" onClick={() => signIn('oidc', { callbackUrl })}>
             Sign in with {oidcName}

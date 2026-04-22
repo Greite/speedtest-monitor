@@ -80,9 +80,12 @@ export function SetupForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             aria-invalid={fieldErrors.email ? true : undefined}
+            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
           />
           {fieldErrors.email ? (
-            <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p>
+            <p id="email-error" className="text-xs text-destructive">
+              {fieldErrors.email.join(' ')}
+            </p>
           ) : null}
         </div>
         <div className="flex flex-col gap-2">
@@ -94,9 +97,12 @@ export function SetupForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             aria-invalid={fieldErrors.password ? true : undefined}
+            aria-describedby={fieldErrors.password ? 'password-error' : undefined}
           />
           {fieldErrors.password ? (
-            <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p>
+            <p id="password-error" className="text-xs text-destructive">
+              {fieldErrors.password.join(' ')}
+            </p>
           ) : null}
         </div>
         <div className="flex flex-col gap-2">
@@ -110,7 +116,7 @@ export function SetupForm() {
           />
         </div>
         {error ? (
-          <Alert variant="destructive">
+          <Alert id="form-error" variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}

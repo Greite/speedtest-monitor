@@ -55,7 +55,9 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">History</CardTitle>
+          <CardTitle as="h2" className="text-base">
+            History
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-64 flex-col items-center justify-center gap-2 text-center">
@@ -70,10 +72,14 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
     );
   }
 
+  const summary = buildSummary(data);
+
   return (
     <Card>
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle className="text-base">History</CardTitle>
+        <CardTitle as="h2" className="text-base">
+          History
+        </CardTitle>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <Legend color="var(--color-speed-down)" label="Download" />
           <Legend color="var(--color-speed-up)" label="Upload" />
@@ -81,7 +87,12 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-64 w-full" style={{ minWidth: 0, minHeight: 0 }}>
+        <div
+          className="h-64 w-full"
+          style={{ minWidth: 0, minHeight: 0 }}
+          role="img"
+          aria-label={summary}
+        >
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
             <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
               <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" opacity={0.5} />
@@ -159,9 +170,49 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
             </LineChart>
           </ResponsiveContainer>
         </div>
+        <table className="sr-only">
+          <caption>{summary}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Time</th>
+              <th scope="col">Download (Mbps)</th>
+              <th scope="col">Upload (Mbps)</th>
+              <th scope="col">Latency (ms)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((p) => (
+              <tr key={p.t}>
+                <td>{p.label}</td>
+                <td>{p.download ?? 'n/a'}</td>
+                <td>{p.upload ?? 'n/a'}</td>
+                <td>{p.latency ?? 'n/a'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </CardContent>
     </Card>
   );
+}
+
+function average(values: (number | null)[]): number | null {
+  const nums = values.filter((v): v is number => v != null);
+  if (nums.length === 0) return null;
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+function buildSummary(data: Point[]): string {
+  const avgDown = average(data.map((p) => p.download));
+  const avgUp = average(data.map((p) => p.upload));
+  const avgLat = average(data.map((p) => p.latency));
+  const start = data[0]?.label;
+  const end = data[data.length - 1]?.label;
+  const parts = [`Speed and latency history, ${data.length} measurements from ${start} to ${end}`];
+  if (avgDown != null) parts.push(`average download ${avgDown.toFixed(1)} Mbps`);
+  if (avgUp != null) parts.push(`average upload ${avgUp.toFixed(1)} Mbps`);
+  if (avgLat != null) parts.push(`average latency ${avgLat.toFixed(0)} ms`);
+  return `${parts.join(', ')}.`;
 }
 
 function Legend({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {

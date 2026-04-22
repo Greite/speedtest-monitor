@@ -92,7 +92,9 @@ export function AlertsCard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Alerts</CardTitle>
+          <CardTitle as="h2" className="text-base">
+            Alerts
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {error ? (
@@ -190,7 +192,9 @@ export function AlertsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Alerts</CardTitle>
+        <CardTitle as="h2" className="text-base">
+          Alerts
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <div className="flex items-center gap-3">

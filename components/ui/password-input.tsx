@@ -25,10 +25,13 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(function Passwo
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? 'Hide password' : 'Show password'}
         aria-pressed={visible}
-        tabIndex={-1}
         className="absolute right-1 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        {visible ? (
+          <EyeOff className="size-4" aria-hidden />
+        ) : (
+          <Eye className="size-4" aria-hidden />
+        )}
       </button>
     </div>
   );
