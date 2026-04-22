@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import {
   Select,
   SelectContent,
@@ -122,9 +123,8 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="add-user-password">Temporary password</Label>
-            <Input
+            <PasswordInput
               id="add-user-password"
-              type="password"
               required
               autoComplete="new-password"
               minLength={MIN_PASSWORD_LEN}

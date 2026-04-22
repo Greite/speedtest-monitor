@@ -1,8 +1,8 @@
 'use client';
 
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -10,8 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { parseApiError } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 
 type Configured = {
   webhook: boolean;
@@ -48,14 +50,22 @@ function numOrNull(v: string): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+type TestState = { ok: boolean; message: string } | 'pending';
+
 export function AlertsCard() {
   const { data: session } = useSession();
   const readOnly = session?.user?.role !== 'admin';
   const [rules, setRules] = useState<Rules | null>(null);
+  const [savedRules, setSavedRules] = useState<Rules | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<Record<string, string>>({});
+  const [testResult, setTestResult] = useState<Record<string, TestState>>({});
+
+  const dirty = useMemo(() => {
+    if (!savedRules || !rules) return false;
+    return JSON.stringify(rules) !== JSON.stringify(savedRules);
+  }, [rules, savedRules]);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,7 +75,10 @@ export function AlertsCard() {
         return r.json();
       })
       .then((data: Rules) => {
-        if (!cancelled) setRules(data);
+        if (!cancelled) {
+          setRules(data);
+          setSavedRules(data);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'load failed');
@@ -89,7 +102,11 @@ export function AlertsCard() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <>
+              <Skeleton className="h-8 w-40" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </>
           )}
         </CardContent>
       </Card>
@@ -128,6 +145,7 @@ export function AlertsCard() {
       }
       const updated = (await res.json()) as Rules;
       setRules(updated);
+      setSavedRules(updated);
       setStatus('Saved');
       toast.success('Alerts saved');
     } catch (err) {
@@ -139,7 +157,7 @@ export function AlertsCard() {
   };
 
   const test = async (destination: keyof Configured) => {
-    setTestResult({ ...testResult, [destination]: 'Sending...' });
+    setTestResult((prev) => ({ ...prev, [destination]: 'pending' }));
     try {
       const res = await fetch('/api/alerts/test', {
         method: 'POST',
@@ -152,12 +170,19 @@ export function AlertsCard() {
       const r = body.results?.[destination];
       setTestResult((prev) => ({
         ...prev,
-        [destination]: r ? (r.ok ? 'OK' : `Failed: ${r.error ?? 'unknown'}`) : 'No result',
+        [destination]: r
+          ? r.ok
+            ? { ok: true, message: 'Delivered' }
+            : { ok: false, message: r.error ?? 'unknown' }
+          : { ok: false, message: 'No result' },
       }));
     } catch (err) {
       setTestResult((prev) => ({
         ...prev,
-        [destination]: `Failed: ${err instanceof Error ? err.message : 'unknown'}`,
+        [destination]: {
+          ok: false,
+          message: err instanceof Error ? err.message : 'unknown',
+        },
       }));
     }
   };
@@ -278,7 +303,7 @@ export function AlertsCard() {
                   >
                     Send test
                   </Button>
-                  {result ? <span className="text-xs text-muted-foreground">{result}</span> : null}
+                  {result ? <TestResultPill state={result} /> : null}
                 </div>
               );
             })}
@@ -294,12 +319,41 @@ export function AlertsCard() {
         ) : null}
 
         <div className="flex items-center gap-2">
-          <Button onClick={save} disabled={saving || readOnly}>
+          <Button onClick={save} disabled={saving || readOnly || !dirty}>
             {saving ? 'Saving...' : 'Save'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (savedRules) setRules(savedRules);
+              setError(null);
+              setStatus(null);
+            }}
+            disabled={saving || readOnly || !dirty}
+          >
+            Cancel
           </Button>
           {status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function TestResultPill({ state }: { state: TestState }) {
+  if (state === 'pending') {
+    return <span className="text-xs text-muted-foreground">Sending…</span>;
+  }
+  const Icon = state.ok ? CheckCircle2 : XCircle;
+  return (
+    <span
+      className={cn(
+        'inline-flex max-w-[32ch] items-center gap-1 truncate text-xs',
+        state.ok ? 'text-latency-ok' : 'text-destructive',
+      )}
+    >
+      <Icon className="size-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{state.message}</span>
+    </span>
   );
 }

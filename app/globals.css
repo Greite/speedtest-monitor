@@ -23,6 +23,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-accent: var(--brand-accent);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -59,13 +62,18 @@
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --speed-down: oklch(0.72 0.15 210);
+  /* Brand identity (logo gradient #2563EB -> #06B6D4) */
+  --brand: oklch(0.58 0.19 250);
+  --brand-foreground: oklch(0.985 0 0);
+  --brand-accent: oklch(0.72 0.15 210);
+  --ring: oklch(0.58 0.19 250);
+  /* Chart palette: brand-first, stable light/dark */
+  --chart-1: oklch(0.58 0.19 250);
+  --chart-2: oklch(0.72 0.15 210);
+  --chart-3: oklch(0.63 0.19 145);
+  --chart-4: oklch(0.75 0.16 80);
+  --chart-5: oklch(0.6 0.23 300);
+  --speed-down: oklch(0.58 0.19 250);
   --speed-up: oklch(0.6 0.23 300);
   --latency-ok: oklch(0.63 0.19 145);
   --latency-warn: oklch(0.75 0.16 80);
@@ -91,13 +99,17 @@
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --speed-down: oklch(0.82 0.15 200);
+  /* Same brand hue, lighter luminance for dark surfaces */
+  --brand: oklch(0.7 0.17 240);
+  --brand-foreground: oklch(0.145 0 0);
+  --brand-accent: oklch(0.82 0.15 200);
+  --ring: oklch(0.7 0.17 240);
+  --chart-1: oklch(0.7 0.17 240);
+  --chart-2: oklch(0.82 0.15 200);
+  --chart-3: oklch(0.74 0.18 145);
+  --chart-4: oklch(0.82 0.16 80);
+  --chart-5: oklch(0.76 0.17 300);
+  --speed-down: oklch(0.7 0.17 240);
   --speed-up: oklch(0.76 0.17 300);
   --latency-ok: oklch(0.74 0.18 145);
   --latency-warn: oklch(0.82 0.16 80);
@@ -110,5 +122,46 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Tabular figures for numeric-heavy UI */
+  table,
+  th,
+  td,
+  .nums-tab {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Skip-link: hidden until focused */
+  .skip-link {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    transform: translateY(-200%);
+    transition: transform 150ms ease-out;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    background: var(--brand);
+    color: var(--brand-foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.2);
+  }
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

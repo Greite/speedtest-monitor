@@ -50,3 +50,30 @@ export function latencyLevel(loadedMs: number | null | undefined): LatencyLevel 
   if (loadedMs < 150) return 'warn';
   return 'bad';
 }
+
+const RELATIVE_FMT = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' });
+
+export function formatRelativeTime(
+  timestamp: number | string | Date,
+  now: number = Date.now(),
+): string {
+  const then = asDate(timestamp).getTime();
+  const diffSec = Math.round((then - now) / 1000);
+  const abs = Math.abs(diffSec);
+  if (abs < 45) return RELATIVE_FMT.format(diffSec, 'second');
+  if (abs < 45 * 60) return RELATIVE_FMT.format(Math.round(diffSec / 60), 'minute');
+  if (abs < 22 * 3600) return RELATIVE_FMT.format(Math.round(diffSec / 3600), 'hour');
+  return RELATIVE_FMT.format(Math.round(diffSec / 86_400), 'day');
+}
+
+export type Delta = { sign: 'up' | 'down' | 'flat'; percent: number } | null;
+
+export function computeDelta(
+  current: number | null | undefined,
+  average: number | null | undefined,
+): Delta {
+  if (current == null || average == null || average === 0) return null;
+  const percent = ((current - average) / average) * 100;
+  if (Math.abs(percent) < 2) return { sign: 'flat', percent: 0 };
+  return { sign: percent > 0 ? 'up' : 'down', percent: Math.abs(percent) };
+}

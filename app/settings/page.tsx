@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { PasswordChangeCard } from '@/components/auth/password-change-card';
 import { AlertsCard } from '@/components/settings/alerts-card';
@@ -24,17 +25,26 @@ export default async function SettingsPage() {
   const envDefaultRetentionDays = getEnvDefaultRetentionDays();
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-8">
+    <main
+      id="main"
+      className="mx-auto flex min-h-[100dvh] max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8"
+    >
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Back to dashboard
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+          Back to dashboard
         </Link>
       </div>
       {readOnly ? (
         <Alert variant="default">
-          <AlertTitle>Read-only mode</AlertTitle>
-          <AlertDescription>You do not have permission to change settings.</AlertDescription>
+          <AlertTitle>Limited permissions</AlertTitle>
+          <AlertDescription>
+            Some settings are restricted to admins. You can still change your own password below.
+          </AlertDescription>
         </Alert>
       ) : null}
       <PasswordChangeCard />

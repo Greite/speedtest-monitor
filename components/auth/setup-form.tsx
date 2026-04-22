@@ -2,10 +2,13 @@
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
+
+import { LogoMark } from '@/components/logo-mark';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import { parseApiError } from '@/lib/api-client';
 
 export function SetupForm() {
@@ -55,60 +58,66 @@ export function SetupForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto mt-24 flex max-w-sm flex-col gap-4">
-      <h1 className="text-center text-2xl font-semibold">Create the first admin</h1>
-      <p className="text-center text-sm text-muted-foreground">
-        This page is only accessible until the first user is created.
-      </p>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          aria-invalid={fieldErrors.email ? true : undefined}
-        />
-        {fieldErrors.email ? (
-          <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p>
+    <main
+      id="main"
+      className="mx-auto flex min-h-[100dvh] max-w-sm flex-col justify-center px-4 py-8"
+    >
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <div className="mb-2 flex flex-col items-center gap-3">
+          <LogoMark size={44} />
+          <h1 className="text-2xl font-semibold tracking-tight">Create the first admin</h1>
+          <p className="text-center text-sm text-muted-foreground">
+            This page is only accessible until the first user is created.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={fieldErrors.email ? true : undefined}
+          />
+          {fieldErrors.email ? (
+            <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p>
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password">Password (min 10 chars)</Label>
+          <PasswordInput
+            id="password"
+            required
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={fieldErrors.password ? true : undefined}
+          />
+          {fieldErrors.password ? (
+            <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p>
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="confirm">Confirm password</Label>
+          <PasswordInput
+            id="confirm"
+            required
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+        </div>
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : null}
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Password (min 10 chars)</Label>
-        <Input
-          id="password"
-          type="password"
-          required
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          aria-invalid={fieldErrors.password ? true : undefined}
-        />
-        {fieldErrors.password ? (
-          <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p>
-        ) : null}
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="confirm">Confirm password</Label>
-        <Input
-          id="confirm"
-          type="password"
-          required
-          autoComplete="new-password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-        />
-      </div>
-      {error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
-      <Button type="submit" disabled={pending}>
-        {pending ? 'Creating...' : 'Create admin'}
-      </Button>
-    </form>
+        <Button type="submit" disabled={pending}>
+          {pending ? 'Creating...' : 'Create admin'}
+        </Button>
+      </form>
+    </main>
   );
 }

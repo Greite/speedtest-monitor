@@ -10,7 +10,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, KeyRound, Search, Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -174,19 +174,24 @@ export function UsersCard() {
         enableSorting: false,
         enableColumnFilter: false,
         cell: ({ row }) => (
-          <div className="flex justify-end gap-2 py-1">
+          <div className="flex items-center justify-end gap-2 py-1">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setResetTarget({ id: row.original.id, email: row.original.email })}
             >
-              Reset pw
+              <KeyRound aria-hidden />
+              Reset password
             </Button>
+            <span aria-hidden className="h-6 w-px bg-border" />
             <Button
-              variant="destructive"
+              variant="ghost"
               size="sm"
               onClick={() => setDeleteTarget({ id: row.original.id, email: row.original.email })}
+              aria-label={`Delete ${row.original.email}`}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
+              <Trash2 aria-hidden />
               Delete
             </Button>
           </div>

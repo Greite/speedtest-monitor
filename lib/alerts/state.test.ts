@@ -37,7 +37,7 @@ describe('alerts/state', () => {
     db.insert(alerts)
       .values({ kind: 'download_below', event: 'fired', timestamp: new Date(1000) })
       .run();
-    expect(readAlertState()['download_below']).toBe('ALERTING');
+    expect(readAlertState().download_below).toBe('ALERTING');
   });
 
   it('returns OK when last event is resolved', () => {
@@ -48,6 +48,6 @@ describe('alerts/state', () => {
     db.insert(alerts)
       .values({ kind: 'download_below', event: 'resolved', timestamp: new Date(2000) })
       .run();
-    expect(readAlertState()['download_below']).toBe('OK');
+    expect(readAlertState().download_below).toBe('OK');
   });
 });

@@ -51,6 +51,13 @@ function setTimeRange(col: Column<MeasurementDto, unknown> | undefined, next: Ti
   else col.setFilterValue(next);
 }
 
+function formatNumericSummary(label: string, val: NumericRange): string {
+  if (val.min != null && val.max != null) return `${label}: ${val.min}–${val.max}`;
+  if (val.min != null) return `${label} ≥ ${val.min}`;
+  if (val.max != null) return `${label} ≤ ${val.max}`;
+  return label;
+}
+
 export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
   const [open, setOpen] = useState(false);
 
@@ -79,13 +86,62 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
     else statusCol.setFilterValue([...set]);
   };
 
+  const activePills: { key: string; label: string; onRemove: () => void }[] = [];
+  if (timeVal.from != null || timeVal.to != null) {
+    const parts: string[] = [];
+    if (timeVal.from != null) parts.push(`from ${new Date(timeVal.from).toLocaleString()}`);
+    if (timeVal.to != null) parts.push(`to ${new Date(timeVal.to).toLocaleString()}`);
+    activePills.push({
+      key: 'time',
+      label: parts.join(' '),
+      onRemove: () => timeCol?.setFilterValue(undefined),
+    });
+  }
+  if (downVal.min != null || downVal.max != null) {
+    activePills.push({
+      key: 'download',
+      label: formatNumericSummary('Download (Mbps)', downVal),
+      onRemove: () => downCol?.setFilterValue(undefined),
+    });
+  }
+  if (upVal.min != null || upVal.max != null) {
+    activePills.push({
+      key: 'upload',
+      label: formatNumericSummary('Upload (Mbps)', upVal),
+      onRemove: () => upCol?.setFilterValue(undefined),
+    });
+  }
+  if (latVal.min != null || latVal.max != null) {
+    activePills.push({
+      key: 'latency',
+      label: formatNumericSummary('Latency (ms)', latVal),
+      onRemove: () => latCol?.setFilterValue(undefined),
+    });
+  }
+  if (serverVal) {
+    activePills.push({
+      key: 'server',
+      label: `Server: ${serverVal}`,
+      onRemove: () => serverCol?.setFilterValue(undefined),
+    });
+  }
+  if (statusVal.length > 0) {
+    activePills.push({
+      key: 'status',
+      label: `Status: ${statusVal.map((s) => STATUSES.find((st) => st.value === s)?.label ?? s).join(', ')}`,
+      onRemove: () => statusCol?.setFilterValue(undefined),
+    });
+  }
+
   return (
     <div className="mb-4 rounded-lg border bg-card">
-      <div className="flex items-center justify-between px-4 py-2">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80"
+          aria-expanded={open}
+          aria-controls="table-filters-panel"
         >
           {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           Filters
@@ -95,15 +151,39 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
             </Badge>
           ) : null}
         </button>
+        {!open && activePills.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {activePills.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={p.onRemove}
+                aria-label={`Remove filter: ${p.label}`}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <span className="max-w-[24ch] truncate">{p.label}</span>
+                <X className="size-3" aria-hidden />
+              </button>
+            ))}
+          </div>
+        ) : null}
         {activeCount > 0 ? (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => table.resetColumnFilters()}
+            className="ml-auto"
+          >
             <X className="size-3" />
             Reset
           </Button>
         ) : null}
       </div>
       {open ? (
-        <div className="grid grid-cols-1 gap-4 border-t p-4 md:grid-cols-3">
+        <div
+          id="table-filters-panel"
+          className="grid grid-cols-1 gap-4 border-t p-4 md:grid-cols-3"
+        >
           <div className="flex flex-col gap-2">
             <Label className="text-xs uppercase tracking-wide text-muted-foreground">Time</Label>
             <div className="flex flex-col gap-1">
@@ -114,7 +194,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                   setTimeRange(timeCol, { from: parseTime(e.target.value), to: timeVal.to })
                 }
                 className="h-8 text-xs"
-                aria-label="From"
+                aria-label="From date and time"
               />
               <Input
                 type="datetime-local"
@@ -123,7 +203,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                   setTimeRange(timeCol, { from: timeVal.from, to: parseTime(e.target.value) })
                 }
                 className="h-8 text-xs"
-                aria-label="To"
+                aria-label="To date and time"
               />
             </div>
           </div>
@@ -145,10 +225,14 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
           />
 
           <div className="flex flex-col gap-2">
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+            <Label
+              htmlFor="filter-server"
+              className="text-xs uppercase tracking-wide text-muted-foreground"
+            >
               Server contains
             </Label>
             <Input
+              id="filter-server"
               type="text"
               value={serverVal}
               onChange={(e) => serverCol?.setFilterValue(e.target.value || undefined)}
@@ -157,8 +241,10 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs uppercase tracking-wide text-muted-foreground">Status</Label>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+              Status
+            </legend>
             <div className="flex flex-wrap gap-2">
               {STATUSES.map((s) => {
                 const active = statusVal.includes(s.value);
@@ -167,8 +253,9 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                     key={s.value}
                     type="button"
                     onClick={() => toggleStatus(s.value)}
+                    aria-pressed={active}
                     className={cn(
-                      'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                      'inline-flex min-h-[36px] items-center rounded-full border px-3 text-xs font-medium transition-colors md:min-h-[28px]',
                       active
                         ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-input bg-background text-muted-foreground hover:text-foreground',
@@ -179,7 +266,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                 );
               })}
             </div>
-          </div>
+          </fieldset>
         </div>
       ) : null}
     </div>
@@ -195,22 +282,28 @@ function NumericBlock({
   value: NumericRange;
   onChange: (next: NumericRange) => void;
 }) {
+  const minId = `${label}-min`.replace(/\s+/g, '-').toLowerCase();
+  const maxId = `${label}-max`.replace(/\s+/g, '-').toLowerCase();
   return (
     <div className="flex flex-col gap-2">
       <Label className="text-xs uppercase tracking-wide text-muted-foreground">{label}</Label>
       <div className="flex items-center gap-2">
         <Input
+          id={minId}
           type="number"
           value={value.min ?? ''}
           onChange={(e) => onChange({ min: parseNumber(e.target.value), max: value.max })}
           placeholder="min"
+          aria-label={`${label} minimum`}
           className="h-8 text-xs"
         />
         <Input
+          id={maxId}
           type="number"
           value={value.max ?? ''}
           onChange={(e) => onChange({ min: value.min, max: parseNumber(e.target.value) })}
           placeholder="max"
+          aria-label={`${label} maximum`}
           className="h-8 text-xs"
         />
       </div>

@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import { parseApiError } from '@/lib/api-client';
 
 export function PasswordChangeCard() {
@@ -66,9 +66,8 @@ export function PasswordChangeCard() {
         <form onSubmit={submit} className="flex max-w-sm flex-col gap-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="pwd-current">Current password</Label>
-            <Input
+            <PasswordInput
               id="pwd-current"
-              type="password"
               autoComplete="current-password"
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
@@ -81,9 +80,8 @@ export function PasswordChangeCard() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="pwd-new">New password</Label>
-            <Input
+            <PasswordInput
               id="pwd-new"
-              type="password"
               autoComplete="new-password"
               value={next}
               onChange={(e) => setNext(e.target.value)}
@@ -96,9 +94,8 @@ export function PasswordChangeCard() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="pwd-confirm">Confirm new password</Label>
-            <Input
+            <PasswordInput
               id="pwd-confirm"
-              type="password"
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}

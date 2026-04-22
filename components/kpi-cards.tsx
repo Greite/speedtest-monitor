@@ -1,9 +1,18 @@
 'use client';
 
-import { ArrowDown, ArrowUp, Gauge } from 'lucide-react';
+import { ArrowDown, ArrowUp, Gauge, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatMbps, formatMs, type LatencyLevel, latencyLevel } from '@/lib/format';
+import {
+  computeDelta,
+  type Delta,
+  formatMbps,
+  formatMs,
+  formatRelativeTime,
+  type LatencyLevel,
+  latencyLevel,
+} from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -13,38 +22,90 @@ const levelColor: Record<LatencyLevel, string> = {
   bad: 'bg-latency-bad',
 };
 
-export function KpiCards({ latest }: { latest: MeasurementDto | null }) {
-  const level = latencyLevel(latest?.latencyLoadedMs ?? null);
+const levelLabel: Record<LatencyLevel, string> = {
+  ok: 'Good',
+  warn: 'Fair',
+  bad: 'Poor',
+};
+
+type Averages = {
+  download: number | null;
+  upload: number | null;
+  latency: number | null;
+};
+
+function useRelativeTime(timestamp: number | null) {
+  const [rendered, setRendered] = useState<string | null>(
+    timestamp ? formatRelativeTime(timestamp) : null,
+  );
+  useEffect(() => {
+    if (timestamp == null) {
+      setRendered(null);
+      return;
+    }
+    setRendered(formatRelativeTime(timestamp));
+    const id = setInterval(() => setRendered(formatRelativeTime(timestamp)), 30_000);
+    return () => clearInterval(id);
+  }, [timestamp]);
+  return rendered;
+}
+
+// Speed health: >= average + 10% is good, <= average - 20% is bad.
+function speedLevel(value: number | null | undefined, average: number | null): LatencyLevel | null {
+  if (value == null || average == null || average === 0) return null;
+  const ratio = value / average;
+  if (ratio >= 0.95) return 'ok';
+  if (ratio >= 0.7) return 'warn';
+  return 'bad';
+}
+
+export function KpiCards({
+  latest,
+  averages,
+}: {
+  latest: MeasurementDto | null;
+  averages: Averages;
+}) {
+  const latencyCurrentLevel = latencyLevel(latest?.latencyLoadedMs ?? null);
+  const downLevel = speedLevel(latest?.downloadMbps, averages.download);
+  const upLevel = speedLevel(latest?.uploadMbps, averages.upload);
+
+  const relative = useRelativeTime(latest?.timestamp ?? null);
+
   return (
-    <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <section
+      aria-live="polite"
+      aria-atomic="false"
+      className="grid grid-cols-1 gap-4 md:grid-cols-3"
+    >
       <Kpi
         label="Download"
         icon={<ArrowDown className="size-4 text-speed-down" />}
         value={formatMbps(latest?.downloadMbps ?? null)}
-        sub="last measurement"
+        level={downLevel}
+        delta={computeDelta(latest?.downloadMbps, averages.download)}
+        deltaSuffix="vs avg"
+        sub={relative ?? 'No measurement yet'}
       />
       <Kpi
         label="Upload"
         icon={<ArrowUp className="size-4 text-speed-up" />}
         value={formatMbps(latest?.uploadMbps ?? null)}
-        sub="last measurement"
+        level={upLevel}
+        delta={computeDelta(latest?.uploadMbps, averages.upload)}
+        deltaSuffix="vs avg"
+        sub={relative ?? 'No measurement yet'}
       />
       <Kpi
         label="Latency"
-        icon={
-          <span className="relative inline-flex items-center gap-1.5">
-            <Gauge className="size-4 text-muted-foreground" />
-            <span
-              className={cn('inline-block size-2 rounded-full', levelColor[level])}
-              aria-hidden
-            />
-          </span>
-        }
+        icon={<Gauge className="size-4 text-muted-foreground" />}
         value={
           latest
             ? `${formatMs(latest.latencyUnloadedMs)} / ${formatMs(latest.latencyLoadedMs)}`
             : '—'
         }
+        level={latest ? latencyCurrentLevel : null}
+        delta={null}
         sub="unloaded / loaded"
       />
     </section>
@@ -55,25 +116,73 @@ function Kpi({
   label,
   icon,
   value,
+  level,
+  delta,
+  deltaSuffix,
   sub,
 }: {
   label: string;
   icon: ReactNode;
   value: string;
+  level: LatencyLevel | null;
+  delta: Delta;
+  deltaSuffix?: string;
   sub: string;
 }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
-          {icon}
-          {label}
+        <CardTitle className="flex items-center justify-between gap-2 text-sm font-normal text-muted-foreground">
+          <span className="flex items-center gap-2">
+            {icon}
+            {label}
+          </span>
+          {level ? (
+            <span className="inline-flex items-center gap-1.5 text-xs">
+              <span
+                className={cn('inline-block size-2 rounded-full', levelColor[level])}
+                aria-hidden
+              />
+              <span className="sr-only">Status:</span>
+              <span>{levelLabel[level]}</span>
+            </span>
+          ) : null}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-bold tracking-tight tabular-nums">{value}</div>
-        <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+          {delta ? <DeltaBadge delta={delta} suffix={deltaSuffix} /> : null}
+          <span>{sub}</span>
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+function DeltaBadge({ delta, suffix }: { delta: NonNullable<Delta>; suffix?: string }) {
+  if (delta.sign === 'flat') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+        <Minus className="size-3" />
+        <span>~{suffix ?? ''}</span>
+      </span>
+    );
+  }
+  const Icon = delta.sign === 'up' ? TrendingUp : TrendingDown;
+  const tone =
+    delta.sign === 'up' ? 'bg-latency-ok/10 text-latency-ok' : 'bg-latency-bad/10 text-latency-bad';
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums',
+        tone,
+      )}
+    >
+      <Icon className="size-3" aria-hidden />
+      <span>
+        {delta.percent.toFixed(0)}%{suffix ? ` ${suffix}` : ''}
+      </span>
+    </span>
   );
 }

@@ -1,15 +1,25 @@
 import { Dashboard } from '@/components/dashboard';
-import { listMeasurements } from '@/lib/measurements';
+import type { Range } from '@/components/time-range-picker';
+import { isRange, listMeasurements } from '@/lib/measurements';
 import { toMeasurementDto } from '@/lib/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export default function Page() {
-  const initial = listMeasurements('24h').map(toMeasurementDto);
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const { range: rangeParam } = await searchParams;
+  const range: Range = rangeParam && isRange(rangeParam) ? rangeParam : '24h';
+  const initial = listMeasurements(range).map(toMeasurementDto);
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-6 py-8">
-      <Dashboard initial={initial} />
+    <main
+      id="main"
+      className="mx-auto flex min-h-[100dvh] max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8"
+    >
+      <Dashboard initial={initial} initialRange={range} />
     </main>
   );
 }

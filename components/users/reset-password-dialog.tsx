@@ -13,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import { parseApiError } from '@/lib/api-client';
 
 type Props = {
@@ -107,9 +107,8 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="reset-pw-new">New password</Label>
-            <Input
+            <PasswordInput
               id="reset-pw-new"
-              type="password"
               required
               autoComplete="new-password"
               autoFocus
@@ -125,9 +124,8 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="reset-pw-confirm">Confirm password</Label>
-            <Input
+            <PasswordInput
               id="reset-pw-confirm"
-              type="password"
               required
               autoComplete="new-password"
               minLength={MIN_PASSWORD_LEN}

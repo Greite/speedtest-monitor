@@ -52,6 +52,11 @@ export function useLiveMeasurements(initial: MeasurementDto[], range: Range = '2
     }
   }, [range]);
 
+  // Refetch when range changes (even without a socket event).
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
   const currentWsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {

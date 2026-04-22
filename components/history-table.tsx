@@ -256,19 +256,21 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
               </span>
               <Button
                 variant="outline"
-                size="icon-xs"
+                size="icon-sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
                 aria-label="Previous page"
+                className="md:size-7"
               >
                 <ChevronLeft />
               </Button>
               <Button
                 variant="outline"
-                size="icon-xs"
+                size="icon-sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
                 aria-label="Next page"
+                className="md:size-7"
               >
                 <ChevronRight />
               </Button>

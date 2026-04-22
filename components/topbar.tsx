@@ -24,10 +24,10 @@ function LiveDot({ running, connected }: { running: boolean; connected: boolean 
     <span
       aria-hidden
       className={cn(
-        'inline-block size-2 rounded-full',
+        'inline-block size-2 rounded-full motion-safe:transition-colors motion-safe:duration-300',
         !connected && 'bg-destructive',
-        connected && running && 'animate-pulse bg-chart-1',
-        connected && !running && 'bg-chart-1',
+        connected && running && 'bg-latency-ok motion-safe:animate-pulse',
+        connected && !running && 'bg-latency-ok',
       )}
     />
   );
@@ -69,9 +69,9 @@ function ThemeSegmented({
             aria-label={label}
             onClick={() => setTheme(value)}
             className={cn(
-              'inline-flex items-center justify-center gap-1.5 rounded-sm px-2 py-1 text-xs font-medium transition-colors',
-              withLabels ? 'flex-1' : 'size-7',
-              active ? 'bg-accent text-primary' : 'text-muted-foreground hover:text-foreground',
+              'inline-flex items-center justify-center gap-1.5 rounded-sm text-xs font-medium transition-colors',
+              withLabels ? 'h-9 flex-1 px-2' : 'size-9 md:size-7',
+              active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             <Icon className="size-3.5" />
@@ -180,10 +180,10 @@ export function Topbar() {
               size="sm"
               onClick={handleRun}
               disabled={isBusy || !connected}
-              className="border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
+              className="border-brand/50 text-brand hover:bg-brand/10 hover:text-brand"
               title={connected ? undefined : 'Waiting for live connection…'}
             >
-              <Play className="text-chart-1" />
+              <Play className="text-brand" />
               <span>Run now</span>
             </Button>
 
@@ -225,9 +225,9 @@ export function Topbar() {
               onClick={handleRun}
               disabled={isBusy || !connected}
               aria-label="Run now"
-              className="border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
+              className="border-brand/50 text-brand hover:bg-brand/10 hover:text-brand"
             >
-              <Play className="text-chart-1" />
+              <Play className="text-brand" />
             </Button>
             <Button
               variant="ghost"
@@ -302,7 +302,7 @@ export function Topbar() {
                 disabled={isBusy || !connected}
                 className="mt-3 w-full border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
               >
-                <Play className="text-chart-1" />
+                <Play className="text-brand" />
                 Run now
               </Button>
             </div>

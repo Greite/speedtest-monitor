@@ -1,5 +1,6 @@
 'use client';
 
+import { LineChartIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import {
   CartesianGrid,
@@ -12,7 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatTime } from '@/lib/format';
+import { formatTime, type LatencyLevel, latencyLevel } from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
 
 type Point = {
@@ -21,9 +22,16 @@ type Point = {
   download: number | null;
   upload: number | null;
   latency: number | null;
+  latencyLevel: LatencyLevel | null;
   serverLocations: string[] | null;
   userLocation: string | null;
   userIp: string | null;
+};
+
+const LEVEL_STROKE: Record<LatencyLevel, string> = {
+  ok: 'var(--color-latency-ok)',
+  warn: 'var(--color-latency-warn)',
+  bad: 'var(--color-latency-bad)',
 };
 
 export function HistoryChart({ measurements }: { measurements: MeasurementDto[] }) {
@@ -36,11 +44,31 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
         download: m.downloadMbps,
         upload: m.uploadMbps,
         latency: m.latencyLoadedMs,
+        latencyLevel: m.latencyLoadedMs != null ? latencyLevel(m.latencyLoadedMs) : null,
         serverLocations: m.serverLocations,
         userLocation: m.userLocation,
         userIp: m.userIp,
       }));
   }, [measurements]);
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-64 flex-col items-center justify-center gap-2 text-center">
+            <LineChartIcon className="size-8 text-muted-foreground" aria-hidden />
+            <p className="text-sm font-medium">No data for this range</p>
+            <p className="text-xs text-muted-foreground">
+              Measurements will appear here as they run.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -49,14 +77,14 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <Legend color="var(--color-speed-down)" label="Download" />
           <Legend color="var(--color-speed-up)" label="Upload" />
-          <Legend color="var(--color-latency-ok)" label="Latency" />
+          <Legend color="var(--color-latency-ok)" label="Latency" dashed />
         </div>
       </CardHeader>
       <CardContent>
         <div className="h-64 w-full" style={{ minWidth: 0, minHeight: 0 }}>
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
             <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
-              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" />
+              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" opacity={0.5} />
               <XAxis
                 dataKey="label"
                 stroke="var(--color-muted-foreground)"
@@ -107,10 +135,26 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
                 type="monotone"
                 dataKey="latency"
                 stroke="var(--color-latency-ok)"
-                dot={false}
                 strokeWidth={2}
                 strokeDasharray="4 3"
                 connectNulls
+                dot={(props) => {
+                  const point = props.payload as Point | undefined;
+                  const lvl = point?.latencyLevel ?? 'ok';
+                  if (lvl === 'ok') return <g key={props.key} />;
+                  return (
+                    <circle
+                      key={props.key}
+                      cx={props.cx}
+                      cy={props.cy}
+                      r={3}
+                      fill={LEVEL_STROKE[lvl]}
+                      stroke="var(--color-background)"
+                      strokeWidth={1}
+                    />
+                  );
+                }}
+                activeDot={{ r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -120,10 +164,19 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
+function Legend({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
   return (
     <span className="flex items-center gap-1.5">
-      <span className="inline-block size-2 rounded-full" style={{ background: color }} />
+      {dashed ? (
+        <span
+          className="inline-block h-0.5 w-3"
+          style={{
+            backgroundImage: `repeating-linear-gradient(to right, ${color} 0, ${color} 3px, transparent 3px, transparent 6px)`,
+          }}
+        />
+      ) : (
+        <span className="inline-block size-2 rounded-full" style={{ background: color }} />
+      )}
       {label}
     </span>
   );
