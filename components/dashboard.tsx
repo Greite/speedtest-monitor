@@ -64,7 +64,7 @@ export function Dashboard({
       </div>
       <KpiCards latest={latest} averages={averages} busy={running} />
       <HistoryChart measurements={measurements} />
-      <HistoryTable measurements={measurements.slice(0, 25)} />
+      <HistoryTable measurements={measurements} />
     </div>
   );
 }
