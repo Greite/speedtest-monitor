@@ -1,0 +1,232 @@
+<mjml>
+  <mj-head>
+    <mj-title>__TITLE__</mj-title>
+    <mj-preview>__BODY__</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" />
+      <mj-text color="#0F172A" font-size="14px" line-height="1.55" />
+    </mj-attributes>
+    <mj-style>
+      a { color: inherit; }
+      .sev-fired { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+      .sev-recovered { background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; }
+      .sev-fired-sub { color: #B91C1C; }
+      .sev-recovered-sub { color: #047857; }
+      .sev-fired-icon-bg { background: #FEE2E2; color: #B91C1C; }
+      .sev-recovered-icon-bg { background: #D1FAE5; color: #047857; }
+      .metric-obs { background: #FFF1F2; border: 1px solid #FECDD3; }
+      .metric-obs-label { color: #9F1239; }
+      .metric-obs-value { color: #BE123C; }
+      .metric-thr { background: #F8FAFC; border: 1px solid #E2E8F0; }
+      .metric-thr-label { color: #64748B; }
+      .metric-thr-value { color: #0F172A; }
+      .metric-thr-unit { color: #475569; }
+      .meta-card { background: #F8FAFC; border: 1px solid #E2E8F0; }
+      .meta-key { color: #64748B; }
+      .meta-val { color: #0F172A; }
+      .meta-sep { border-top: 1px solid #E2E8F0; }
+      .pill-fired { background: #FEE2E2; border: 1px solid #FECACA; color: #991B1B; }
+      .pill-recovered { background: #D1FAE5; border: 1px solid #A7F3D0; color: #065F46; }
+      .footer-bg { background: #F8FAFC !important; }
+      .footer-text { color: #64748B; }
+      .footer-hint { color: #94A3B8; }
+      .card { background: #FFFFFF; }
+      .outer { background: #F1F5F9; }
+      .title-text { color: #0F172A; }
+      .body-text { color: #475569; }
+      .header-title { color: #0F172A; }
+      .header-sub { color: #64748B; }
+      .link-text { color: #64748B; }
+      .divider { border-top: 1px solid #E2E8F0 !important; }
+
+      @media (prefers-color-scheme: dark) {
+        body, .outer { background: #020617 !important; }
+        .card { background: #0F172A !important; border-color: #1E293B !important; }
+        .divider { border-top-color: #1E293B !important; }
+        .title-text, .header-title { color: #F8FAFC !important; }
+        .body-text { color: #CBD5E1 !important; }
+        .header-sub { color: #94A3B8 !important; }
+        .sev-fired { background: #2A0F14 !important; border-color: #7F1D1D !important; color: #FCA5A5 !important; }
+        .sev-recovered { background: #022C22 !important; border-color: #065F46 !important; color: #6EE7B7 !important; }
+        .sev-fired-sub { color: #F87171 !important; }
+        .sev-recovered-sub { color: #34D399 !important; }
+        .sev-fired-icon-bg { background: #7F1D1D !important; color: #FCA5A5 !important; }
+        .sev-recovered-icon-bg { background: #065F46 !important; color: #6EE7B7 !important; }
+        .metric-obs { background: #2A0F14 !important; border-color: #7F1D1D !important; }
+        .metric-obs-label { color: #F87171 !important; }
+        .metric-obs-value { color: #FCA5A5 !important; }
+        .metric-thr { background: #0B1220 !important; border-color: #1E293B !important; }
+        .metric-thr-label { color: #94A3B8 !important; }
+        .metric-thr-value { color: #F8FAFC !important; }
+        .metric-thr-unit { color: #CBD5E1 !important; }
+        .meta-card { background: #0B1220 !important; border-color: #1E293B !important; }
+        .meta-key { color: #94A3B8 !important; }
+        .meta-val { color: #E2E8F0 !important; }
+        .meta-sep { border-top-color: #1E293B !important; }
+        .pill-fired { background: #2A0F14 !important; border-color: #7F1D1D !important; color: #FCA5A5 !important; }
+        .pill-recovered { background: #022C22 !important; border-color: #065F46 !important; color: #6EE7B7 !important; }
+        .footer-bg { background: #0B1220 !important; }
+        .footer-text { color: #94A3B8 !important; }
+        .footer-hint { color: #64748B !important; }
+        .link-text { color: #94A3B8 !important; }
+        .cta-button a { background: linear-gradient(135deg, #3B82F6 0%, #22D3EE 100%) !important; color: #0F172A !important; }
+      }
+    </mj-style>
+  </mj-head>
+
+  <mj-body css-class="outer" background-color="#F1F5F9" width="680px">
+    <mj-wrapper css-class="card" background-color="#FFFFFF" border="1px solid #E2E8F0" border-radius="16px" padding="0">
+
+      <mj-section padding="0">
+        <mj-column padding="0">
+          <mj-text padding="0" line-height="0" font-size="0">
+            <div style="height:6px;background:linear-gradient(90deg,#2563EB 0%,#06B6D4 100%);border-radius:16px 16px 0 0;">&nbsp;</div>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="28px 24px 28px 24px">
+        <mj-column vertical-align="middle" width="100%">
+          <mj-text align="center" padding="0">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+              <tr>
+                <td style="padding-right:12px;vertical-align:middle;">
+                  <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2563EB 0%,#06B6D4 100%);text-align:center;line-height:40px;">
+                    <span style="display:inline-block;color:#FFFFFF;font-size:20px;font-weight:900;line-height:40px;letter-spacing:-0.5px;">s</span>
+                  </div>
+                </td>
+                <td style="vertical-align:middle;text-align:left;">
+                  <div class="header-title" style="font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.2px;color:#0F172A;line-height:1.2;">Speedtest Monitor</div>
+                  <div class="header-sub" style="font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:500;letter-spacing:0.6px;color:#64748B;margin-top:2px;text-transform:uppercase;">Alert notification</div>
+                </td>
+              </tr>
+            </table>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0 24px">
+        <mj-column>
+          <mj-text padding="0" line-height="0" font-size="0">
+            <div class="divider" style="height:1px;line-height:1px;background:#E2E8F0;font-size:0;">&nbsp;</div>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="20px 24px 12px 24px">
+        <mj-column>
+          <mj-text padding="0" css-class="sev-__SEVERITY__">
+            <div class="sev-__SEVERITY__" style="border-radius:10px;padding:12px 14px;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="width:28px;vertical-align:top;padding-right:10px;">
+                    <div class="sev-__SEVERITY__-icon-bg" style="width:28px;height:28px;border-radius:8px;text-align:center;line-height:28px;font-weight:900;font-size:14px;">__SEVERITY_ICON__</div>
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <div style="font-size:13px;font-weight:600;line-height:1.2;">__SEVERITY_LABEL__</div>
+                    <div class="sev-__SEVERITY__-sub" style="font-size:12px;font-weight:400;line-height:1.3;margin-top:2px;">__SEVERITY_SUB__</div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="12px 24px 8px 24px">
+        <mj-column>
+          <mj-text css-class="title-text" padding="0" font-size="22px" font-weight="700" line-height="1.25" letter-spacing="-0.4px" color="#0F172A">__TITLE__</mj-text>
+          <mj-text css-class="body-text" padding="10px 0 0 0" font-size="14px" line-height="1.55" color="#475569">__BODY__</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!--METRICS:START-->
+      <mj-section padding="12px 24px">
+        <mj-column padding-right="6px" width="50%" css-class="metric-obs" border="1px solid #FECDD3" border-radius="12px" background-color="#FFF1F2">
+          <mj-text padding="14px 14px 4px 14px" css-class="metric-obs-label" font-size="10px" font-weight="700" letter-spacing="1.2px" color="#9F1239">OBSERVED</mj-text>
+          <mj-text padding="0 14px 14px 14px" css-class="metric-obs-value" font-size="28px" font-weight="700" letter-spacing="-0.6px" color="#BE123C" line-height="1.1">
+            __OBSERVED__<span style="font-size:13px;font-weight:600;margin-left:4px;">__OBSERVED_UNIT__</span>
+          </mj-text>
+        </mj-column>
+        <mj-column padding-left="6px" width="50%" css-class="metric-thr" border="1px solid #E2E8F0" border-radius="12px" background-color="#F8FAFC">
+          <mj-text padding="14px 14px 4px 14px" css-class="metric-thr-label" font-size="10px" font-weight="700" letter-spacing="1.2px" color="#64748B">THRESHOLD</mj-text>
+          <mj-text padding="0 14px 14px 14px" css-class="metric-thr-value" font-size="28px" font-weight="700" letter-spacing="-0.6px" color="#0F172A" line-height="1.1">
+            __THRESHOLD__<span class="metric-thr-unit" style="font-size:13px;font-weight:600;margin-left:4px;color:#475569;">__THRESHOLD_UNIT__</span>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <!--METRICS:END-->
+
+      <mj-section padding="12px 24px">
+        <mj-column css-class="meta-card" border="1px solid #E2E8F0" border-radius="12px" background-color="#F8FAFC">
+          <mj-text padding="12px 16px" font-size="12px" line-height="1.3">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="meta-key" style="font-weight:600;color:#64748B;font-size:12px;">Alert ID</td>
+                <td class="meta-val" align="right" style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#0F172A;font-size:13px;">__ALERT_ID__</td>
+              </tr>
+            </table>
+          </mj-text>
+          <mj-text padding="0 16px" line-height="0" font-size="0">
+            <div class="meta-sep" style="height:1px;line-height:1px;background:#E2E8F0;font-size:0;">&nbsp;</div>
+          </mj-text>
+          <mj-text padding="12px 16px" font-size="12px" line-height="1.3">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="meta-key" style="font-weight:600;color:#64748B;font-size:12px;">Kind</td>
+                <td class="meta-val" align="right" style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;color:#0F172A;font-size:13px;">__KIND__</td>
+              </tr>
+            </table>
+          </mj-text>
+          <mj-text padding="0 16px" line-height="0" font-size="0">
+            <div class="meta-sep" style="height:1px;line-height:1px;background:#E2E8F0;font-size:0;">&nbsp;</div>
+          </mj-text>
+          <mj-text padding="12px 16px" font-size="12px" line-height="1.3">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td class="meta-key" style="font-weight:600;color:#64748B;font-size:12px;">Event</td>
+                <td align="right">
+                  <span class="pill-__SEVERITY__" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.4px;text-transform:lowercase;">__EVENT__</span>
+                </td>
+              </tr>
+            </table>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!--CTA:START-->
+      <mj-section padding="20px 24px 4px 24px">
+        <mj-column>
+          <mj-button css-class="cta-button" href="__DASHBOARD_URL__" background-color="#2563EB" color="#FFFFFF" border-radius="10px" font-size="14px" font-weight="700" letter-spacing="0.1px" inner-padding="14px 20px" padding="0" width="100%" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+            Open dashboard &nbsp;→
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="4px 24px 20px 24px">
+        <mj-column>
+          <mj-text css-class="link-text" align="center" padding="0" font-family="'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11px" font-weight="500" color="#64748B">
+            <a href="__DASHBOARD_URL__" style="text-decoration:underline;color:inherit;">__DASHBOARD_URL__</a>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <!--CTA:END-->
+
+      <mj-section padding="0 24px">
+        <mj-column>
+          <mj-text padding="0" line-height="0" font-size="0">
+            <div class="divider" style="height:1px;line-height:1px;background:#E2E8F0;font-size:0;">&nbsp;</div>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section css-class="footer-bg" background-color="#F8FAFC" padding="20px 24px 24px 24px" border-radius="0 0 16px 16px">
+        <mj-column>
+          <mj-text css-class="footer-text" align="center" padding="0" font-size="11px" font-weight="500" color="#64748B">Sent by Speedtest Monitor · __TIMESTAMP__</mj-text>
+          <mj-text css-class="footer-hint" align="center" padding="6px 0 0 0" font-size="10px" color="#94A3B8">You are receiving this because alerts are enabled in Settings.</mj-text>
+        </mj-column>
+      </mj-section>
+
+    </mj-wrapper>
+  </mj-body>
+</mjml>

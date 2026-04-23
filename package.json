@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "dev": "bun server.ts",
-    "build": "bunx drizzle-kit generate && bun scripts/fetch-releases.ts && next build",
+    "build": "bunx drizzle-kit generate && bun scripts/fetch-releases.ts && bun scripts/build-email-templates.ts && next build",
+    "build:email": "bun scripts/build-email-templates.ts",
     "releases:fetch": "bun scripts/fetch-releases.ts",
     "start": "NODE_ENV=production bun server.ts",
     "lint": "biome check .",
@@ -54,6 +55,7 @@
     "@biomejs/biome": "^2.4.12",
     "@tailwindcss/postcss": "^4.1.16",
     "@types/bun": "^1.3.12",
+    "@types/mjml": "^5.0.0",
     "@types/node": "^24.12.2",
     "@types/nodemailer": "^8.0",
     "@types/react": "^19.2.14",
@@ -61,6 +63,7 @@
     "@types/ws": "^8.18.1",
     "drizzle-kit": "^0.31.10",
     "husky": "^9.1.7",
+    "mjml": "^5.0.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
     "typescript": "^6.0.2"

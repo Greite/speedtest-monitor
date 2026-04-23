@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { SmtpConfig } from '../config';
+import { renderAlertEmail } from '../templates/render';
 import type { AlertPayload, DeliveryResult } from '../types';
 
 export function createSmtpDestination(cfg: SmtpConfig, publicUrl: string | null) {
@@ -12,20 +13,14 @@ export function createSmtpDestination(cfg: SmtpConfig, publicUrl: string | null)
   return {
     name: 'smtp' as const,
     async send(payload: AlertPayload): Promise<DeliveryResult> {
-      const lines = [
-        payload.body,
-        '',
-        `Alert ID: ${payload.alertId}`,
-        `Kind: ${payload.kind}`,
-        `Event: ${payload.event}`,
-      ];
-      if (publicUrl) lines.push('', `Dashboard: ${publicUrl}`);
+      const { subject, text, html } = renderAlertEmail(payload, publicUrl);
       try {
         await transporter.sendMail({
           from: cfg.from,
           to: cfg.to.join(', '),
-          subject: `[Speedtest] ${payload.title}`,
-          text: lines.join('\n'),
+          subject,
+          text,
+          html,
         });
         return { ok: true };
       } catch (err) {

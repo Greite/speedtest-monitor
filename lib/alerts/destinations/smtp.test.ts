@@ -22,7 +22,7 @@ const payload: AlertPayload = {
 };
 
 describe('destinations/smtp', () => {
-  it('sends mail with expected subject/from/to/body and dashboard link', async () => {
+  it('sends mail with expected subject/from/to/text/html and dashboard link', async () => {
     sendMailMock.mockReset();
     sendMailMock.mockResolvedValue({ messageId: 'x' });
     const d = createSmtpDestination(
@@ -46,6 +46,9 @@ describe('destinations/smtp', () => {
     expect(opts.to).toBe('c@d, e@f');
     expect(opts.text).toContain('b');
     expect(opts.text).toContain('https://dash');
+    expect(typeof opts.html).toBe('string');
+    expect(opts.html).toContain('Speedtest Monitor');
+    expect(opts.html).toContain('https://dash');
   });
 
   it('returns ok:false when sendMail throws', async () => {
