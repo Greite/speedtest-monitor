@@ -34,12 +34,22 @@ const TIME_FMT = new Intl.DateTimeFormat(LOCALE, {
   timeZone: TIMEZONE,
 });
 
+const SHORT_DATE_FMT = new Intl.DateTimeFormat(LOCALE, {
+  day: '2-digit',
+  month: '2-digit',
+  timeZone: TIMEZONE,
+});
+
 export function formatDateTime(timestamp: number | string | Date): string {
   return DATE_TIME_FMT.format(asDate(timestamp));
 }
 
 export function formatTime(timestamp: number | string | Date): string {
   return TIME_FMT.format(asDate(timestamp));
+}
+
+export function formatShortDate(timestamp: number | string | Date): string {
+  return SHORT_DATE_FMT.format(asDate(timestamp));
 }
 
 export type LatencyLevel = 'ok' | 'warn' | 'bad';

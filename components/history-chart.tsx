@@ -14,13 +14,22 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatTime, type LatencyLevel, latencyLevel } from '@/lib/format';
+import {
+  formatDateTime,
+  formatShortDate,
+  formatTime,
+  type LatencyLevel,
+  latencyLevel,
+} from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 type Point = {
   t: number;
   label: string;
+  timeLabel: string;
+  dateLabel: string;
+  showDate: boolean;
   download: number | null;
   upload: number | null;
   latency: number | null;
@@ -39,11 +48,19 @@ const LEVEL_STROKE: Record<LatencyLevel, string> = {
 export function HistoryChart({ measurements }: { measurements: MeasurementDto[] }) {
   const [showTable, setShowTable] = useState(false);
   const data = useMemo<Point[]>(() => {
-    return [...measurements]
-      .sort((a, b) => a.timestamp - b.timestamp)
-      .map((m) => ({
+    const sorted = [...measurements].sort((a, b) => a.timestamp - b.timestamp);
+    let prevDate: string | null = null;
+    return sorted.map((m) => {
+      const timeLabel = formatTime(m.timestamp);
+      const dateLabel = formatShortDate(m.timestamp);
+      const showDate = dateLabel !== prevDate;
+      prevDate = dateLabel;
+      return {
         t: m.timestamp,
-        label: formatTime(m.timestamp),
+        label: `${dateLabel} ${timeLabel}`,
+        timeLabel,
+        dateLabel,
+        showDate,
         download: m.downloadMbps,
         upload: m.uploadMbps,
         latency: m.latencyLoadedMs,
@@ -51,7 +68,8 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
         serverLocations: m.serverLocations,
         userLocation: m.userLocation,
         userIp: m.userIp,
-      }));
+      };
+    });
   }, [measurements]);
 
   if (data.length === 0) {
@@ -116,6 +134,8 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
+                height={36}
+                tick={(props) => <XAxisTick {...props} data={data} />}
               />
               <YAxis
                 yAxisId="speed"
@@ -263,7 +283,48 @@ function Legend({ color, label, dashed }: { color: string; label: string; dashed
   );
 }
 
-function ChartTooltip({ active, payload, label }: TooltipContentProps) {
+type XAxisTickProps = {
+  x?: number | string;
+  y?: number | string;
+  payload?: { index?: number };
+  data: Point[];
+};
+
+function XAxisTick({ x = 0, y = 0, payload, data }: XAxisTickProps) {
+  const idx = payload?.index;
+  if (idx == null) return null;
+  const point = data[idx];
+  if (!point) return null;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={12}
+        textAnchor="middle"
+        fill="var(--color-muted-foreground)"
+        fontSize={11}
+      >
+        {point.timeLabel}
+      </text>
+      {point.showDate ? (
+        <text
+          x={0}
+          y={0}
+          dy={26}
+          textAnchor="middle"
+          fill="var(--color-muted-foreground)"
+          fontSize={10}
+          fontWeight={500}
+        >
+          {point.dateLabel}
+        </text>
+      ) : null}
+    </g>
+  );
+}
+
+function ChartTooltip({ active, payload }: TooltipContentProps) {
   if (!active || !payload?.length) return null;
   const point = payload[0]?.payload as Point | undefined;
   if (!point) return null;
@@ -279,7 +340,9 @@ function ChartTooltip({ active, payload, label }: TooltipContentProps) {
         padding: '8px 10px',
       }}
     >
-      <div style={{ color: 'var(--color-muted-foreground)', marginBottom: 4 }}>{label}</div>
+      <div style={{ color: 'var(--color-muted-foreground)', marginBottom: 4 }}>
+        {formatDateTime(point.t)}
+      </div>
       {payload.map((entry) => {
         const key = entry.graphicalItemId;
         const displayName = String(entry.name ?? entry.dataKey ?? '');
