@@ -30,7 +30,7 @@ export type TableFilters = {
 
 export type TableQuery = {
   page: number;
-  pageSize: PageSize;
+  pageSize: number;
   sort: SortColumn;
   sortDir: 'asc' | 'desc';
   filters: TableFilters;
