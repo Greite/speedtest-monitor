@@ -12,7 +12,8 @@
       "!**/coverage",
       "!**/*.css",
       "!next-env.d.ts",
-      "!lib/generated"
+      "!lib/generated",
+      "!lib/alerts/templates/alert-email.html.ts"
     ]
   },
   "formatter": {
