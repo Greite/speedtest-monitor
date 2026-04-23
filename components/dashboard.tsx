@@ -46,6 +46,7 @@ export function Dashboard({
 
   const { measurements, running } = useLiveMeasurements(initial, range);
   const latest = measurements.find((m) => m.status === 'success') ?? null;
+  const refreshSignal = measurements[0]?.id ?? null;
 
   const averages = useMemo(() => {
     const successes = measurements.filter((m) => m.status === 'success');
@@ -64,7 +65,7 @@ export function Dashboard({
       </div>
       <KpiCards latest={latest} averages={averages} busy={running} />
       <HistoryChart measurements={measurements} />
-      <HistoryTable measurements={measurements} />
+      <HistoryTable refreshSignal={refreshSignal} />
     </div>
   );
 }

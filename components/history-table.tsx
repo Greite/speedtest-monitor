@@ -5,9 +5,6 @@ import {
   type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   type PaginationState,
   type SortingState,
   useReactTable,
@@ -35,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useTableMeasurements } from '@/components/use-table-measurements';
 import {
   formatDateTime,
   formatMbps,
@@ -42,6 +40,11 @@ import {
   type LatencyLevel,
   latencyLevel,
 } from '@/lib/format';
+import type {
+  SortColumn,
+  TableFilters as TableFiltersType,
+  TableQuery,
+} from '@/lib/measurements-query';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -57,25 +60,13 @@ function statusBadge(status: MeasurementDto['status']) {
   return <Badge variant="destructive">Error</Badge>;
 }
 
-function inNumericRange(value: number | null, range: NumericRange): boolean {
-  if (value == null) return false;
-  if (range.min != null && value < range.min) return false;
-  if (range.max != null && value > range.max) return false;
-  return true;
-}
-
 const columns: ColumnDef<MeasurementDto>[] = [
   {
     id: 'timestamp',
     accessorKey: 'timestamp',
     header: 'Time',
     cell: ({ row }) => formatDateTime(row.original.timestamp),
-    filterFn: (row, _id, value: TimeRange) => {
-      const ts = row.original.timestamp;
-      if (value.from != null && ts < value.from) return false;
-      if (value.to != null && ts > value.to) return false;
-      return true;
-    },
+    enableSorting: true,
   },
   {
     id: 'download',
@@ -84,16 +75,14 @@ const columns: ColumnDef<MeasurementDto>[] = [
     cell: ({ row }) => (
       <span className="text-speed-down">{formatMbps(row.original.downloadMbps)}</span>
     ),
-    sortUndefined: 'last',
-    filterFn: (row, _id, value: NumericRange) => inNumericRange(row.original.downloadMbps, value),
+    enableSorting: true,
   },
   {
     id: 'upload',
     accessorKey: 'uploadMbps',
     header: 'Upload',
     cell: ({ row }) => <span className="text-speed-up">{formatMbps(row.original.uploadMbps)}</span>,
-    sortUndefined: 'last',
-    filterFn: (row, _id, value: NumericRange) => inNumericRange(row.original.uploadMbps, value),
+    enableSorting: true,
   },
   {
     id: 'latency',
@@ -111,9 +100,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
         {formatMs(row.original.latencyUnloadedMs)} / {formatMs(row.original.latencyLoadedMs)}
       </span>
     ),
-    sortUndefined: 'last',
-    filterFn: (row, _id, value: NumericRange) =>
-      inNumericRange(row.original.latencyLoadedMs, value),
+    enableSorting: true,
   },
   {
     id: 'server',
@@ -124,50 +111,120 @@ const columns: ColumnDef<MeasurementDto>[] = [
         {row.original.serverLocations?.join(' | ') ?? '-'}
       </span>
     ),
-    filterFn: (row, _id, value: string) => {
-      const joined = row.original.serverLocations?.join(' | ') ?? '';
-      return joined.toLowerCase().includes(value.toLowerCase());
-    },
+    enableSorting: false,
   },
   {
     id: 'status',
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => statusBadge(row.original.status),
-    filterFn: (row, _id, value: StatusValue[]) => {
-      if (!value.length) return true;
-      return value.includes(row.original.status);
-    },
+    enableSorting: true,
   },
 ];
 
 const PAGE_SIZES = [10, 25, 50, 100] as const;
 
-export function HistoryTable({ measurements }: { measurements: MeasurementDto[] }) {
+const COLUMN_TO_SORT: Record<string, SortColumn> = {
+  timestamp: 'timestamp',
+  download: 'downloadMbps',
+  upload: 'uploadMbps',
+  latency: 'latencyLoadedMs',
+  status: 'status',
+};
+
+function buildFiltersFromState(columnFilters: ColumnFiltersState): TableFiltersType {
+  const out: TableFiltersType = {};
+  for (const f of columnFilters) {
+    if (f.id === 'timestamp') {
+      const v = f.value as TimeRange;
+      if (v.from != null || v.to != null) {
+        out.time = {
+          ...(v.from != null ? { from: v.from } : {}),
+          ...(v.to != null ? { to: v.to } : {}),
+        };
+      }
+    } else if (f.id === 'download') {
+      const v = f.value as NumericRange;
+      if (v.min != null || v.max != null) {
+        out.download = {
+          ...(v.min != null ? { min: v.min } : {}),
+          ...(v.max != null ? { max: v.max } : {}),
+        };
+      }
+    } else if (f.id === 'upload') {
+      const v = f.value as NumericRange;
+      if (v.min != null || v.max != null) {
+        out.upload = {
+          ...(v.min != null ? { min: v.min } : {}),
+          ...(v.max != null ? { max: v.max } : {}),
+        };
+      }
+    } else if (f.id === 'latency') {
+      const v = f.value as NumericRange;
+      if (v.min != null || v.max != null) {
+        out.latency = {
+          ...(v.min != null ? { min: v.min } : {}),
+          ...(v.max != null ? { max: v.max } : {}),
+        };
+      }
+    } else if (f.id === 'server') {
+      const v = f.value as string;
+      if (v) out.server = v;
+    } else if (f.id === 'status') {
+      const v = f.value as StatusValue[];
+      if (v.length > 0) out.status = v;
+    }
+  }
+  return out;
+}
+
+export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'timestamp', desc: true }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 });
-  const data = useMemo(() => measurements, [measurements]);
+
+  const query = useMemo<TableQuery>(() => {
+    const s = sorting[0];
+    const sortId = s?.id ?? 'timestamp';
+    const sort: SortColumn = COLUMN_TO_SORT[sortId] ?? 'timestamp';
+    return {
+      page: pagination.pageIndex + 1,
+      pageSize: pagination.pageSize,
+      sort,
+      sortDir: s?.desc ? 'desc' : 'asc',
+      filters: buildFiltersFromState(columnFilters),
+    };
+  }, [sorting, columnFilters, pagination]);
+
+  const { measurements, totalCount, loading } = useTableMeasurements(query, refreshSignal);
+
+  const pageCount = Math.max(1, Math.ceil(totalCount / pagination.pageSize));
 
   const table = useReactTable({
-    data,
+    data: measurements,
     columns,
     state: { sorting, columnFilters, pagination },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    manualSorting: true,
+    manualFiltering: true,
+    manualPagination: true,
+    pageCount,
+    onSortingChange: (updater) => {
+      setSorting(updater);
+      setPagination((p) => ({ ...p, pageIndex: 0 }));
+    },
+    onColumnFiltersChange: (updater) => {
+      setColumnFilters(updater);
+      setPagination((p) => ({ ...p, pageIndex: 0 }));
+    },
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const rows = table.getRowModel().rows;
-  const totalFiltered = table.getFilteredRowModel().rows.length;
-  const pageIndex = table.getState().pagination.pageIndex;
-  const pageSize = table.getState().pagination.pageSize;
-  const firstRow = totalFiltered === 0 ? 0 : pageIndex * pageSize + 1;
-  const lastRow = Math.min(totalFiltered, (pageIndex + 1) * pageSize);
+  const pageIndex = pagination.pageIndex;
+  const pageSize = pagination.pageSize;
+  const firstRow = totalCount === 0 ? 0 : pageIndex * pageSize + 1;
+  const lastRow = Math.min(totalCount, (pageIndex + 1) * pageSize);
 
   return (
     <Card>
@@ -189,22 +246,29 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
                   const sortDir = header.column.getIsSorted();
                   const ariaSort =
                     sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : 'none';
+                  const canSort = header.column.getCanSort();
                   return (
                     <TableHead key={header.id} aria-sort={ariaSort}>
-                      <button
-                        type="button"
-                        onClick={header.column.getToggleSortingHandler()}
-                        className="inline-flex items-center gap-1 text-left font-medium text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {sortDir === 'asc' ? (
-                          <ArrowUp className="size-3" aria-hidden />
-                        ) : sortDir === 'desc' ? (
-                          <ArrowDown className="size-3" aria-hidden />
-                        ) : (
-                          <ArrowUpDown className="size-3 opacity-40" aria-hidden />
-                        )}
-                      </button>
+                      {canSort ? (
+                        <button
+                          type="button"
+                          onClick={header.column.getToggleSortingHandler()}
+                          className="inline-flex items-center gap-1 text-left font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {sortDir === 'asc' ? (
+                            <ArrowUp className="size-3" aria-hidden />
+                          ) : sortDir === 'desc' ? (
+                            <ArrowDown className="size-3" aria-hidden />
+                          ) : (
+                            <ArrowUpDown className="size-3 opacity-40" aria-hidden />
+                          )}
+                        </button>
+                      ) : (
+                        <span className="font-medium text-muted-foreground">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </span>
+                      )}
                     </TableHead>
                   );
                 })}
@@ -218,7 +282,11 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
                   colSpan={columns.length}
                   className="py-6 text-center text-muted-foreground"
                 >
-                  {measurements.length === 0 ? 'No measurements yet.' : 'No rows match filters.'}
+                  {loading
+                    ? 'Loading...'
+                    : totalCount === 0
+                      ? 'No measurements.'
+                      : 'No rows match filters.'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -240,7 +308,7 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
           aria-atomic="true"
         >
           <div>
-            {totalFiltered === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalFiltered}`}
+            {totalCount === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalCount}`}
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -264,7 +332,7 @@ export function HistoryTable({ measurements }: { measurements: MeasurementDto[] 
             </div>
             <div className="flex items-center gap-2">
               <span>
-                Page {table.getPageCount() === 0 ? 0 : pageIndex + 1} of {table.getPageCount()}
+                Page {totalCount === 0 ? 0 : pageIndex + 1} of {pageCount}
               </span>
               <Button
                 variant="outline"
