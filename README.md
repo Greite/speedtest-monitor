@@ -16,7 +16,7 @@ Self-hosted internet speed monitor. Runs [`@cloudflare/speedtest`](https://www.n
 - **DB**: Drizzle ORM 0.45 + `bun:sqlite` (built-in)
 - **Measurement engine**: `@cloudflare/speedtest` (HTTP-only, no browser)
 - **Tests**: Bun native (`bun test`)
-- **Runtime image**: `oven/bun:1-slim` (no Chromium, no browser sandbox)
+- **Runtime image**: `oven/bun:1-slim`
 
 ## Run with Docker
 
@@ -34,9 +34,9 @@ Configuration:
 | `SPEEDTEST_TEST_DURATION_S` | `10` | Duration of each download/upload phase (seconds). Raise for multi-Gbps links so TCP can ramp up and the sample is not dominated by slow-start. |
 | `SPEEDTEST_PARALLEL_STREAMS` | `8` | Parallel HTTP streams per phase. More streams help saturate high-bandwidth links (try `16` on 10 Gbps). |
 | `PORT` | `3000` | HTTP + WebSocket port |
-| `TZ` | — | Display timezone inside the container |
+| `TZ` | - | Display timezone inside the container |
 
-Change the interval at any time via the UI (`/settings`) — it is persisted in SQLite and takes effect immediately without a restart.
+Change the interval at any time via the UI (`/settings`) - it is persisted in SQLite and takes effect immediately without a restart.
 
 ## Alerts
 
@@ -167,50 +167,62 @@ first boot after the upgrade:
 ```bash
 bun install
 bun run db:generate        # generate drizzle migrations
-bun run dev                # bun --hot server.ts -> http://localhost:3000
+bun run dev                # bun server.ts -> http://localhost:3003
 bun test                   # bun native unit tests
-bun run lint               # biome check
+bun run lint               # biome check .
 bun run typecheck          # tsc --noEmit
-bun run build              # next build + tsup bundle for server.ts
+bun run build              # drizzle generate + fetch releases + build email templates + next build
 ```
 
 ### End-to-end check
 
 ```bash
 # trigger one measurement (~20s)
-curl -X POST http://localhost:3000/api/measurements/run
+curl -X POST http://localhost:3003/api/measurements/run
 
 # read history
-curl 'http://localhost:3000/api/measurements?range=24h' | jq
+curl 'http://localhost:3003/api/measurements?range=24h' | jq
 
 # tail the WebSocket stream
-websocat ws://localhost:3000/ws
+websocat ws://localhost:3003/ws
 
 # change interval (live)
-curl -X PATCH http://localhost:3000/api/settings \
+curl -X PATCH http://localhost:3003/api/settings \
   -H 'content-type: application/json' \
   -d '{"intervalMinutes":5}'
 ```
 
 ## API
 
+All routes require an authenticated session (cookie or OIDC). Mutating routes require the `admin` role.
+
 | Route | Method | Description |
 |---|---|---|
+| `/api/health` | GET | Liveness probe (no auth) |
 | `/api/measurements?range=1h\|6h\|24h\|7d\|30d` | GET | History for the given range |
+| `/api/measurements/table` | GET | Paginated history with server-side sort/filter (used by the dashboard table) |
 | `/api/measurements/run` | POST | Trigger a manual run (409 if already running) |
 | `/api/settings` | GET | Current interval + env default |
 | `/api/settings` | PATCH | `{ intervalMinutes: 1..1440 }` |
+| `/api/alerts/rules` | GET / PUT | Read or upsert the alert rule set |
+| `/api/alerts/test` | POST | Send a synthetic alert to a destination to verify wiring |
+| `/api/users` | GET / POST | List users / create a user (admin) |
+| `/api/users/[id]` | PATCH / DELETE | Update role or delete a user (admin) |
+| `/api/users/[id]/reset-password` | POST | Reset a user's password (admin) |
+| `/api/account/password` | PATCH | Change your own password |
+| `/api/auth/setup` | POST | First-run admin creation (only while no user exists) |
+| `/api/auth/[...nextauth]` | * | NextAuth endpoints (sign-in, callback, session, ...) |
 | `/ws` | WebSocket | Pushes `measurement`, `running`, `settings_updated` events |
 
 ## Tests
 
-Unit tests live next to the code they cover (`lib/**/*.test.ts`). Run with:
+Unit tests live next to the code they cover (`lib/**/*.test.ts`, `components/**/*.test.ts`). Run with:
 
 ```bash
 bun test
 ```
 
-Covered areas: formatting helpers, latency thresholds, cron expression generation, range validation, PATCH settings schema.
+Covered areas: cron expression generation, measurement DTO mapping, range and pagination query parsing, alert evaluation and per-condition state machine, alert dispatch and formatting, MJML email rendering, every destination adapter (webhook, ntfy, Discord, Slack, SMTP), auth bootstrap and config, password hashing, OIDC providers, and user management.
 
 ## Reverse proxy
 
