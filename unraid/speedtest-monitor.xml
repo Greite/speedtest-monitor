@@ -2,7 +2,7 @@
 <Container version="2">
   <Name>speedtest-monitor</Name>
   <Repository>ghcr.io/greite/speedtest-monitor:latest</Repository>
-  <Registry>https://github.com/Greite/speedtest-monitor/pkgs/container/speedtest-monitor</Registry>
+  <Registry>https://ghcr.io</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
@@ -14,7 +14,7 @@
 On first boot, set AUTH_SECRET (required) and either set SPEEDTEST_ADMIN_EMAIL + SPEEDTEST_ADMIN_PASSWORD to seed the first admin, or visit /setup to create it from the UI. All other variables are optional.&#xD;
 &#xD;
 Data is persisted to /data (mapped to /mnt/user/appdata/speedtest-monitor by default).</Overview>
-  <Category>Network:Other Tools: Status:Stable</Category>
+  <Category>Network:Other Tools</Category>
   <WebUI>http://[IP]:[PORT:3000]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/Greite/speedtest-monitor/main/unraid/speedtest-monitor.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/Greite/speedtest-monitor/main/public/brand/icon-256.png</Icon>

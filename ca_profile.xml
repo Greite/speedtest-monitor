@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommunityApplications>
+  <Profile>
+    Repository for the speedtest-monitor Unraid template. speedtest-monitor is a self-hosted internet speed monitor: it runs Cloudflare Speed Test on a configurable schedule, stores every measurement in SQLite, and serves a live dashboard with alerts (webhook, ntfy, Discord, Slack, SMTP) and authentication (local accounts and OIDC). Source-available under the MIT license. Bug reports and pull requests welcome on GitHub.
+  </Profile>
+  <Icon>https://raw.githubusercontent.com/Greite/speedtest-monitor/main/public/brand/icon-256.png</Icon>
+  <WebPage>https://github.com/Greite/speedtest-monitor</WebPage>
+</CommunityApplications>
