@@ -224,6 +224,14 @@
 .live-glow {
   animation: live-glow-pulse 2.2s ease-in-out infinite;
 }
+@media (prefers-reduced-motion: reduce) {
+  .live-glow {
+    animation: none;
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-brand) 35%, transparent),
+      0 6px 22px -8px color-mix(in oklab, var(--color-brand) 30%, transparent);
+  }
+}
 
 /* ---- Pulsing ring for live status --------------------------------------- */
 @keyframes pulse-ring {
@@ -246,6 +254,21 @@
 }
 .kpi-flash {
   animation: kpi-flash 1.2s ease-out;
+}
+
+/* ---- Drawer section stagger entry --------------------------------------- */
+@keyframes drawer-section-in {
+  0% {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.drawer-section {
+  animation: drawer-section-in 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 /* ---- Underline glide for segmented controls ----------------------------- */

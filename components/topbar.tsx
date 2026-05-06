@@ -1,8 +1,18 @@
 'use client';
 
-import { Check, LogOut, Menu, Monitor, Moon, Play, Settings, Sun } from 'lucide-react';
+import {
+  Check,
+  ChevronRight,
+  LogOut,
+  Menu,
+  Monitor,
+  Moon,
+  Play,
+  Settings,
+  Sun,
+} from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
@@ -152,6 +162,7 @@ export function Topbar() {
   const { running, connected, triggerRun } = useLiveMeasurements([], '24h');
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -305,9 +316,9 @@ export function Topbar() {
                 className="pointer-events-none absolute inset-0 -z-10 app-backdrop"
               />
               <DialogHeader className="border-b border-border/50 px-5 py-4 text-left">
-                <DialogTitle className="flex items-center gap-2.5">
+                <DialogTitle className="flex items-center gap-2.5" aria-label="Speedtest Monitor">
                   <LogoMark size={28} />
-                  <span className="text-base font-semibold leading-none tracking-tight">
+                  <span aria-hidden className="text-lg font-semibold leading-none tracking-tight">
                     Speedtest<span className="text-muted-foreground">·</span>Monitor
                   </span>
                 </DialogTitle>
@@ -319,20 +330,27 @@ export function Topbar() {
                 className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5"
               >
                 {role ? (
-                  <section aria-labelledby="m-account">
+                  <section
+                    aria-labelledby="m-account"
+                    className="drawer-section"
+                    style={{ animationDelay: '0ms' }}
+                  >
                     <h3
                       id="m-account"
                       className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
                     >
                       Account
                     </h3>
-                    <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/70 px-3 py-2 backdrop-blur-sm">
-                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/70 px-3 py-2">
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                         <span className="size-1 rounded-full bg-brand" aria-hidden />
                         {role}
                       </span>
                       {session?.user?.email ? (
-                        <span className="min-w-0 truncate text-sm text-muted-foreground">
+                        <span
+                          className="min-w-0 truncate text-sm text-muted-foreground"
+                          title={session.user.email}
+                        >
                           {session.user.email}
                         </span>
                       ) : null}
@@ -340,7 +358,11 @@ export function Topbar() {
                   </section>
                 ) : null}
 
-                <section aria-labelledby="m-live">
+                <section
+                  aria-labelledby="m-live"
+                  className="drawer-section"
+                  style={{ animationDelay: '40ms' }}
+                >
                   <h3
                     id="m-live"
                     className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -349,7 +371,7 @@ export function Topbar() {
                   </h3>
                   <div
                     className={cn(
-                      'rounded-md border border-border/60 bg-card/80 p-3 backdrop-blur-sm transition-shadow',
+                      'rounded-md border border-border/60 bg-card/70 p-3 transition-shadow duration-300',
                       isBusy && 'live-glow',
                     )}
                   >
@@ -371,7 +393,7 @@ export function Topbar() {
                       }}
                       disabled={isBusy || !connected}
                       className={cn(
-                        'mt-3 w-full bg-brand text-brand-foreground hover:bg-brand/90',
+                        'mt-3 min-h-[44px] w-full bg-brand text-brand-foreground hover:bg-brand/90',
                         !isBusy && connected && 'brand-glow',
                       )}
                     >
@@ -381,7 +403,11 @@ export function Topbar() {
                   </div>
                 </section>
 
-                <section aria-labelledby="m-theme">
+                <section
+                  aria-labelledby="m-theme"
+                  className="drawer-section"
+                  style={{ animationDelay: '80ms' }}
+                >
                   <h3
                     id="m-theme"
                     className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -397,7 +423,11 @@ export function Topbar() {
                   />
                 </section>
 
-                <section aria-labelledby="m-nav">
+                <section
+                  aria-labelledby="m-nav"
+                  className="drawer-section"
+                  style={{ animationDelay: '120ms' }}
+                >
                   <h3
                     id="m-nav"
                     className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -405,57 +435,64 @@ export function Topbar() {
                     Navigation
                   </h3>
                   <ul className="flex flex-col gap-2">
-                    <li>
-                      <Link
-                        href="/settings"
-                        onClick={() => setMenuOpen(false)}
-                        className="group flex items-center justify-between gap-3 rounded-md border border-border/60 bg-card/60 px-3 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <Settings
-                            className="size-4 text-muted-foreground group-hover:text-foreground"
-                            aria-hidden
-                          />
-                          Settings
-                        </span>
-                        <span
-                          aria-hidden
-                          className="text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                        >
-                          →
-                        </span>
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/changelog"
-                        onClick={() => setMenuOpen(false)}
-                        className="group flex items-center justify-between gap-3 rounded-md border border-border/60 bg-card/60 px-3 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <span
-                            aria-hidden
-                            className="inline-block size-1.5 rounded-full bg-latency-ok"
-                          />
-                          Changelog
-                        </span>
-                        <span
-                          aria-hidden
-                          className="text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                        >
-                          →
-                        </span>
-                      </Link>
-                    </li>
+                    {[
+                      { href: '/settings', label: 'Settings', icon: Settings },
+                      { href: '/changelog', label: 'Changelog', icon: null },
+                    ].map(({ href, label: navLabel, icon: Icon }) => {
+                      const active = pathname === href;
+                      return (
+                        <li key={href}>
+                          <Link
+                            href={href}
+                            onClick={() => setMenuOpen(false)}
+                            aria-current={active ? 'page' : undefined}
+                            className={cn(
+                              'group flex min-h-[44px] items-center justify-between gap-3 rounded-md border px-3 py-3 text-sm font-medium transition-colors',
+                              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                              active
+                                ? 'border-brand/40 bg-brand/10 text-foreground'
+                                : 'border-border/60 bg-card/70 hover:bg-accent',
+                            )}
+                          >
+                            <span className="flex items-center gap-2.5">
+                              {Icon ? (
+                                <Icon
+                                  className={cn(
+                                    'size-4',
+                                    active
+                                      ? 'text-brand'
+                                      : 'text-muted-foreground group-hover:text-foreground',
+                                  )}
+                                  aria-hidden
+                                />
+                              ) : null}
+                              {navLabel}
+                            </span>
+                            <ChevronRight
+                              aria-hidden
+                              className={cn(
+                                'size-4 transition-transform',
+                                active
+                                  ? 'text-brand'
+                                  : 'text-muted-foreground group-hover:translate-x-0.5',
+                              )}
+                            />
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </section>
 
-                <div className="mt-auto pt-2">
+                <div className="drawer-section mt-auto pt-2" style={{ animationDelay: '160ms' }}>
                   <ConfirmDialog
                     trigger={
                       <button
                         type="button"
-                        className="flex w-full items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
+                        className={cn(
+                          'flex min-h-[44px] w-full items-center justify-start gap-2.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                        )}
                       >
                         <LogOut className="size-4" aria-hidden />
                         Log out
