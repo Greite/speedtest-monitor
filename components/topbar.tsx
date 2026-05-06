@@ -294,67 +294,100 @@ export function Topbar() {
                 <Menu aria-hidden />
               </Button>
             </DialogTrigger>
-            <DialogContent className="left-auto right-0 top-0 translate-x-0 translate-y-0 h-full w-full max-w-sm rounded-none border-0 border-l p-4 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right">
-              <DialogHeader className="text-left">
-                <DialogTitle className="flex items-center gap-2">
+            <DialogContent
+              className={cn(
+                'left-auto right-0 top-0 h-full w-full max-w-sm translate-x-0 translate-y-0 rounded-none border-0 border-l border-border/60 bg-background/95 p-0 backdrop-blur-xl',
+                'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right',
+              )}
+            >
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -z-10 app-backdrop"
+              />
+              <DialogHeader className="border-b border-border/50 px-5 py-4 text-left">
+                <DialogTitle className="flex items-center gap-2.5">
                   <LogoMark size={28} />
-                  <span className="text-lg font-semibold leading-none tracking-tight">
-                    Speedtest Monitor
+                  <span className="text-base font-semibold leading-none tracking-tight">
+                    Speedtest<span className="text-muted-foreground">·</span>Monitor
                   </span>
                 </DialogTitle>
                 <DialogDescription className="sr-only">Main navigation menu</DialogDescription>
               </DialogHeader>
 
-              <nav aria-label="Main" className="flex flex-col gap-4">
+              <nav
+                aria-label="Main"
+                className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5"
+              >
                 {role ? (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      <span className="size-1 rounded-full bg-brand" aria-hidden />
-                      {role}
-                    </span>
-                    {session?.user?.email ? (
-                      <span className="truncate text-sm text-muted-foreground">
-                        {session.user.email}
+                  <section aria-labelledby="m-account">
+                    <h3
+                      id="m-account"
+                      className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+                    >
+                      Account
+                    </h3>
+                    <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/70 px-3 py-2 backdrop-blur-sm">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        <span className="size-1 rounded-full bg-brand" aria-hidden />
+                        {role}
                       </span>
-                    ) : null}
-                  </div>
+                      {session?.user?.email ? (
+                        <span className="min-w-0 truncate text-sm text-muted-foreground">
+                          {session.user.email}
+                        </span>
+                      ) : null}
+                    </div>
+                  </section>
                 ) : null}
 
-                <div className="rounded-md border border-border bg-card p-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <LiveDot running={isBusy} connected={connected} />
-                    <span className="font-medium">{label}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {connected
-                      ? isBusy
-                        ? 'Running a measurement now…'
-                        : 'Live connection active.'
-                      : 'Reconnecting to live feed…'}
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={async () => {
-                      await handleRun();
-                    }}
-                    disabled={isBusy || !connected}
+                <section aria-labelledby="m-live">
+                  <h3
+                    id="m-live"
+                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+                  >
+                    Live status
+                  </h3>
+                  <div
                     className={cn(
-                      'mt-3 w-full bg-brand text-brand-foreground hover:bg-brand/90',
-                      !isBusy && connected && 'brand-glow',
+                      'rounded-md border border-border/60 bg-card/80 p-3 backdrop-blur-sm transition-shadow',
+                      isBusy && 'live-glow',
                     )}
                   >
-                    <Play aria-hidden />
-                    {isBusy ? 'Running…' : 'Run now'}
-                  </Button>
-                </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <LiveDot running={isBusy} connected={connected} />
+                      <span className="font-medium">{label}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {connected
+                        ? isBusy
+                          ? 'Running a measurement now…'
+                          : 'Live connection active.'
+                        : 'Reconnecting to live feed…'}
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        await handleRun();
+                      }}
+                      disabled={isBusy || !connected}
+                      className={cn(
+                        'mt-3 w-full bg-brand text-brand-foreground hover:bg-brand/90',
+                        !isBusy && connected && 'brand-glow',
+                      )}
+                    >
+                      <Play aria-hidden className={cn(isBusy && 'animate-pulse')} />
+                      {isBusy ? 'Running…' : 'Run now'}
+                    </Button>
+                  </div>
+                </section>
 
-                <div>
-                  <div
-                    id="theme-label"
-                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+                <section aria-labelledby="m-theme">
+                  <h3
+                    id="m-theme"
+                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
                   >
                     Theme
-                  </div>
+                  </h3>
                   <ThemeSegmented
                     mounted={mounted}
                     theme={theme}
@@ -362,36 +395,82 @@ export function Topbar() {
                     withLabels
                     fullWidth
                   />
+                </section>
+
+                <section aria-labelledby="m-nav">
+                  <h3
+                    id="m-nav"
+                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+                  >
+                    Navigation
+                  </h3>
+                  <ul className="flex flex-col gap-2">
+                    <li>
+                      <Link
+                        href="/settings"
+                        onClick={() => setMenuOpen(false)}
+                        className="group flex items-center justify-between gap-3 rounded-md border border-border/60 bg-card/60 px-3 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <Settings
+                            className="size-4 text-muted-foreground group-hover:text-foreground"
+                            aria-hidden
+                          />
+                          Settings
+                        </span>
+                        <span
+                          aria-hidden
+                          className="text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                        >
+                          →
+                        </span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/changelog"
+                        onClick={() => setMenuOpen(false)}
+                        className="group flex items-center justify-between gap-3 rounded-md border border-border/60 bg-card/60 px-3 py-2.5 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <span
+                            aria-hidden
+                            className="inline-block size-1.5 rounded-full bg-latency-ok"
+                          />
+                          Changelog
+                        </span>
+                        <span
+                          aria-hidden
+                          className="text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                        >
+                          →
+                        </span>
+                      </Link>
+                    </li>
+                  </ul>
+                </section>
+
+                <div className="mt-auto pt-2">
+                  <ConfirmDialog
+                    trigger={
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
+                      >
+                        <LogOut className="size-4" aria-hidden />
+                        Log out
+                      </button>
+                    }
+                    title="Log out?"
+                    description="You will be signed out and returned to the login page."
+                    confirmLabel="Log out"
+                    destructive
+                    onConfirm={async () => {
+                      setMenuOpen(false);
+                      await handleLogout();
+                    }}
+                  />
                 </div>
-
-                <Link
-                  href="/settings"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
-                >
-                  <Settings className="size-4" aria-hidden />
-                  Settings
-                </Link>
-
-                <ConfirmDialog
-                  trigger={
-                    <button
-                      type="button"
-                      className="flex items-center gap-3 rounded-md border border-border px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
-                    >
-                      <LogOut className="size-4" aria-hidden />
-                      Log out
-                    </button>
-                  }
-                  title="Log out?"
-                  description="You will be signed out and returned to the login page."
-                  confirmLabel="Log out"
-                  destructive
-                  onConfirm={async () => {
-                    setMenuOpen(false);
-                    await handleLogout();
-                  }}
-                />
               </nav>
             </DialogContent>
           </Dialog>
