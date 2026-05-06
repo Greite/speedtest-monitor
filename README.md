@@ -170,7 +170,7 @@ bun run db:generate        # generate drizzle migrations
 bun run dev                # bun server.ts -> http://localhost:3003
 bun test                   # bun native unit tests
 bun run lint               # biome check .
-bun run typecheck          # tsc --noEmit
+bun run tsc                # tsc --noEmit
 bun run build              # drizzle generate + fetch releases + build email templates + next build
 ```
 
@@ -236,7 +236,3 @@ location /ws {
   proxy_set_header Connection "upgrade";
 }
 ```
-
-## Mockups
-
-See `mockups/dashboard.pen` (Pencil) for the dashboard + settings wireframes used to design the UI.
