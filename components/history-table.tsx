@@ -37,6 +37,7 @@ import {
   formatDateTime,
   formatMbps,
   formatMs,
+  formatRelativeTime,
   type LatencyLevel,
   latencyLevel,
 } from '@/lib/format';
@@ -55,9 +56,37 @@ const levelColor: Record<LatencyLevel, string> = {
 };
 
 function statusBadge(status: MeasurementDto['status']) {
-  if (status === 'success') return <Badge variant="secondary">OK</Badge>;
-  if (status === 'timeout') return <Badge variant="outline">Timeout</Badge>;
-  return <Badge variant="destructive">Error</Badge>;
+  if (status === 'success') {
+    return (
+      <Badge className="border-latency-ok/30 bg-latency-ok/10 text-latency-ok hover:bg-latency-ok/15">
+        <span className="size-1.5 rounded-full bg-latency-ok" aria-hidden />
+        OK
+      </Badge>
+    );
+  }
+  if (status === 'timeout') {
+    return (
+      <Badge className="border-latency-warn/30 bg-latency-warn/10 text-latency-warn hover:bg-latency-warn/15">
+        <span className="size-1.5 rounded-full bg-latency-warn" aria-hidden />
+        Timeout
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15">
+      <span className="size-1.5 rounded-full bg-destructive" aria-hidden />
+      Error
+    </Badge>
+  );
+}
+
+function TimeCell({ ts }: { ts: number }) {
+  return (
+    <span title={formatDateTime(ts)} className="font-mono text-xs">
+      <span className="text-foreground">{formatRelativeTime(ts)}</span>
+      <span className="ml-2 text-muted-foreground">{formatDateTime(ts)}</span>
+    </span>
+  );
 }
 
 const columns: ColumnDef<MeasurementDto>[] = [
@@ -65,7 +94,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
     id: 'timestamp',
     accessorKey: 'timestamp',
     header: 'Time',
-    cell: ({ row }) => formatDateTime(row.original.timestamp),
+    cell: ({ row }) => <TimeCell ts={row.original.timestamp} />,
     enableSorting: true,
   },
   {
@@ -73,7 +102,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
     accessorKey: 'downloadMbps',
     header: 'Download',
     cell: ({ row }) => (
-      <span className="text-speed-down">{formatMbps(row.original.downloadMbps)}</span>
+      <span className="font-mono text-speed-down">{formatMbps(row.original.downloadMbps)}</span>
     ),
     enableSorting: true,
   },
@@ -81,7 +110,9 @@ const columns: ColumnDef<MeasurementDto>[] = [
     id: 'upload',
     accessorKey: 'uploadMbps',
     header: 'Upload',
-    cell: ({ row }) => <span className="text-speed-up">{formatMbps(row.original.uploadMbps)}</span>,
+    cell: ({ row }) => (
+      <span className="font-mono text-speed-up">{formatMbps(row.original.uploadMbps)}</span>
+    ),
     enableSorting: true,
   },
   {
@@ -89,7 +120,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
     accessorKey: 'latencyLoadedMs',
     header: 'Latency (u/l)',
     cell: ({ row }) => (
-      <span className="inline-flex items-center gap-2">
+      <span className="inline-flex items-center gap-2 font-mono">
         <span
           className={cn(
             'inline-block size-2 rounded-full',
@@ -227,9 +258,13 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
   const lastRow = Math.min(totalCount, (pageIndex + 1) * pageSize);
 
   return (
-    <Card>
+    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle as="h2" className="text-base">
+        <CardTitle
+          as="h2"
+          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Recent measurements
         </CardTitle>
       </CardHeader>

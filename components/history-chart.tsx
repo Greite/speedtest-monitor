@@ -3,9 +3,10 @@
 import { LineChartIcon, TableIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   type TooltipContentProps,
@@ -45,7 +46,13 @@ const LEVEL_STROKE: Record<LatencyLevel, string> = {
   bad: 'var(--color-latency-bad)',
 };
 
-export function HistoryChart({ measurements }: { measurements: MeasurementDto[] }) {
+export function HistoryChart({
+  measurements,
+  running = false,
+}: {
+  measurements: MeasurementDto[];
+  running?: boolean;
+}) {
   const [showTable, setShowTable] = useState(false);
   const data = useMemo<Point[]>(() => {
     const sorted = [...measurements].sort((a, b) => a.timestamp - b.timestamp);
@@ -96,9 +103,18 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
   const summary = buildSummary(data);
 
   return (
-    <Card>
+    <Card
+      className={cn(
+        'relative overflow-hidden border-border/60 bg-card/80 backdrop-blur-sm transition-shadow',
+        running && 'live-glow',
+      )}
+    >
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle as="h2" className="text-base">
+        <CardTitle
+          as="h2"
+          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           History
         </CardTitle>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -118,16 +134,31 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 pb-0">
         <div
-          className="h-64 w-full"
+          className="relative h-64 w-full overflow-hidden"
           style={{ minWidth: 0, minHeight: 0 }}
           role="img"
           aria-label={summary}
         >
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
-            <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
-              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" opacity={0.5} />
+            <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="chart-fill-down" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-speed-down)" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="var(--color-speed-down)" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient id="chart-fill-up" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-speed-up)" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="var(--color-speed-up)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                stroke="var(--color-border)"
+                strokeDasharray="3 3"
+                opacity={0.45}
+                vertical={false}
+              />
               <XAxis
                 dataKey="label"
                 stroke="var(--color-muted-foreground)"
@@ -143,8 +174,9 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
-                width={48}
+                width={56}
                 unit=" Mbps"
+                tickMargin={4}
               />
               <YAxis
                 yAxisId="latency"
@@ -155,32 +187,40 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
                 axisLine={false}
                 width={48}
                 unit=" ms"
+                tickMargin={4}
               />
-              <Tooltip content={ChartTooltip} />
-              <Line
+              <Tooltip
+                content={ChartTooltip}
+                cursor={{ stroke: 'var(--color-border)', strokeDasharray: '3 3' }}
+              />
+              <Area
                 yAxisId="speed"
                 type="monotone"
                 dataKey="download"
                 stroke="var(--color-speed-down)"
+                strokeWidth={1.25}
+                fill="url(#chart-fill-down)"
                 dot={false}
-                strokeWidth={2}
                 connectNulls
+                isAnimationActive={false}
               />
-              <Line
+              <Area
                 yAxisId="speed"
                 type="monotone"
                 dataKey="upload"
                 stroke="var(--color-speed-up)"
+                strokeWidth={1.25}
+                fill="url(#chart-fill-up)"
                 dot={false}
-                strokeWidth={2}
                 connectNulls
+                isAnimationActive={false}
               />
               <Line
                 yAxisId="latency"
                 type="monotone"
                 dataKey="latency"
                 stroke="var(--color-latency-ok)"
-                strokeWidth={2}
+                strokeWidth={1.25}
                 strokeDasharray="4 3"
                 connectNulls
                 dot={(props) => {
@@ -201,13 +241,13 @@ export function HistoryChart({ measurements }: { measurements: MeasurementDto[] 
                 }}
                 activeDot={{ r: 4 }}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
         <div
           id="chart-data-table"
           className={cn(
-            'mt-4 max-h-64 overflow-auto rounded-md border border-border',
+            'mx-6 mb-6 mt-4 max-h-64 overflow-auto rounded-md border border-border',
             !showTable && 'sr-only',
           )}
         >
@@ -332,33 +372,67 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
   return (
     <div
       style={{
-        background: 'var(--color-popover)',
+        background: 'color-mix(in oklab, var(--color-popover) 92%, transparent)',
         border: '1px solid var(--color-border)',
-        borderRadius: 8,
+        borderRadius: 10,
         color: 'var(--color-popover-foreground)',
         fontSize: 12,
-        padding: '8px 10px',
+        padding: '10px 12px',
+        backdropFilter: 'blur(8px)',
+        boxShadow: '0 8px 24px -8px rgb(0 0 0 / 0.18)',
       }}
     >
-      <div style={{ color: 'var(--color-muted-foreground)', marginBottom: 4 }}>
+      <div
+        style={{
+          color: 'var(--color-muted-foreground)',
+          marginBottom: 6,
+          fontFamily: 'var(--font-mono)',
+          fontSize: 11,
+          letterSpacing: '0.04em',
+        }}
+      >
         {formatDateTime(point.t)}
       </div>
       {payload.map((entry) => {
         const key = entry.graphicalItemId;
         const displayName = String(entry.name ?? entry.dataKey ?? '');
         return (
-          <div key={key} style={{ color: entry.color }}>
-            {displayName}: {entry.value}
+          <div
+            key={key}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 6,
+                  height: 6,
+                  borderRadius: 9999,
+                  background: entry.color,
+                }}
+              />
+              <span style={{ color: 'var(--color-muted-foreground)' }}>{displayName}</span>
+            </span>
+            <span style={{ color: entry.color, fontVariantNumeric: 'tabular-nums' }}>
+              {entry.value}
+            </span>
           </div>
         );
       })}
       {(point.serverLocations || point.userLocation || point.userIp) && (
         <div
           style={{
-            marginTop: 6,
-            paddingTop: 6,
+            marginTop: 8,
+            paddingTop: 8,
             borderTop: '1px solid var(--color-border)',
             color: 'var(--color-muted-foreground)',
+            fontSize: 11,
           }}
         >
           {point.serverLocations?.length ? (

@@ -27,38 +27,41 @@ export default function ChangelogPage() {
     <main
       id="main"
       tabIndex={-1}
-      className="mx-auto flex min-h-[100dvh] max-w-4xl scroll-mt-16 flex-col gap-8 px-4 py-6 outline-none md:px-6 md:py-8"
+      className="mx-auto flex min-h-[100dvh] max-w-6xl scroll-mt-16 flex-col gap-6 px-4 py-6 outline-none md:px-6 md:py-8"
     >
-      <header className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
-          >
-            <ArrowLeft className="size-4" aria-hidden />
-            Back to dashboard
-          </Link>
-          <a
-            href={`${GITHUB_REPO_URL}/releases`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
-          >
-            View on GitHub
-            <ExternalLink className="size-3.5" aria-hidden />
-          </a>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Changelog</h1>
-          <p className="text-sm text-muted-foreground">
-            All released versions of Speedtest Monitor, pulled from GitHub at build time.
-          </p>
+      <header className="flex flex-col gap-3">
+        <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Release history
+            </span>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Changelog<span className="text-brand">.</span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <ArrowLeft className="size-3.5" aria-hidden />
+              Back to dashboard
+            </Link>
+            <a
+              href={`${GITHUB_REPO_URL}/releases`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              View on GitHub
+              <ExternalLink className="size-3.5" aria-hidden />
+            </a>
+          </div>
         </div>
       </header>
 
       {releases.length === 0 ? (
-        <Card>
+        <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <GitCommit className="size-8 text-muted-foreground" aria-hidden />
             <p className="text-sm font-medium">No releases available</p>
@@ -72,36 +75,61 @@ export default function ChangelogPage() {
           </CardContent>
         </Card>
       ) : (
-        <ol className="flex flex-col gap-6">
+        <ol className="relative flex flex-col gap-6 border-l border-border/50 pl-6 ml-2">
           {releases.map((r) => {
             const dateIso = new Date(r.date).toISOString();
             const dateLabel = DATE_FMT.format(new Date(r.date));
             const current = r.tag === APP_VERSION;
             return (
-              <li key={r.tag}>
-                <Card id={r.tag} className="scroll-mt-20">
+              <li key={r.tag} className="relative">
+                {/* Timeline node */}
+                <span
+                  aria-hidden
+                  className={
+                    current
+                      ? 'absolute -left-[33px] top-7 grid size-3.5 place-items-center rounded-full bg-background'
+                      : 'absolute -left-[31px] top-7 size-2 rounded-full bg-border'
+                  }
+                >
+                  {current ? (
+                    <>
+                      <span className="size-3.5 rounded-full bg-brand" />
+                      <span className="pulse-ring absolute inset-0 rounded-full text-brand" />
+                    </>
+                  ) : null}
+                </span>
+                <Card
+                  id={r.tag}
+                  className="scroll-mt-20 border-border/60 bg-card/80 backdrop-blur-sm transition-shadow hover:shadow-md"
+                >
                   <CardHeader>
                     <div className="flex flex-wrap items-center gap-2">
-                      <CardTitle as="h2" className="text-xl font-bold tracking-tight">
+                      <CardTitle as="h2" className="text-xl font-semibold tracking-tight">
                         <a
                           href={r.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
+                          className="rounded-sm hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
                           {r.name}
                         </a>
                       </CardTitle>
                       {current ? (
-                        <Badge variant="default" aria-label="Current version">
+                        <Badge
+                          aria-label="Current version"
+                          className="border-brand/30 bg-brand/10 text-brand hover:bg-brand/15"
+                        >
+                          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
                           Current
                         </Badge>
                       ) : null}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
                       <time dateTime={dateIso}>{dateLabel}</time>
-                      <span aria-hidden>&middot;</span>
-                      <span className="font-mono tabular-nums">{r.tag}</span>
+                      <span aria-hidden className="text-border">
+                        /
+                      </span>
+                      <span className="tabular-nums">{r.tag}</span>
                     </div>
                   </CardHeader>
                   <CardContent>

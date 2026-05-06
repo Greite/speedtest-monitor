@@ -226,9 +226,13 @@ export function UsersCard() {
     emailQuery.trim() !== '' || roleFilter !== 'all' || providerFilter !== 'all';
 
   return (
-    <Card>
+    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle as="h2" className="text-base">
+        <CardTitle
+          as="h2"
+          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Users
         </CardTitle>
       </CardHeader>

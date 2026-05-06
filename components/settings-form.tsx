@@ -87,9 +87,13 @@ function IntervalCard({
   const describedBy = [`interval-hint`, error ? `interval-error` : null].filter(Boolean).join(' ');
 
   return (
-    <Card>
+    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle as="h2" className="text-base">
+        <CardTitle
+          as="h2"
+          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Measurement interval
         </CardTitle>
       </CardHeader>
@@ -106,9 +110,15 @@ function IntervalCard({
             onChange={(e) => setValue(e.target.value)}
             aria-invalid={!valid || !!error || undefined}
             aria-describedby={describedBy || undefined}
+            className="font-mono tabular-nums"
           />
           <div id="interval-hint" className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="secondary">env default: {envDefault}</Badge>
+            <Badge
+              variant="outline"
+              className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide"
+            >
+              env default: {envDefault}
+            </Badge>
             between 1 and 1440 - changes apply immediately
           </div>
         </div>
@@ -120,8 +130,12 @@ function IntervalCard({
           </Alert>
         ) : null}
         <div className="flex items-center gap-2">
-          <Button onClick={onSave} disabled={!valid || !dirty || saving || readOnly}>
-            {saving ? 'Saving...' : 'Save'}
+          <Button
+            onClick={onSave}
+            disabled={!valid || !dirty || saving || readOnly}
+            className="bg-brand text-brand-foreground hover:bg-brand/90"
+          >
+            {saving ? 'Saving…' : 'Save'}
           </Button>
           <Button
             variant="outline"
@@ -192,9 +206,13 @@ function RetentionCard({
     .join(' ');
 
   return (
-    <Card>
+    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle as="h2" className="text-base">
+        <CardTitle
+          as="h2"
+          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Data retention
         </CardTitle>
       </CardHeader>
@@ -211,12 +229,18 @@ function RetentionCard({
             onChange={(e) => setValue(e.target.value)}
             aria-invalid={!valid || !!error || undefined}
             aria-describedby={describedBy || undefined}
+            className="font-mono tabular-nums"
           />
           <div
             id="retention-hint"
             className="flex items-center gap-2 text-xs text-muted-foreground"
           >
-            <Badge variant="secondary">env default: {envDefault}</Badge>
+            <Badge
+              variant="outline"
+              className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide"
+            >
+              env default: {envDefault}
+            </Badge>
             between 1 and 3650 - purge runs daily at 03:00
           </div>
         </div>
@@ -228,8 +252,12 @@ function RetentionCard({
           </Alert>
         ) : null}
         <div className="flex items-center gap-2">
-          <Button onClick={onSave} disabled={!valid || !dirty || saving || readOnly}>
-            {saving ? 'Saving...' : 'Save'}
+          <Button
+            onClick={onSave}
+            disabled={!valid || !dirty || saving || readOnly}
+            className="bg-brand text-brand-foreground hover:bg-brand/90"
+          >
+            {saving ? 'Saving…' : 'Save'}
           </Button>
           <Button
             variant="outline"

@@ -58,9 +58,13 @@ export function PasswordChangeCard() {
   }
 
   return (
-    <Card id="account">
+    <Card id="account" className="border-border/60 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle as="h2" className="text-base">
+        <CardTitle
+          as="h2"
+          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Account
         </CardTitle>
       </CardHeader>
@@ -110,8 +114,12 @@ export function PasswordChangeCard() {
             </Alert>
           ) : null}
           <div>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Saving...' : 'Change password'}
+            <Button
+              type="submit"
+              disabled={saving}
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
+            >
+              {saving ? 'Saving…' : 'Change password'}
             </Button>
           </div>
         </form>

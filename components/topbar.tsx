@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Menu, Monitor, Moon, Play, Settings, Sun } from 'lucide-react';
+import { Check, LogOut, Menu, Monitor, Moon, Play, Settings, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
@@ -17,6 +17,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useLiveMeasurements } from './use-live-measurements';
 
@@ -29,16 +37,19 @@ const THEMES: { value: ThemeChoice; label: string; icon: typeof Sun }[] = [
 ];
 
 function LiveDot({ running, connected }: { running: boolean; connected: boolean }) {
+  const tone = !connected ? 'bg-destructive text-destructive' : 'bg-latency-ok text-latency-ok';
   return (
-    <span
-      aria-hidden
-      className={cn(
-        'inline-block size-2 rounded-full motion-safe:transition-colors motion-safe:duration-300',
-        !connected && 'bg-destructive',
-        connected && running && 'bg-latency-ok motion-safe:animate-pulse',
-        connected && !running && 'bg-latency-ok',
-      )}
-    />
+    <span aria-hidden className="relative inline-flex size-2 items-center justify-center">
+      <span
+        className={cn(
+          'absolute inset-0 rounded-full motion-safe:transition-colors motion-safe:duration-300',
+          tone,
+        )}
+      />
+      {connected && running ? (
+        <span className={cn('pulse-ring absolute inset-0 rounded-full', 'text-latency-ok')} />
+      ) : null}
+    </span>
   );
 }
 
@@ -93,6 +104,48 @@ function ThemeSegmented({
   );
 }
 
+function ThemeMenu({
+  mounted,
+  theme,
+  setTheme,
+}: {
+  mounted: boolean;
+  theme: string | undefined;
+  setTheme: (t: string) => void;
+}) {
+  const current = THEMES.find((t) => mounted && t.value === theme) ?? THEMES[2];
+  const CurrentIcon = current.icon;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" aria-label={`Theme: ${current.label}`}>
+          <CurrentIcon aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[10rem]">
+        <DropdownMenuLabel className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          Theme
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {THEMES.map(({ value, label, icon: Icon }) => {
+          const active = mounted && theme === value;
+          return (
+            <DropdownMenuItem
+              key={value}
+              onSelect={() => setTheme(value)}
+              className={cn('gap-2', active && 'bg-accent text-accent-foreground')}
+            >
+              <Icon className="size-4" aria-hidden />
+              <span>{label}</span>
+              {active ? <Check className="ml-auto size-3.5" aria-hidden /> : null}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function Topbar() {
   const { data: session } = useSession();
   const role = session?.user?.role ?? null;
@@ -106,8 +159,6 @@ export function Topbar() {
 
   useEffect(() => setMounted(true), []);
 
-  // Auto-close the mobile sheet when crossing the md breakpoint (the trigger is
-  // `md:hidden` so desktop users wouldn't reach it otherwise).
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mq = window.matchMedia('(min-width: 768px)');
@@ -140,17 +191,17 @@ export function Topbar() {
   const label = liveLabel({ running: isBusy, connected });
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:gap-4 md:px-6">
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 shrink-0"
+          className="group flex items-center gap-2.5 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
           aria-label="Speedtest Monitor home"
         >
-          <LogoMark size={28} />
-          <span className="text-lg font-bold tracking-tight">
-            <span className="hidden md:inline">Speedtest Monitor</span>
+          <LogoMark size={28} className="transition-transform group-hover:scale-105" />
+          <span className="text-base font-semibold leading-none tracking-tight">
+            <span className="hidden md:inline">Speedtest · Monitor</span>
             <span className="md:hidden">Speedtest</span>
           </span>
         </Link>
@@ -158,28 +209,30 @@ export function Topbar() {
         <div className="flex-1" />
 
         {/* Desktop/tablet cluster */}
-        <nav aria-label="Main" className="hidden items-center gap-3 md:flex md:gap-4">
+        <nav aria-label="Main" className="hidden items-center gap-2 md:flex md:gap-3">
           <div
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-2.5 py-1 text-xs text-muted-foreground"
             aria-live="polite"
           >
             <LiveDot running={isBusy} connected={connected} />
-            <span>{label}</span>
+            <span className="font-medium tracking-wide">{label}</span>
           </div>
 
           <Button
-            variant="outline"
             size="sm"
             onClick={handleRun}
             disabled={isBusy || !connected}
-            className="border-brand/50 text-brand hover:bg-brand/10 hover:text-brand"
+            className={cn(
+              'bg-brand text-brand-foreground hover:bg-brand/90',
+              !isBusy && connected && 'brand-glow',
+            )}
             title={connected ? undefined : 'Waiting for live connection…'}
           >
-            <Play className="text-brand" aria-hidden />
-            <span>Run now</span>
+            <Play aria-hidden className={cn('size-3.5', isBusy && 'animate-pulse')} />
+            <span>{isBusy ? 'Running…' : 'Run now'}</span>
           </Button>
 
-          <span aria-hidden className="h-6 w-px bg-border" />
+          <span aria-hidden className="mx-1 h-6 w-px bg-border/70" />
 
           <Button variant="ghost" size="icon-sm" asChild aria-label="Settings">
             <Link href="/settings">
@@ -187,12 +240,11 @@ export function Topbar() {
             </Link>
           </Button>
 
-          <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} />
-
-          <span aria-hidden className="h-6 w-px bg-border" />
+          <ThemeMenu mounted={mounted} theme={theme} setTheme={setTheme} />
 
           {role ? (
-            <span className="rounded bg-muted px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="size-1 rounded-full bg-brand" aria-hidden />
               {role}
             </span>
           ) : null}
@@ -203,7 +255,7 @@ export function Topbar() {
                 variant="ghost"
                 size="icon-sm"
                 aria-label="Log out"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut aria-hidden />
               </Button>
@@ -220,14 +272,16 @@ export function Topbar() {
         <div className="flex items-center gap-2 md:hidden">
           <LiveDot running={isBusy} connected={connected} />
           <Button
-            variant="outline"
             size="icon-sm"
             onClick={handleRun}
             disabled={isBusy || !connected}
             aria-label="Run now"
-            className="border-brand/50 text-brand hover:bg-brand/10 hover:text-brand"
+            className={cn(
+              'bg-brand text-brand-foreground hover:bg-brand/90',
+              !isBusy && connected && 'brand-glow',
+            )}
           >
-            <Play className="text-brand" aria-hidden />
+            <Play aria-hidden className={cn(isBusy && 'animate-pulse')} />
           </Button>
           <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
             <DialogTrigger asChild>
@@ -244,7 +298,9 @@ export function Topbar() {
               <DialogHeader className="text-left">
                 <DialogTitle className="flex items-center gap-2">
                   <LogoMark size={28} />
-                  <span className="text-lg font-bold tracking-tight">Speedtest Monitor</span>
+                  <span className="text-lg font-semibold leading-none tracking-tight">
+                    Speedtest Monitor
+                  </span>
                 </DialogTitle>
                 <DialogDescription className="sr-only">Main navigation menu</DialogDescription>
               </DialogHeader>
@@ -252,7 +308,8 @@ export function Topbar() {
               <nav aria-label="Main" className="flex flex-col gap-4">
                 {role ? (
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-muted px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      <span className="size-1 rounded-full bg-brand" aria-hidden />
                       {role}
                     </span>
                     {session?.user?.email ? (
@@ -276,23 +333,25 @@ export function Topbar() {
                       : 'Reconnecting to live feed…'}
                   </p>
                   <Button
-                    variant="outline"
                     size="sm"
                     onClick={async () => {
                       await handleRun();
                     }}
                     disabled={isBusy || !connected}
-                    className="mt-3 w-full border-chart-1/50 text-primary hover:bg-chart-1/10 hover:text-primary"
+                    className={cn(
+                      'mt-3 w-full bg-brand text-brand-foreground hover:bg-brand/90',
+                      !isBusy && connected && 'brand-glow',
+                    )}
                   >
-                    <Play className="text-brand" aria-hidden />
-                    Run now
+                    <Play aria-hidden />
+                    {isBusy ? 'Running…' : 'Run now'}
                   </Button>
                 </div>
 
                 <div>
                   <div
                     id="theme-label"
-                    className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
                   >
                     Theme
                   </div>

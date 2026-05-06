@@ -90,9 +90,13 @@ export function AlertsCard() {
 
   if (!rules) {
     return (
-      <Card>
+      <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle as="h2" className="text-base">
+          <CardTitle
+            as="h2"
+            className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+          >
+            <span className="size-1.5 rounded-full bg-brand" aria-hidden />
             Alerts
           </CardTitle>
         </CardHeader>
@@ -190,9 +194,13 @@ export function AlertsCard() {
   };
 
   return (
-    <Card>
+    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle as="h2" className="text-base">
+        <CardTitle
+          as="h2"
+          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Alerts
         </CardTitle>
       </CardHeader>

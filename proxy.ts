@@ -12,6 +12,10 @@ export default auth(async (req) => {
     pathname === '/api/health' ||
     pathname.startsWith('/_next/') ||
     pathname === '/favicon.ico' ||
+    pathname === '/icon.svg' ||
+    pathname === '/apple-icon' ||
+    pathname.startsWith('/icon-') ||
+    pathname.startsWith('/apple-icon-') ||
     pathname.startsWith('/icons/')
   ) {
     return NextResponse.next();
@@ -65,5 +69,7 @@ export default auth(async (req) => {
 });
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon|icon-|apple-icon-|icons/).*)',
+  ],
 };
