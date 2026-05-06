@@ -2,7 +2,7 @@
 <Container version="2">
   <Name>speedtest-monitor</Name>
   <Repository>ghcr.io/greite/speedtest-monitor:latest</Repository>
-  <Registry>https://ghcr.io</Registry>
+  <Registry>https://ghcr.io/greite/speedtest-monitor</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
