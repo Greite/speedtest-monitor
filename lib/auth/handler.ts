@@ -122,4 +122,7 @@ export const auth = new Proxy({} as Auth, {
   get(_target, prop) {
     return Reflect.get(getAuth() as object, prop);
   },
+  has(_target, prop) {
+    return Reflect.has(getAuth() as object, prop);
+  },
 });
