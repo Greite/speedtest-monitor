@@ -1,5 +1,6 @@
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+
 import { PasswordChangeCard } from '@/components/auth/password-change-card';
 import { AlertsCard } from '@/components/settings/alerts-card';
 import { SettingsForm } from '@/components/settings-form';

@@ -1,7 +1,9 @@
 import type { NextResponse } from 'next/server';
-import { apiError } from '@/lib/api-errors';
+
 import { auth } from './handler';
 import type { SessionUser } from './types';
+
+import { apiError } from '@/lib/api-errors';
 
 export class AuthError extends Error {
   constructor(
@@ -27,7 +29,9 @@ export async function requireSession(): Promise<SessionUser> {
 
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireSession();
-  if (user.role !== 'admin') throw new AuthError(403, 'forbidden');
+  if (user.role !== 'admin') {
+    throw new AuthError(403, 'forbidden');
+  }
   return user;
 }
 

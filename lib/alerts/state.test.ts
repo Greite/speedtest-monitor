@@ -1,6 +1,8 @@
 import { Database } from 'bun:sqlite';
 import { beforeEach, describe, expect, it } from 'bun:test';
+
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+
 import * as schema from '../db/schema';
 import { alerts } from '../db/schema';
 import { readAlertState } from './state';
@@ -29,7 +31,9 @@ beforeEach(() => {
 describe('alerts/state', () => {
   it('returns OK for all kinds when no alerts exist', () => {
     const state = readAlertState();
-    for (const k of ALL_KINDS) expect(state[k]).toBe('OK');
+    for (const k of ALL_KINDS) {
+      expect(state[k]).toBe('OK');
+    }
   });
 
   it('returns ALERTING for a kind whose last event is fired', () => {

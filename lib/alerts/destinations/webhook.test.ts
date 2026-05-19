@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+
 import type { AlertPayload } from '../types';
 import { createWebhookDestination } from './webhook';
 

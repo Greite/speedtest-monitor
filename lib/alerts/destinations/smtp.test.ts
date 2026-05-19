@@ -1,4 +1,5 @@
 import { describe, expect, it, mock } from 'bun:test';
+
 import type { AlertPayload } from '../types';
 
 const sendMailMock = mock();
@@ -54,10 +55,7 @@ describe('destinations/smtp', () => {
   it('returns ok:false when sendMail throws', async () => {
     sendMailMock.mockReset();
     sendMailMock.mockRejectedValue(new Error('SMTP fail'));
-    const d = createSmtpDestination(
-      { host: 'h', port: 25, secure: false, from: 'a@b', to: ['c@d'] },
-      null,
-    );
+    const d = createSmtpDestination({ host: 'h', port: 25, secure: false, from: 'a@b', to: ['c@d'] }, null);
     expect(await d.send(payload)).toEqual({ ok: false, error: 'SMTP fail' });
   });
 });

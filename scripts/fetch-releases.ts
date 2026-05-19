@@ -36,16 +36,15 @@ async function fetchAll(): Promise<Release[]> {
 
   const out: Release[] = [];
   for (let page = 1; page <= 10; page++) {
-    const res = await fetch(
-      `https://api.github.com/repos/${REPO}/releases?per_page=100&page=${page}`,
-      { headers },
-    );
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=100&page=${page}`, { headers });
     if (!res.ok) {
       throw new Error(`GitHub API ${res.status}: ${await res.text()}`);
     }
     const batch = (await res.json()) as GithubRelease[];
     for (const r of batch) {
-      if (r.draft) continue;
+      if (r.draft) {
+        continue;
+      }
       out.push({
         tag: r.tag_name,
         name: r.name?.trim() || r.tag_name,
@@ -55,7 +54,9 @@ async function fetchAll(): Promise<Release[]> {
         prerelease: r.prerelease,
       });
     }
-    if (batch.length < 100) break;
+    if (batch.length < 100) {
+      break;
+    }
   }
   return out;
 }

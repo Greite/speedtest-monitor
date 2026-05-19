@@ -13,15 +13,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  formatDateTime,
-  formatShortDate,
-  formatTime,
-  type LatencyLevel,
-  latencyLevel,
-} from '@/lib/format';
+import { formatDateTime, formatShortDate, formatTime, type LatencyLevel, latencyLevel } from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -46,13 +41,7 @@ const LEVEL_STROKE: Record<LatencyLevel, string> = {
   bad: 'var(--color-latency-bad)',
 };
 
-export function HistoryChart({
-  measurements,
-  running = false,
-}: {
-  measurements: MeasurementDto[];
-  running?: boolean;
-}) {
+export function HistoryChart({ measurements, running = false }: { measurements: MeasurementDto[]; running?: boolean }) {
   const [showTable, setShowTable] = useState(false);
   const data = useMemo<Point[]>(() => {
     const sorted = [...measurements].sort((a, b) => a.timestamp - b.timestamp);
@@ -91,9 +80,7 @@ export function HistoryChart({
           <div className="flex h-64 flex-col items-center justify-center gap-2 text-center">
             <LineChartIcon className="size-8 text-muted-foreground" aria-hidden />
             <p className="text-sm font-medium">No data for this range</p>
-            <p className="text-xs text-muted-foreground">
-              Measurements will appear here as they run.
-            </p>
+            <p className="text-xs text-muted-foreground">Measurements will appear here as they run.</p>
           </div>
         </CardContent>
       </Card>
@@ -153,12 +140,7 @@ export function HistoryChart({
                   <stop offset="100%" stopColor="var(--color-speed-up)" stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <CartesianGrid
-                stroke="var(--color-border)"
-                strokeDasharray="3 3"
-                opacity={0.45}
-                vertical={false}
-              />
+              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" opacity={0.45} vertical={false} />
               <XAxis
                 dataKey="label"
                 stroke="var(--color-muted-foreground)"
@@ -189,10 +171,7 @@ export function HistoryChart({
                 unit=" ms"
                 tickMargin={4}
               />
-              <Tooltip
-                content={ChartTooltip}
-                cursor={{ stroke: 'var(--color-border)', strokeDasharray: '3 3' }}
-              />
+              <Tooltip content={ChartTooltip} cursor={{ stroke: 'var(--color-border)', strokeDasharray: '3 3' }} />
               <Area
                 yAxisId="speed"
                 type="monotone"
@@ -226,7 +205,9 @@ export function HistoryChart({
                 dot={(props) => {
                   const point = props.payload as Point | undefined;
                   const lvl = point?.latencyLevel ?? 'ok';
-                  if (lvl === 'ok') return <g key={props.key} />;
+                  if (lvl === 'ok') {
+                    return <g key={props.key} />;
+                  }
                   return (
                     <circle
                       key={props.key}
@@ -288,7 +269,9 @@ export function HistoryChart({
 
 function average(values: (number | null)[]): number | null {
   const nums = values.filter((v): v is number => v != null);
-  if (nums.length === 0) return null;
+  if (nums.length === 0) {
+    return null;
+  }
   return nums.reduce((a, b) => a + b, 0) / nums.length;
 }
 
@@ -299,9 +282,15 @@ function buildSummary(data: Point[]): string {
   const start = data[0]?.label;
   const end = data[data.length - 1]?.label;
   const parts = [`Speed and latency history, ${data.length} measurements from ${start} to ${end}`];
-  if (avgDown != null) parts.push(`average download ${avgDown.toFixed(1)} Mbps`);
-  if (avgUp != null) parts.push(`average upload ${avgUp.toFixed(1)} Mbps`);
-  if (avgLat != null) parts.push(`average latency ${avgLat.toFixed(0)} ms`);
+  if (avgDown != null) {
+    parts.push(`average download ${avgDown.toFixed(1)} Mbps`);
+  }
+  if (avgUp != null) {
+    parts.push(`average upload ${avgUp.toFixed(1)} Mbps`);
+  }
+  if (avgLat != null) {
+    parts.push(`average latency ${avgLat.toFixed(0)} ms`);
+  }
   return `${parts.join(', ')}.`;
 }
 
@@ -332,19 +321,16 @@ type XAxisTickProps = {
 
 function XAxisTick({ x = 0, y = 0, payload, data }: XAxisTickProps) {
   const idx = payload?.index;
-  if (idx == null) return null;
+  if (idx == null) {
+    return null;
+  }
   const point = data[idx];
-  if (!point) return null;
+  if (!point) {
+    return null;
+  }
   return (
     <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={12}
-        textAnchor="middle"
-        fill="var(--color-muted-foreground)"
-        fontSize={11}
-      >
+      <text x={0} y={0} dy={12} textAnchor="middle" fill="var(--color-muted-foreground)" fontSize={11}>
         {point.timeLabel}
       </text>
       {point.showDate ? (
@@ -365,9 +351,13 @@ function XAxisTick({ x = 0, y = 0, payload, data }: XAxisTickProps) {
 }
 
 function ChartTooltip({ active, payload }: TooltipContentProps) {
-  if (!active || !payload?.length) return null;
+  if (!active || !payload?.length) {
+    return null;
+  }
   const point = payload[0]?.payload as Point | undefined;
-  if (!point) return null;
+  if (!point) {
+    return null;
+  }
 
   return (
     <div
@@ -419,9 +409,7 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
               />
               <span style={{ color: 'var(--color-muted-foreground)' }}>{displayName}</span>
             </span>
-            <span style={{ color: entry.color, fontVariantNumeric: 'tabular-nums' }}>
-              {entry.value}
-            </span>
+            <span style={{ color: entry.color, fontVariantNumeric: 'tabular-nums' }}>{entry.value}</span>
           </div>
         );
       })}
@@ -435,9 +423,7 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
             fontSize: 11,
           }}
         >
-          {point.serverLocations?.length ? (
-            <div>Server: {point.serverLocations.join(' | ')}</div>
-          ) : null}
+          {point.serverLocations?.length ? <div>Server: {point.serverLocations.join(' | ')}</div> : null}
           {point.userLocation ? <div>Client: {point.userLocation}</div> : null}
           {point.userIp ? <div>IP: {point.userIp}</div> : null}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,13 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parseApiError } from '@/lib/api-client';
 
 type Props = {
@@ -52,7 +47,9 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
 
   function handleOpenChange(next: boolean) {
     onOpenChange(next);
-    if (!next) reset();
+    if (!next) {
+      reset();
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -117,9 +114,7 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
               onChange={(e) => setEmail(e.target.value)}
               aria-invalid={fieldErrors.email ? true : undefined}
             />
-            {fieldErrors.email ? (
-              <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p>
-            ) : null}
+            {fieldErrors.email ? <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p> : null}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="add-user-password">Temporary password</Label>
@@ -133,9 +128,7 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
               onChange={(e) => setPassword(e.target.value)}
               aria-invalid={fieldErrors.password ? true : undefined}
             />
-            {fieldErrors.password ? (
-              <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p>
-            ) : null}
+            {fieldErrors.password ? <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p> : null}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="add-user-role">Role</Label>

@@ -6,11 +6,7 @@ import { toMeasurementDto } from '@/lib/types';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ range?: string }>;
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const { range: rangeParam } = await searchParams;
   const range: Range = rangeParam && isRange(rangeParam) ? rangeParam : '24h';
   const initial = listMeasurements(range).map(toMeasurementDto);

@@ -27,17 +27,15 @@ export function formatMessage({ transition, timestamp }: Input): {
     };
   }
 
-  const metric =
-    kind === 'download_below'
-      ? 'Download'
-      : kind === 'upload_below'
-        ? 'Upload'
-        : kind === 'latency_above'
-          ? 'Latency'
-          : 'Bufferbloat';
+  const metricLabels: Record<Exclude<typeof kind, 'failure_streak'>, string> = {
+    download_below: 'Download',
+    upload_below: 'Upload',
+    latency_above: 'Latency',
+    bufferbloat_above: 'Bufferbloat',
+  };
+  const metric = metricLabels[kind];
   const unit = kind === 'latency_above' || kind === 'bufferbloat_above' ? 'ms' : 'Mbps';
-  const direction =
-    kind === 'download_below' || kind === 'upload_below' ? 'dropped below' : 'rose above';
+  const direction = kind === 'download_below' || kind === 'upload_below' ? 'dropped below' : 'rose above';
 
   if (event === 'fired') {
     return {

@@ -1,6 +1,10 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
-  "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": true },
+  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "ignoreUnknown": false,
     "includes": [
@@ -10,44 +14,44 @@
       "!**/dist",
       "!**/drizzle",
       "!**/coverage",
+      "!**/public",
+      "!**/.claude",
+      "!**/.vscode",
+      "!**/.worktrees",
+      "!**/*.tsbuildinfo",
       "!**/*.css",
       "!next-env.d.ts",
+      "!bun-env.d.ts",
+      "!bun.lock",
+      "!speedtest.db",
+      "!speedtest.db-shm",
+      "!speedtest.db-wal",
       "!lib/generated",
-      "!lib/alerts/templates/alert-email.html.ts"
+      "!lib/alerts/templates/alert-email.html.ts",
+      "!CLAUDE.md"
     ]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 100
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "suspicious": {
-        "noExplicitAny": "warn"
-      },
-      "style": {
-        "noNonNullAssertion": "off"
-      }
-    }
-  },
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
+    "lineWidth": 120,
+    "lineEnding": "lf"
   },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",
       "semicolons": "always",
-      "trailingCommas": "all"
+      "trailingCommas": "all",
+      "bracketSpacing": true,
+      "arrowParentheses": "always"
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true,
+      "trailingCommas": "none"
     }
   },
   "css": {
@@ -55,16 +59,99 @@
     "formatter": { "enabled": false },
     "linter": { "enabled": false }
   },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "useImportType": "error",
+        "noNonNullAssertion": "off",
+        "noParameterAssign": "error",
+        "noNestedTernary": "warn",
+        "useTemplate": "error",
+        "useDefaultParameterLast": "error",
+        "noUselessElse": "warn",
+        "useShorthandAssign": "error",
+        "useBlockStatements": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noArrayIndexKey": "off",
+        "noImplicitAnyLet": "error",
+        "noShadowRestrictedNames": "error",
+        "useIterableCallbackReturn": "error",
+        "noConsole": "warn",
+        "noDuplicateElseIf": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "useExhaustiveDependencies": "off",
+        "useHookAtTopLevel": "error",
+        "useJsxKeyInIterable": "error",
+        "noUndeclaredDependencies": "error"
+      },
+      "a11y": {
+        "recommended": true,
+        "noSvgWithoutTitle": "warn",
+        "noStaticElementInteractions": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "warn"
+      }
+    }
+  },
   "overrides": [
+    {
+      "includes": ["app/**/route.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["scripts/**/*.ts", "server.ts", "proxy.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
     {
       "includes": ["**/*.test.ts", "**/*.test.tsx"],
       "linter": {
         "rules": {
           "suspicious": {
-            "noExplicitAny": "off"
+            "noExplicitAny": "off",
+            "noConsole": "off"
           }
         }
       }
     }
-  ]
+  ],
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              [":BUN:", ":NODE:"],
+              ":BLANK_LINE:",
+              ":PACKAGE:",
+              ":BLANK_LINE:",
+              ":PATH:",
+              ":BLANK_LINE:",
+              ["@/components/**", "@/lib/**", "@/**"]
+            ]
+          }
+        }
+      }
+    }
+  }
 }

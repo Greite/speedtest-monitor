@@ -33,7 +33,9 @@ function parseBlocks(src: string): Block[] {
         buf.push(lines[i]);
         i++;
       }
-      if (i < lines.length) i++;
+      if (i < lines.length) {
+        i++;
+      }
       blocks.push({ kind: 'pre', lang, text: buf.join('\n') });
       continue;
     }
@@ -66,11 +68,7 @@ function parseBlocks(src: string): Block[] {
     }
 
     // Table
-    if (
-      line.trim().startsWith('|') &&
-      i + 1 < lines.length &&
-      /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])
-    ) {
+    if (line.trim().startsWith('|') && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
       const header = line
         .trim()
         .replace(/^\||\|$/g, '')
@@ -168,7 +166,9 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
         break;
       }
     }
-    if (matched) continue;
+    if (matched) {
+      continue;
+    }
     // Eat one char as literal text, coalescing into the last text token
     const last = tokens[tokens.length - 1];
     if (last?.t === 'text') {
@@ -266,10 +266,7 @@ export function Markdown({ source }: { source: string }) {
             );
           case 'ul':
             return (
-              <ul
-                key={key}
-                className="ml-5 list-disc space-y-1 text-foreground/85 marker:text-muted-foreground"
-              >
+              <ul key={key} className="ml-5 list-disc space-y-1 text-foreground/85 marker:text-muted-foreground">
                 {b.items.map((it, i) => {
                   const itemKey = `${key}-${i}-${it.slice(0, 24)}`;
                   return <li key={itemKey}>{renderInline(it, itemKey)}</li>;
@@ -278,10 +275,7 @@ export function Markdown({ source }: { source: string }) {
             );
           case 'ol':
             return (
-              <ol
-                key={key}
-                className="ml-5 list-decimal space-y-1 text-foreground/85 marker:text-muted-foreground"
-              >
+              <ol key={key} className="ml-5 list-decimal space-y-1 text-foreground/85 marker:text-muted-foreground">
                 {b.items.map((it, i) => {
                   const itemKey = `${key}-${i}-${it.slice(0, 24)}`;
                   return <li key={itemKey}>{renderInline(it, itemKey)}</li>;
@@ -299,10 +293,7 @@ export function Markdown({ source }: { source: string }) {
             );
           case 'quote':
             return (
-              <blockquote
-                key={key}
-                className="border-l-2 border-border pl-3 text-sm text-muted-foreground italic"
-              >
+              <blockquote key={key} className="border-l-2 border-border pl-3 text-sm text-muted-foreground italic">
                 {renderInline(b.text, key)}
               </blockquote>
             );

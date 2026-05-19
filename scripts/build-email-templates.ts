@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
 import mjml2html from 'mjml';
 
 const ROOT = join(import.meta.dir, '..');

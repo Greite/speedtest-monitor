@@ -22,7 +22,9 @@ export function apiValidationError(err: z.ZodError, status = 400): NextResponse<
   const fields: Record<string, string[]> = {};
   for (const issue of err.issues) {
     const key = issue.path.join('.') || '_';
-    if (!fields[key]) fields[key] = [];
+    if (!fields[key]) {
+      fields[key] = [];
+    }
     fields[key].push(issue.message);
   }
   return apiError('validation_failed', 'One or more fields are invalid.', status, fields);

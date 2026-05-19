@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import type { Measurement } from '../db/schema';
 import { evaluateAlerts } from './evaluate';
 import { type AlertRules, type AlertState, DEFAULT_RULES } from './types';
@@ -54,9 +55,7 @@ describe('evaluateAlerts', () => {
       currentState: { ...stateAllOK, download_below: 'ALERTING' },
       rules: rules({ thresholds: { ...DEFAULT_RULES.thresholds, downloadMbps: 100 } }),
     });
-    expect(out).toEqual([
-      { kind: 'download_below', event: 'resolved', observed: 150, threshold: 100 },
-    ]);
+    expect(out).toEqual([{ kind: 'download_below', event: 'resolved', observed: 150, threshold: 100 }]);
   });
 
   it('does not fire when threshold is null', () => {

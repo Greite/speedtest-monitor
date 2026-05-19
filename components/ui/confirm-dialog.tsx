@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -55,11 +56,7 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
             {cancelLabel}
           </Button>
-          <Button
-            variant={destructive ? 'destructive' : 'default'}
-            onClick={handleConfirm}
-            disabled={busy}
-          >
+          <Button variant={destructive ? 'destructive' : 'default'} onClick={handleConfirm} disabled={busy}>
             {busy ? 'Working…' : confirmLabel}
           </Button>
         </DialogFooter>

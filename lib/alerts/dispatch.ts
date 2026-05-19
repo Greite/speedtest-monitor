@@ -4,10 +4,7 @@ import type { AlertPayload, AlertRules, DeliveryResult, DestinationName } from '
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 function withTimeout<T>(p: Promise<T>, ms: number, timeoutValue: T): Promise<T> {
-  return Promise.race([
-    p,
-    new Promise<T>((resolve) => setTimeout(() => resolve(timeoutValue), ms)),
-  ]);
+  return Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(timeoutValue), ms))]);
 }
 
 type Input = {
@@ -17,9 +14,7 @@ type Input = {
   timeoutMs?: number;
 };
 
-export async function dispatchAlert(
-  input: Input,
-): Promise<Partial<Record<DestinationName, DeliveryResult>>> {
+export async function dispatchAlert(input: Input): Promise<Partial<Record<DestinationName, DeliveryResult>>> {
   const { payload, destinations, rules, timeoutMs = DEFAULT_TIMEOUT_MS } = input;
   const active = destinations.filter((d) => rules.destinations[d.name]);
   const results = await Promise.all(

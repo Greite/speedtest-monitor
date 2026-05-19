@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -114,11 +115,7 @@ export function PasswordChangeCard() {
             </Alert>
           ) : null}
           <div>
-            <Button
-              type="submit"
-              disabled={saving}
-              className="bg-brand text-brand-foreground hover:bg-brand/90"
-            >
+            <Button type="submit" disabled={saving} className="bg-brand text-brand-foreground hover:bg-brand/90">
               {saving ? 'Saving…' : 'Change password'}
             </Button>
           </div>

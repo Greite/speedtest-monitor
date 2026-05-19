@@ -10,7 +10,9 @@ type Input = {
 
 export function evaluateAlerts(input: Input): AlertTransition[] {
   const { measurement, streakCount, currentState, rules } = input;
-  if (!rules.enabled) return [];
+  if (!rules.enabled) {
+    return [];
+  }
   const out: AlertTransition[] = [];
   const isSuccess = measurement.status === 'success';
 
@@ -21,8 +23,12 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
     isBreach: boolean,
     evaluable: boolean,
   ) => {
-    if (threshold === null) return;
-    if (!evaluable) return;
+    if (threshold === null) {
+      return;
+    }
+    if (!evaluable) {
+      return;
+    }
     const current = currentState[kind];
     if (isBreach && current === 'OK') {
       out.push({ kind, event: 'fired', observed, threshold });

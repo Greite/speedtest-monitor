@@ -3,6 +3,7 @@ import { Instrument_Sans, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import type { ReactNode } from 'react';
 import { Toaster } from 'sonner';
+
 import { SessionShell } from '@/components/auth/session-shell';
 import { FocusMainOnNavigate } from '@/components/focus-main-on-navigate';
 import './globals.css';
@@ -28,12 +29,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="en"
-      dir="ltr"
-      suppressHydrationWarning
-      className={`${sans.variable} ${mono.variable}`}
-    >
+    <html lang="en" dir="ltr" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
       <body className="font-sans antialiased">
         <a href="#main" className="skip-link">
           Skip to main content

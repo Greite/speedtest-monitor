@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,7 +36,9 @@ export function DeleteUserDialog({ open, onOpenChange, user, onDeleted }: Props)
   }
 
   async function onConfirm() {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
     setError(null);
     setPending(true);
     let res: Response;
@@ -69,8 +72,8 @@ export function DeleteUserDialog({ open, onOpenChange, user, onDeleted }: Props)
           <DialogDescription>
             {user ? (
               <>
-                This permanently removes <span className="font-medium">{user.email}</span>. Their
-                sessions are immediately invalidated. This cannot be undone.
+                This permanently removes <span className="font-medium">{user.email}</span>. Their sessions are
+                immediately invalidated. This cannot be undone.
               </>
             ) : (
               'This cannot be undone.'

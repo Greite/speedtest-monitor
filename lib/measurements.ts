@@ -1,4 +1,5 @@
 import { and, asc, desc, gte, inArray, like, lt, lte, sql } from 'drizzle-orm';
+
 import { getDb } from './db/client';
 import { alerts, type Measurement, measurements } from './db/schema';
 import type { SortColumn, TableQuery } from './measurements-query';
@@ -61,17 +62,35 @@ export function listMeasurementsPaged(query: TableQuery): {
   const f = query.filters;
   const conds = [];
 
-  if (f.time?.from != null) conds.push(gte(measurements.timestamp, new Date(f.time.from)));
-  if (f.time?.to != null) conds.push(lte(measurements.timestamp, new Date(f.time.to)));
+  if (f.time?.from != null) {
+    conds.push(gte(measurements.timestamp, new Date(f.time.from)));
+  }
+  if (f.time?.to != null) {
+    conds.push(lte(measurements.timestamp, new Date(f.time.to)));
+  }
 
-  if (f.download?.min != null) conds.push(gte(measurements.downloadMbps, f.download.min));
-  if (f.download?.max != null) conds.push(lte(measurements.downloadMbps, f.download.max));
-  if (f.upload?.min != null) conds.push(gte(measurements.uploadMbps, f.upload.min));
-  if (f.upload?.max != null) conds.push(lte(measurements.uploadMbps, f.upload.max));
-  if (f.latency?.min != null) conds.push(gte(measurements.latencyLoadedMs, f.latency.min));
-  if (f.latency?.max != null) conds.push(lte(measurements.latencyLoadedMs, f.latency.max));
+  if (f.download?.min != null) {
+    conds.push(gte(measurements.downloadMbps, f.download.min));
+  }
+  if (f.download?.max != null) {
+    conds.push(lte(measurements.downloadMbps, f.download.max));
+  }
+  if (f.upload?.min != null) {
+    conds.push(gte(measurements.uploadMbps, f.upload.min));
+  }
+  if (f.upload?.max != null) {
+    conds.push(lte(measurements.uploadMbps, f.upload.max));
+  }
+  if (f.latency?.min != null) {
+    conds.push(gte(measurements.latencyLoadedMs, f.latency.min));
+  }
+  if (f.latency?.max != null) {
+    conds.push(lte(measurements.latencyLoadedMs, f.latency.max));
+  }
 
-  if (f.status && f.status.length > 0) conds.push(inArray(measurements.status, f.status));
+  if (f.status && f.status.length > 0) {
+    conds.push(inArray(measurements.status, f.status));
+  }
   if (f.server) {
     conds.push(like(sql`lower(${measurements.serverLocations})`, `%${f.server.toLowerCase()}%`));
   }

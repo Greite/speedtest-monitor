@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
 import { cn } from '@/lib/utils';
 
 export type Range = '1h' | '6h' | '24h' | '7d' | '30d';
@@ -37,7 +38,9 @@ export function TimeRangePicker({
   useIsoLayoutEffect(() => {
     const track = trackRef.current;
     const btn = buttonsRef.current[value];
-    if (!track || !btn) return;
+    if (!track || !btn) {
+      return;
+    }
     const trackRect = track.getBoundingClientRect();
     const btnRect = btn.getBoundingClientRect();
     setPill({

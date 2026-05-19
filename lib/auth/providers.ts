@@ -1,15 +1,9 @@
 import Credentials from 'next-auth/providers/credentials';
+
 import { loadAuthConfig } from './config';
 import { verifyPassword } from './hash';
 import type { SessionUser } from './types';
-import {
-  createUser,
-  findUserByEmail,
-  findUserById,
-  findUserByOidcSubject,
-  updateLastLogin,
-  updateUser,
-} from './users';
+import { createUser, findUserByEmail, findUserById, findUserByOidcSubject, updateLastLogin, updateUser } from './users';
 
 type OidcClaims = { email: unknown; sub: unknown; name?: unknown };
 
@@ -23,7 +17,9 @@ export async function oidcProfile(args: {
   let user = findUserByOidcSubject(sub) ?? findUserByEmail(email);
 
   if (!user) {
-    if (!args.allowNewUsers) throw new Error('OIDC_USER_NOT_ALLOWED');
+    if (!args.allowNewUsers) {
+      throw new Error('OIDC_USER_NOT_ALLOWED');
+    }
     user = createUser({
       email,
       name: typeof args.claims.name === 'string' ? args.claims.name : null,
@@ -54,10 +50,16 @@ export function buildProviders(): unknown[] {
         .toLowerCase()
         .trim();
       const password = String(creds?.password ?? '');
-      if (!email || !password) return null;
+      if (!email || !password) {
+        return null;
+      }
       const user = findUserByEmail(email);
-      if (!user?.passwordHash) return null;
-      if (!(await verifyPassword(user.passwordHash, password))) return null;
+      if (!user?.passwordHash) {
+        return null;
+      }
+      if (!(await verifyPassword(user.passwordHash, password))) {
+        return null;
+      }
       updateLastLogin(user.id);
       return { id: String(user.id), email: user.email, name: user.name, role: user.role };
     },

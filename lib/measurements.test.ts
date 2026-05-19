@@ -1,14 +1,11 @@
 import { Database } from 'bun:sqlite';
 import { beforeEach, describe, expect, it } from 'bun:test';
+
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+
 import * as schema from './db/schema';
 import { alerts, measurements as measurementsTable } from './db/schema';
-import {
-  cutoffForRetentionDays,
-  isRange,
-  listMeasurementsPaged,
-  purgeByRetention,
-} from './measurements';
+import { cutoffForRetentionDays, isRange, listMeasurementsPaged, purgeByRetention } from './measurements';
 
 describe('isRange', () => {
   it('accepts the documented ranges', () => {
@@ -65,9 +62,7 @@ describe('purgeByRetention extended to alerts', () => {
     const db = drizzle(sqlite, { schema });
     const old = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
     db.insert(alerts).values({ kind: 'download_below', event: 'fired', timestamp: old }).run();
-    db.insert(alerts)
-      .values({ kind: 'download_below', event: 'resolved', timestamp: new Date() })
-      .run();
+    db.insert(alerts).values({ kind: 'download_below', event: 'resolved', timestamp: new Date() }).run();
     purgeByRetention(5);
     const rows = db.select().from(alerts).all();
     expect(rows).toHaveLength(1);
@@ -127,7 +122,9 @@ describe('listMeasurementsPaged', () => {
         serverLocations: null,
       },
     ];
-    for (const r of rows) db.insert(measurementsTable).values(r).run();
+    for (const r of rows) {
+      db.insert(measurementsTable).values(r).run();
+    }
   });
 
   it('returns rows sorted desc by timestamp and totalCount by default', () => {

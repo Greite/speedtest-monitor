@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import { formatMbps, formatMs, formatTime, latencyLevel } from './format';
 
 describe('formatMbps', () => {

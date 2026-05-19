@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
 import { countAdmins, deleteUser, findUserById, updateUser } from '@/lib/auth/users';
@@ -34,7 +35,9 @@ export async function PATCH(req: Request, { params }: Params) {
     return apiError('invalid_id', 'User id must be an integer.', 400);
   }
   const target = findUserById(userId);
-  if (!target) return apiError('not_found', 'User not found.', 404);
+  if (!target) {
+    return apiError('not_found', 'User not found.', 404);
+  }
 
   let body: unknown;
   try {
@@ -63,7 +66,9 @@ export async function DELETE(_req: Request, { params }: Params) {
     return apiError('invalid_id', 'User id must be an integer.', 400);
   }
   const target = findUserById(userId);
-  if (!target) return new NextResponse(null, { status: 204 });
+  if (!target) {
+    return new NextResponse(null, { status: 204 });
+  }
   if (target.role === 'admin' && countAdmins() <= 1) {
     return apiError('last_admin', 'Cannot delete the last admin.', 409);
   }

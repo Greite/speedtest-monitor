@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+
 import { loadAlertConfig } from './config';
 
 const ENV_KEYS = [
@@ -19,10 +20,14 @@ const ENV_KEYS = [
 ];
 
 beforeEach(() => {
-  for (const k of ENV_KEYS) delete process.env[k];
+  for (const k of ENV_KEYS) {
+    delete process.env[k];
+  }
 });
 afterEach(() => {
-  for (const k of ENV_KEYS) delete process.env[k];
+  for (const k of ENV_KEYS) {
+    delete process.env[k];
+  }
 });
 
 describe('alerts/config', () => {

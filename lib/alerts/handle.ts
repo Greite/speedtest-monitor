@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+
 import { getDb } from '../db/client';
 import { type Alert, alerts, type Measurement } from '../db/schema';
 import { broadcastAlert } from '../ws/broadcast';
@@ -14,7 +15,9 @@ import type { AlertTransition } from './types';
 
 export async function handleAlertsForMeasurement(measurement: Measurement): Promise<void> {
   const rules = getAlertRules();
-  if (!rules.enabled) return;
+  if (!rules.enabled) {
+    return;
+  }
 
   const state = readAlertState();
   const streakCount = computeFailureStreak();
@@ -24,7 +27,9 @@ export async function handleAlertsForMeasurement(measurement: Measurement): Prom
     currentState: state,
     rules,
   });
-  if (transitions.length === 0) return;
+  if (transitions.length === 0) {
+    return;
+  }
 
   const cfg = loadAlertConfig();
   const destinations = buildDestinations(cfg);
@@ -77,11 +82,6 @@ async function dispatchAndUpdate(
     rules,
   });
   const db = getDb();
-  const updated = db
-    .update(alerts)
-    .set({ deliveryStatus })
-    .where(eq(alerts.id, row.id))
-    .returning()
-    .get();
+  const updated = db.update(alerts).set({ deliveryStatus }).where(eq(alerts.id, row.id)).returning().get();
   broadcastAlert(updated);
 }

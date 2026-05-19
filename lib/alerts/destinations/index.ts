@@ -13,11 +13,21 @@ export type Destination = {
 
 export function buildDestinations(cfg: AlertConfig): Destination[] {
   const dests: Destination[] = [];
-  if (cfg.webhook) dests.push(createWebhookDestination(cfg.webhook));
-  if (cfg.ntfy) dests.push(createNtfyDestination(cfg.ntfy));
-  if (cfg.discord) dests.push(createDiscordDestination(cfg.discord));
-  if (cfg.slack) dests.push(createSlackDestination(cfg.slack));
-  if (cfg.smtp) dests.push(createSmtpDestination(cfg.smtp, cfg.publicUrl));
+  if (cfg.webhook) {
+    dests.push(createWebhookDestination(cfg.webhook));
+  }
+  if (cfg.ntfy) {
+    dests.push(createNtfyDestination(cfg.ntfy));
+  }
+  if (cfg.discord) {
+    dests.push(createDiscordDestination(cfg.discord));
+  }
+  if (cfg.slack) {
+    dests.push(createSlackDestination(cfg.slack));
+  }
+  if (cfg.smtp) {
+    dests.push(createSmtpDestination(cfg.smtp, cfg.publicUrl));
+  }
   return dests;
 }
 

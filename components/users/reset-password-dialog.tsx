@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,12 +43,16 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
 
   function handleOpenChange(next: boolean) {
     onOpenChange(next);
-    if (!next) reset();
+    if (!next) {
+      reset();
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      return;
+    }
     setError(null);
     setFieldErrors({});
     if (password.length < MIN_PASSWORD_LEN) {
@@ -96,8 +101,8 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
           <DialogDescription>
             {user ? (
               <>
-                Set a new password for <span className="font-medium">{user.email}</span>. Share it
-                with them out-of-band; they can change it after logging in.
+                Set a new password for <span className="font-medium">{user.email}</span>. Share it with them
+                out-of-band; they can change it after logging in.
               </>
             ) : (
               'Set a new password.'

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+
 import type { SmtpConfig } from '../config';
 import { renderAlertEmail } from '../templates/render';
 import type { AlertPayload, DeliveryResult } from '../types';

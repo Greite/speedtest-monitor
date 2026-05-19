@@ -1,4 +1,5 @@
 import { desc } from 'drizzle-orm';
+
 import { getDb } from '../db/client';
 import { measurements } from '../db/schema';
 
@@ -15,7 +16,9 @@ export function computeFailureStreak(): number {
 
   let streak = 0;
   for (const row of rows) {
-    if (row.status === 'success') break;
+    if (row.status === 'success') {
+      break;
+    }
     streak++;
   }
   return streak;

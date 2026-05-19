@@ -3,9 +3,7 @@ import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core
 
 export const measurements = sqliteTable('measurements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  timestamp: integer('timestamp', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+  timestamp: integer('timestamp', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
   downloadMbps: real('download_mbps'),
   uploadMbps: real('upload_mbps'),
   latencyUnloadedMs: real('latency_unloaded_ms'),
@@ -35,17 +33,9 @@ export const alerts = sqliteTable(
   'alerts',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    timestamp: integer('timestamp', { mode: 'timestamp_ms' })
-      .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+    timestamp: integer('timestamp', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
     kind: text('kind', {
-      enum: [
-        'download_below',
-        'upload_below',
-        'latency_above',
-        'bufferbloat_above',
-        'failure_streak',
-      ],
+      enum: ['download_below', 'upload_below', 'latency_above', 'bufferbloat_above', 'failure_streak'],
     }).notNull(),
     event: text('event', { enum: ['fired', 'resolved'] }).notNull(),
     measurementId: integer('measurement_id').references(() => measurements.id, {
@@ -64,12 +54,7 @@ export const alerts = sqliteTable(
 
 export type Alert = typeof alerts.$inferSelect;
 export type NewAlert = typeof alerts.$inferInsert;
-export type AlertKind =
-  | 'download_below'
-  | 'upload_below'
-  | 'latency_above'
-  | 'bufferbloat_above'
-  | 'failure_streak';
+export type AlertKind = 'download_below' | 'upload_below' | 'latency_above' | 'bufferbloat_above' | 'failure_streak';
 export type AlertEvent = 'fired' | 'resolved';
 
 export const users = sqliteTable('users', {
@@ -84,9 +69,7 @@ export const users = sqliteTable('users', {
     .default('local'),
   oidcSubject: text('oidc_subject').unique(),
   name: text('name'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
   lastLoginAt: integer('last_login_at', { mode: 'timestamp_ms' }),
 });
 

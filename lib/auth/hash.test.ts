@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import { hashPassword, needsRehash, verifyPassword } from './hash';
 
 describe('auth/hash', () => {

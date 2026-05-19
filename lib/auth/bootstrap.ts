@@ -11,7 +11,9 @@ export async function ensureSeededAdmin(): Promise<void> {
     return;
   }
   const seed = cfg.seed;
-  if (!seed) return;
+  if (!seed) {
+    return;
+  }
 
   const existing = findUserByEmail(seed.email);
   if (!existing) {
@@ -24,11 +26,15 @@ export async function ensureSeededAdmin(): Promise<void> {
     return;
   }
 
-  const stillValid = existing.passwordHash
-    ? await verifyPassword(existing.passwordHash, seed.password)
-    : false;
+  const stillValid = existing.passwordHash ? await verifyPassword(existing.passwordHash, seed.password) : false;
   const patch: Parameters<typeof updateUser>[1] = {};
-  if (existing.role !== 'admin') patch.role = 'admin';
-  if (!stillValid) patch.passwordHash = await hashPassword(seed.password);
-  if (Object.keys(patch).length > 0) updateUser(existing.id, patch);
+  if (existing.role !== 'admin') {
+    patch.role = 'admin';
+  }
+  if (!stillValid) {
+    patch.passwordHash = await hashPassword(seed.password);
+  }
+  if (Object.keys(patch).length > 0) {
+    updateUser(existing.id, patch);
+  }
 }

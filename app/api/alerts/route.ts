@@ -1,5 +1,6 @@
 import { desc } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+
 import { getDb } from '@/lib/db/client';
 import { alerts } from '@/lib/db/schema';
 

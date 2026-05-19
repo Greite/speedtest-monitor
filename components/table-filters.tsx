@@ -3,6 +3,7 @@
 import type { Column, Table } from '@tanstack/react-table';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,40 +22,62 @@ const STATUSES: readonly { value: StatusValue; label: string }[] = [
 ];
 
 function parseNumber(v: string): number | undefined {
-  if (v === '') return undefined;
+  if (v === '') {
+    return undefined;
+  }
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
 }
 
 function parseTime(v: string): number | undefined {
-  if (v === '') return undefined;
+  if (v === '') {
+    return undefined;
+  }
   const t = new Date(v).getTime();
   return Number.isFinite(t) ? t : undefined;
 }
 
 function toDateTimeLocal(ms?: number): string {
-  if (ms == null) return '';
+  if (ms == null) {
+    return '';
+  }
   const d = new Date(ms);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function setNumericRange(col: Column<MeasurementDto, unknown> | undefined, next: NumericRange) {
-  if (!col) return;
-  if (next.min == null && next.max == null) col.setFilterValue(undefined);
-  else col.setFilterValue(next);
+  if (!col) {
+    return;
+  }
+  if (next.min == null && next.max == null) {
+    col.setFilterValue(undefined);
+  } else {
+    col.setFilterValue(next);
+  }
 }
 
 function setTimeRange(col: Column<MeasurementDto, unknown> | undefined, next: TimeRange) {
-  if (!col) return;
-  if (next.from == null && next.to == null) col.setFilterValue(undefined);
-  else col.setFilterValue(next);
+  if (!col) {
+    return;
+  }
+  if (next.from == null && next.to == null) {
+    col.setFilterValue(undefined);
+  } else {
+    col.setFilterValue(next);
+  }
 }
 
 function formatNumericSummary(label: string, val: NumericRange): string {
-  if (val.min != null && val.max != null) return `${label}: ${val.min}–${val.max}`;
-  if (val.min != null) return `${label} ≥ ${val.min}`;
-  if (val.max != null) return `${label} ≤ ${val.max}`;
+  if (val.min != null && val.max != null) {
+    return `${label}: ${val.min}–${val.max}`;
+  }
+  if (val.min != null) {
+    return `${label} ≥ ${val.min}`;
+  }
+  if (val.max != null) {
+    return `${label} ≤ ${val.max}`;
+  }
   return label;
 }
 
@@ -78,19 +101,31 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
   const statusVal = (statusCol?.getFilterValue() as StatusValue[] | undefined) ?? [];
 
   const toggleStatus = (s: StatusValue) => {
-    if (!statusCol) return;
+    if (!statusCol) {
+      return;
+    }
     const set = new Set(statusVal);
-    if (set.has(s)) set.delete(s);
-    else set.add(s);
-    if (set.size === 0) statusCol.setFilterValue(undefined);
-    else statusCol.setFilterValue([...set]);
+    if (set.has(s)) {
+      set.delete(s);
+    } else {
+      set.add(s);
+    }
+    if (set.size === 0) {
+      statusCol.setFilterValue(undefined);
+    } else {
+      statusCol.setFilterValue([...set]);
+    }
   };
 
   const activePills: { key: string; label: string; onRemove: () => void }[] = [];
   if (timeVal.from != null || timeVal.to != null) {
     const parts: string[] = [];
-    if (timeVal.from != null) parts.push(`from ${new Date(timeVal.from).toLocaleString()}`);
-    if (timeVal.to != null) parts.push(`to ${new Date(timeVal.to).toLocaleString()}`);
+    if (timeVal.from != null) {
+      parts.push(`from ${new Date(timeVal.from).toLocaleString()}`);
+    }
+    if (timeVal.to != null) {
+      parts.push(`to ${new Date(timeVal.to).toLocaleString()}`);
+    }
     activePills.push({
       key: 'time',
       label: parts.join(' '),
@@ -168,26 +203,16 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
           </div>
         ) : null}
         {activeCount > 0 ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => table.resetColumnFilters()}
-            className="ml-auto"
-          >
+          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()} className="ml-auto">
             <X className="size-3" />
             Reset
           </Button>
         ) : null}
       </div>
       {open ? (
-        <div
-          id="table-filters-panel"
-          className="grid grid-cols-1 gap-4 border-t p-4 md:grid-cols-3"
-        >
+        <div id="table-filters-panel" className="grid grid-cols-1 gap-4 border-t p-4 md:grid-cols-3">
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
-              Time
-            </legend>
+            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Time</legend>
             <div className="flex flex-col gap-1">
               <Label htmlFor="filter-time-from" className="sr-only">
                 From date and time
@@ -196,9 +221,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                 id="filter-time-from"
                 type="datetime-local"
                 value={toDateTimeLocal(timeVal.from)}
-                onChange={(e) =>
-                  setTimeRange(timeCol, { from: parseTime(e.target.value), to: timeVal.to })
-                }
+                onChange={(e) => setTimeRange(timeCol, { from: parseTime(e.target.value), to: timeVal.to })}
                 className="h-8 text-xs"
               />
               <Label htmlFor="filter-time-to" className="sr-only">
@@ -208,35 +231,18 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                 id="filter-time-to"
                 type="datetime-local"
                 value={toDateTimeLocal(timeVal.to)}
-                onChange={(e) =>
-                  setTimeRange(timeCol, { from: timeVal.from, to: parseTime(e.target.value) })
-                }
+                onChange={(e) => setTimeRange(timeCol, { from: timeVal.from, to: parseTime(e.target.value) })}
                 className="h-8 text-xs"
               />
             </div>
           </fieldset>
 
-          <NumericBlock
-            label="Download (Mbps)"
-            value={downVal}
-            onChange={(n) => setNumericRange(downCol, n)}
-          />
-          <NumericBlock
-            label="Upload (Mbps)"
-            value={upVal}
-            onChange={(n) => setNumericRange(upCol, n)}
-          />
-          <NumericBlock
-            label="Latency loaded (ms)"
-            value={latVal}
-            onChange={(n) => setNumericRange(latCol, n)}
-          />
+          <NumericBlock label="Download (Mbps)" value={downVal} onChange={(n) => setNumericRange(downCol, n)} />
+          <NumericBlock label="Upload (Mbps)" value={upVal} onChange={(n) => setNumericRange(upCol, n)} />
+          <NumericBlock label="Latency loaded (ms)" value={latVal} onChange={(n) => setNumericRange(latCol, n)} />
 
           <div className="flex flex-col gap-2">
-            <Label
-              htmlFor="filter-server"
-              className="text-xs uppercase tracking-wide text-muted-foreground"
-            >
+            <Label htmlFor="filter-server" className="text-xs uppercase tracking-wide text-muted-foreground">
               Server contains
             </Label>
             <Input
@@ -250,9 +256,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
           </div>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
-              Status
-            </legend>
+            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Status</legend>
             <div className="flex flex-wrap gap-2">
               {STATUSES.map((s) => {
                 const active = statusVal.includes(s.value);
@@ -294,9 +298,7 @@ function NumericBlock({
   const maxId = `${label}-max`.replace(/\s+/g, '-').toLowerCase();
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </legend>
+      <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{label}</legend>
       <div className="flex items-center gap-2">
         <Label htmlFor={minId} className="sr-only">
           {`${label} minimum`}

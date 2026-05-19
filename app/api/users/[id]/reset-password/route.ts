@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
 import { hashPassword } from '@/lib/auth/hash';
@@ -20,7 +21,9 @@ export async function POST(req: Request, { params }: Params) {
     return apiError('invalid_id', 'User id must be an integer.', 400);
   }
   const target = findUserById(userId);
-  if (!target) return apiError('not_found', 'User not found.', 404);
+  if (!target) {
+    return apiError('not_found', 'User not found.', 404);
+  }
   let body: unknown;
   try {
     body = await req.json();

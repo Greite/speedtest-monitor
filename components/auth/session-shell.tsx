@@ -2,6 +2,7 @@
 import { usePathname } from 'next/navigation';
 import { SessionProvider } from 'next-auth/react';
 import type { ReactNode } from 'react';
+
 import { Footer } from '@/components/footer';
 import { Topbar } from '@/components/topbar';
 

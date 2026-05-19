@@ -60,7 +60,7 @@ export function LoginForm({
           <LogoMark size={48} />
           <div className="flex flex-col items-center gap-1">
             <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-              Speedtest · Monitor
+              Speedtest·Monitor
             </span>
             <h1 className="text-2xl font-semibold tracking-tight">
               Welcome back<span className="text-brand">.</span>
@@ -132,11 +132,7 @@ export function LoginForm({
                 <span>or</span>
                 <span className="h-px flex-1 bg-border/70" />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => signIn('oidc', { callbackUrl })}
-              >
+              <Button type="button" variant="outline" onClick={() => signIn('oidc', { callbackUrl })}>
                 Sign in with {oidcName}
               </Button>
             </>

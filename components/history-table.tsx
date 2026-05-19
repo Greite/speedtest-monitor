@@ -11,27 +11,14 @@ import {
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
+
 import type { NumericRange, StatusValue, TimeRange } from '@/components/table-filters';
 import { TableFilters } from '@/components/table-filters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTableMeasurements } from '@/components/use-table-measurements';
 import {
   formatDateTime,
@@ -41,11 +28,7 @@ import {
   type LatencyLevel,
   latencyLevel,
 } from '@/lib/format';
-import type {
-  SortColumn,
-  TableFilters as TableFiltersType,
-  TableQuery,
-} from '@/lib/measurements-query';
+import type { SortColumn, TableFilters as TableFiltersType, TableQuery } from '@/lib/measurements-query';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -101,18 +84,14 @@ const columns: ColumnDef<MeasurementDto>[] = [
     id: 'download',
     accessorKey: 'downloadMbps',
     header: 'Download',
-    cell: ({ row }) => (
-      <span className="font-mono text-speed-down">{formatMbps(row.original.downloadMbps)}</span>
-    ),
+    cell: ({ row }) => <span className="font-mono text-speed-down">{formatMbps(row.original.downloadMbps)}</span>,
     enableSorting: true,
   },
   {
     id: 'upload',
     accessorKey: 'uploadMbps',
     header: 'Upload',
-    cell: ({ row }) => (
-      <span className="font-mono text-speed-up">{formatMbps(row.original.uploadMbps)}</span>
-    ),
+    cell: ({ row }) => <span className="font-mono text-speed-up">{formatMbps(row.original.uploadMbps)}</span>,
     enableSorting: true,
   },
   {
@@ -122,10 +101,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
     cell: ({ row }) => (
       <span className="inline-flex items-center gap-2 font-mono">
         <span
-          className={cn(
-            'inline-block size-2 rounded-full',
-            levelColor[latencyLevel(row.original.latencyLoadedMs)],
-          )}
+          className={cn('inline-block size-2 rounded-full', levelColor[latencyLevel(row.original.latencyLoadedMs)])}
           aria-hidden
         />
         {formatMs(row.original.latencyUnloadedMs)} / {formatMs(row.original.latencyLoadedMs)}
@@ -138,9 +114,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
     accessorFn: (row) => row.serverLocations?.join(' | ') ?? '',
     header: 'Server',
     cell: ({ row }) => (
-      <span className="text-xs text-muted-foreground">
-        {row.original.serverLocations?.join(' | ') ?? '-'}
-      </span>
+      <span className="text-xs text-muted-foreground">{row.original.serverLocations?.join(' | ') ?? '-'}</span>
     ),
     enableSorting: false,
   },
@@ -200,10 +174,14 @@ function buildFiltersFromState(columnFilters: ColumnFiltersState): TableFiltersT
       }
     } else if (f.id === 'server') {
       const v = f.value as string;
-      if (v) out.server = v;
+      if (v) {
+        out.server = v;
+      }
     } else if (f.id === 'status') {
       const v = f.value as StatusValue[];
-      if (v.length > 0) out.status = v;
+      if (v.length > 0) {
+        out.status = v;
+      }
     }
   }
   return out;
@@ -271,16 +249,14 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
       <CardContent>
         <TableFilters table={table} />
         <Table>
-          <TableCaption className="sr-only">
-            Recent speedtest measurements, sortable and filterable.
-          </TableCaption>
+          <TableCaption className="sr-only">Recent speedtest measurements, sortable and filterable.</TableCaption>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const sortDir = header.column.getIsSorted();
-                  const ariaSort =
-                    sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : 'none';
+                  const ariaSortMap = { asc: 'ascending', desc: 'descending' } as const;
+                  const ariaSort = sortDir ? ariaSortMap[sortDir] : 'none';
                   const canSort = header.column.getCanSort();
                   return (
                     <TableHead key={header.id} aria-sort={ariaSort}>
@@ -291,13 +267,9 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
                           className="inline-flex items-center gap-1 text-left font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
-                          {sortDir === 'asc' ? (
-                            <ArrowUp className="size-3" aria-hidden />
-                          ) : sortDir === 'desc' ? (
-                            <ArrowDown className="size-3" aria-hidden />
-                          ) : (
-                            <ArrowUpDown className="size-3 opacity-40" aria-hidden />
-                          )}
+                          {sortDir === 'asc' && <ArrowUp className="size-3" aria-hidden />}
+                          {sortDir === 'desc' && <ArrowDown className="size-3" aria-hidden />}
+                          {!sortDir && <ArrowUpDown className="size-3 opacity-40" aria-hidden />}
                         </button>
                       ) : (
                         <span className="font-medium text-muted-foreground">
@@ -313,24 +285,17 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="py-6 text-center text-muted-foreground"
-                >
-                  {loading
-                    ? 'Loading...'
-                    : totalCount === 0
-                      ? 'No measurements.'
-                      : 'No rows match filters.'}
+                <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
+                  {loading && 'Loading...'}
+                  {!loading && totalCount === 0 && 'No measurements.'}
+                  {!loading && totalCount !== 0 && 'No rows match filters.'}
                 </TableCell>
               </TableRow>
             ) : (
               rows.map((row) => (
                 <TableRow key={row.id} className="tabular-nums">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
@@ -342,18 +307,12 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
           aria-live="polite"
           aria-atomic="true"
         >
-          <div>
-            {totalCount === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalCount}`}
-          </div>
+          <div>{totalCount === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalCount}`}</div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span>Rows per page</span>
               <Select value={String(pageSize)} onValueChange={(v) => table.setPageSize(Number(v))}>
-                <SelectTrigger
-                  size="sm"
-                  className="h-7 w-[72px] text-xs"
-                  aria-label="Rows per page"
-                >
+                <SelectTrigger size="sm" className="h-7 w-[72px] text-xs" aria-label="Rows per page">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

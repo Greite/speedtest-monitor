@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import { parseTableQuery } from './measurements-query';
 
 function qs(obj: Record<string, string>): URLSearchParams {

@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,9 @@ const DESTS: { key: keyof Configured; label: string }[] = [
 ];
 
 function numOrNull(v: string): number | null {
-  if (v.trim() === '') return null;
+  if (v.trim() === '') {
+    return null;
+  }
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
@@ -63,7 +66,9 @@ export function AlertsCard() {
   const [testResult, setTestResult] = useState<Record<string, TestState>>({});
 
   const dirty = useMemo(() => {
-    if (!savedRules || !rules) return false;
+    if (!savedRules || !rules) {
+      return false;
+    }
     return JSON.stringify(rules) !== JSON.stringify(savedRules);
   }, [rules, savedRules]);
 
@@ -71,7 +76,9 @@ export function AlertsCard() {
     let cancelled = false;
     fetch('/api/alerts/rules')
       .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) {
+          throw new Error(`HTTP ${r.status}`);
+        }
         return r.json();
       })
       .then((data: Rules) => {
@@ -81,7 +88,9 @@ export function AlertsCard() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'load failed');
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'load failed');
+        }
       });
     return () => {
       cancelled = true;
@@ -174,13 +183,17 @@ export function AlertsCard() {
         results?: Record<string, { ok: boolean; error?: string }>;
       };
       const r = body.results?.[destination];
+      let result: { ok: boolean; message: string };
+      if (!r) {
+        result = { ok: false, message: 'No result' };
+      } else if (r.ok) {
+        result = { ok: true, message: 'Delivered' };
+      } else {
+        result = { ok: false, message: r.error ?? 'unknown' };
+      }
       setTestResult((prev) => ({
         ...prev,
-        [destination]: r
-          ? r.ok
-            ? { ok: true, message: 'Delivered' }
-            : { ok: false, message: r.error ?? 'unknown' }
-          : { ok: false, message: 'No result' },
+        [destination]: result,
       }));
     } catch (err) {
       setTestResult((prev) => ({
@@ -217,9 +230,7 @@ export function AlertsCard() {
 
         <div className="flex flex-col gap-3">
           <h3 className="text-sm font-semibold">Thresholds</h3>
-          <p className="text-xs text-muted-foreground">
-            Leave empty to disable a rule. Values must be positive.
-          </p>
+          <p className="text-xs text-muted-foreground">Leave empty to disable a rule. Values must be positive.</p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="th-download">Download below (Mbps)</Label>
@@ -291,10 +302,7 @@ export function AlertsCard() {
               const configured = rules.destinationsConfigured[key];
               const result = testResult[key];
               return (
-                <div
-                  key={key}
-                  className="flex flex-wrap items-center gap-3 rounded-md border bg-card/50 px-3 py-2"
-                >
+                <div key={key} className="flex flex-wrap items-center gap-3 rounded-md border bg-card/50 px-3 py-2">
                   <Switch
                     id={`dest-${key}`}
                     checked={rules.destinations[key]}
@@ -307,12 +315,7 @@ export function AlertsCard() {
                   <Badge variant={configured ? 'secondary' : 'outline'}>
                     {configured ? 'configured in env' : 'missing env var'}
                   </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!configured || readOnly}
-                    onClick={() => test(key)}
-                  >
+                  <Button variant="outline" size="sm" disabled={!configured || readOnly} onClick={() => test(key)}>
                     Send test
                   </Button>
                   {result ? <TestResultPill state={result} /> : null}
@@ -337,7 +340,9 @@ export function AlertsCard() {
           <Button
             variant="outline"
             onClick={() => {
-              if (savedRules) setRules(savedRules);
+              if (savedRules) {
+                setRules(savedRules);
+              }
               setError(null);
               setStatus(null);
             }}

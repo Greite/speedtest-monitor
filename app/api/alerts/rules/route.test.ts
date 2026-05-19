@@ -1,14 +1,15 @@
 import { Database } from 'bun:sqlite';
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+
 import { drizzle } from 'drizzle-orm/bun-sqlite';
-import * as schema from '@/lib/db/schema';
+
 import { GET, PATCH } from './route';
+
+import * as schema from '@/lib/db/schema';
 
 beforeEach(() => {
   const sqlite = new Database(':memory:');
-  sqlite.exec(
-    `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
-  );
+  sqlite.exec(`CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`);
   globalThis.__speedtestDb = { sqlite, db: drizzle(sqlite, { schema }) };
 });
 afterEach(() => {

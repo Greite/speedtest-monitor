@@ -1,6 +1,8 @@
 import { Database } from 'bun:sqlite';
 import { beforeEach, describe, expect, it } from 'bun:test';
+
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+
 import * as schema from '@/lib/db/schema';
 import { measurements } from '@/lib/db/schema';
 
@@ -56,9 +58,7 @@ describe('GET /api/measurements/table', () => {
   });
 
   it('filters and paginates together', async () => {
-    const res = await GET(
-      new Request('http://x/api/measurements/table?downloadMin=200&pageSize=10'),
-    );
+    const res = await GET(new Request('http://x/api/measurements/table?downloadMin=200&pageSize=10'));
     const body = await res.json();
     expect(body.totalCount).toBe(10);
     expect(body.measurements).toHaveLength(10);

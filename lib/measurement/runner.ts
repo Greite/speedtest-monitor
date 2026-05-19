@@ -6,7 +6,6 @@ import { broadcastMeasurement, broadcastRunning } from '../ws/broadcast';
 import { runCloudflareSpeedTest } from './cloudflare';
 
 declare global {
-  // eslint-disable-next-line no-var
   var __speedtestRunning: boolean | undefined;
 }
 
@@ -17,9 +16,7 @@ export class MeasurementBusyError extends Error {
   }
 }
 
-function insertMeasurement(
-  row: Omit<Measurement, 'id' | 'timestamp'> & { timestamp?: Date },
-): Measurement {
+function insertMeasurement(row: Omit<Measurement, 'id' | 'timestamp'> & { timestamp?: Date }): Measurement {
   const db = getDb();
   return db
     .insert(measurements)
@@ -29,7 +26,9 @@ function insertMeasurement(
 }
 
 export async function runMeasurement(): Promise<Measurement> {
-  if (globalThis.__speedtestRunning) throw new MeasurementBusyError();
+  if (globalThis.__speedtestRunning) {
+    throw new MeasurementBusyError();
+  }
   globalThis.__speedtestRunning = true;
   const startedAt = Date.now();
   broadcastRunning(startedAt);
@@ -37,9 +36,7 @@ export async function runMeasurement(): Promise<Measurement> {
   try {
     const result = await runCloudflareSpeedTest();
     if (result.downloadMbps === null || result.uploadMbps === null) {
-      throw new Error(
-        `incomplete results: download=${result.downloadMbps} upload=${result.uploadMbps}`,
-      );
+      throw new Error(`incomplete results: download=${result.downloadMbps} upload=${result.uploadMbps}`);
     }
     const row = insertMeasurement({
       downloadMbps: result.downloadMbps,
@@ -89,7 +86,9 @@ export async function runMeasurementSafe(): Promise<Measurement | null> {
   try {
     return await runMeasurement();
   } catch (err) {
-    if (err instanceof MeasurementBusyError) return null;
+    if (err instanceof MeasurementBusyError) {
+      return null;
+    }
     throw err;
   }
 }

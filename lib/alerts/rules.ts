@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+
 import { getDb } from '../db/client';
 import { settings } from '../db/schema';
 import { type AlertRules, DEFAULT_RULES } from './types';
@@ -31,7 +32,9 @@ const rulesSchema = z.object({
 export function getAlertRules(): AlertRules {
   const db = getDb();
   const row = db.select().from(settings).where(eq(settings.key, KEY)).get();
-  if (!row) return DEFAULT_RULES;
+  if (!row) {
+    return DEFAULT_RULES;
+  }
   try {
     return rulesSchema.parse(JSON.parse(row.value));
   } catch {

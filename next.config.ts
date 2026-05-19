@@ -1,8 +1,11 @@
 import { execSync } from 'node:child_process';
+
 import type { NextConfig } from 'next';
 
 function resolveAppVersion(): string {
-  if (process.env.APP_VERSION) return process.env.APP_VERSION;
+  if (process.env.APP_VERSION) {
+    return process.env.APP_VERSION;
+  }
   try {
     return execSync('git describe --tags --exact-match HEAD', {
       stdio: ['ignore', 'pipe', 'ignore'],

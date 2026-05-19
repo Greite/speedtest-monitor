@@ -1,6 +1,8 @@
 import { Database } from 'bun:sqlite';
 import { beforeEach, describe, expect, it } from 'bun:test';
+
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+
 import * as schema from '../db/schema';
 import { getAlertRules, setAlertRules } from './rules';
 import { DEFAULT_RULES } from './types';
@@ -8,9 +10,7 @@ import { DEFAULT_RULES } from './types';
 beforeEach(() => {
   const sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });
-  sqlite.exec(
-    `CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`,
-  );
+  sqlite.exec(`CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL);`);
   globalThis.__speedtestDb = { sqlite, db };
 });
 

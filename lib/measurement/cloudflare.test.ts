@@ -1,5 +1,6 @@
 // lib/measurement/cloudflare.test.ts
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+
 import { fetchCloudflareMeta, probeLatency, probeUpload } from './cloudflare';
 
 const fetchMock = mock();
@@ -84,8 +85,6 @@ describe('probeUpload', () => {
 
   it('throws when a stream responds non-2xx', async () => {
     fetchMock.mockImplementation(async () => new Response(null, { status: 500 }));
-    await expect(probeUpload({ durationMs: 150, parallel: 2 })).rejects.toThrow(
-      /upload failed.*500/,
-    );
+    await expect(probeUpload({ durationMs: 150, parallel: 2 })).rejects.toThrow(/upload failed.*500/);
   });
 });

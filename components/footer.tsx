@@ -1,16 +1,11 @@
 import Link from 'next/link';
+
 import { LogoMark } from '@/components/logo-mark';
 import { APP_VERSION, GITHUB_REPO_URL } from '@/lib/version';
 
 function GithubMark({ className }: { className?: string }) {
   return (
-    <svg
-      role="img"
-      aria-label="GitHub"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      className={className}
-    >
+    <svg role="img" aria-label="GitHub" viewBox="0 0 16 16" fill="currentColor" className={className}>
       <title>GitHub</title>
       <path
         fillRule="evenodd"
@@ -25,10 +20,7 @@ export function Footer() {
   const year = new Date().getFullYear();
   const isTagged = APP_VERSION !== 'dev';
   return (
-    <footer
-      role="contentinfo"
-      className="mt-auto border-t border-border/60 bg-background/40 backdrop-blur-sm"
-    >
+    <footer role="contentinfo" className="mt-auto border-t border-border/60 bg-background/40 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 text-sm text-muted-foreground md:flex-row md:px-6">
         <div className="flex items-center gap-2.5">
           <LogoMark size={20} />
@@ -42,19 +34,11 @@ export function Footer() {
           <Link
             href="/changelog"
             className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-2.5 py-0.5 font-mono text-[11px] font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label={
-              isTagged
-                ? `Version ${APP_VERSION}, view changelog`
-                : 'Development build, view changelog'
-            }
+            aria-label={isTagged ? `Version ${APP_VERSION}, view changelog` : 'Development build, view changelog'}
           >
             <span
               aria-hidden
-              className={
-                isTagged
-                  ? 'size-1.5 rounded-full bg-latency-ok'
-                  : 'size-1.5 rounded-full bg-muted-foreground'
-              }
+              className={isTagged ? 'size-1.5 rounded-full bg-latency-ok' : 'size-1.5 rounded-full bg-muted-foreground'}
             />
             <span className="tabular-nums">{APP_VERSION}</span>
           </Link>

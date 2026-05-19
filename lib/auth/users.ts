@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+
 import { getDb } from '../db/client';
 import { type NewUser, type User, users } from '../db/schema';
 
@@ -51,13 +52,9 @@ export function createUser(
     .get();
 }
 
-export function updateUser(
-  id: number,
-  patch: Partial<Omit<NewUser, 'id' | 'createdAt'>>,
-): User | undefined {
+export function updateUser(id: number, patch: Partial<Omit<NewUser, 'id' | 'createdAt'>>): User | undefined {
   const db = getDb();
-  const normalized =
-    'email' in patch && patch.email ? { ...patch, email: lower(patch.email) } : patch;
+  const normalized = 'email' in patch && patch.email ? { ...patch, email: lower(patch.email) } : patch;
   const changed = db.update(users).set(normalized).where(eq(users.id, id)).returning().get();
   return changed;
 }

@@ -1,5 +1,7 @@
 import { createRequire } from 'node:module';
+
 import type { migrate as migrateFn } from 'drizzle-orm/bun-sqlite/migrator';
+
 import { getDb } from './client';
 
 // See comment in client.ts: hide the Bun-only specifier from static analysis
@@ -10,9 +12,6 @@ const lazyRequire = new Function('r', 's', 'return r(s)') as <T>(r: NodeJS.Requi
 
 export function runMigrations() {
   const db = getDb();
-  const { migrate } = lazyRequire<{ migrate: typeof migrateFn }>(
-    cjsRequire,
-    'drizzle-orm/bun-sqlite/migrator',
-  );
+  const { migrate } = lazyRequire<{ migrate: typeof migrateFn }>(cjsRequire, 'drizzle-orm/bun-sqlite/migrator');
   migrate(db, { migrationsFolder: './drizzle' });
 }

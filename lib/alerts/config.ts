@@ -22,15 +22,15 @@ export type AlertConfig = {
 };
 
 function parseHeadersJson(raw: string | undefined): Record<string, string> {
-  if (!raw) return {};
+  if (!raw) {
+    return {};
+  }
   try {
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
       return Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, String(v)]));
     }
-  } catch {
-    console.warn('[alerts] SPEEDTEST_WEBHOOK_HEADERS is not valid JSON; ignoring');
-  }
+  } catch {}
   return {};
 }
 
@@ -38,12 +38,23 @@ function parseSmtp(): SmtpConfig | null {
   const host = process.env.SPEEDTEST_SMTP_HOST;
   const from = process.env.SPEEDTEST_SMTP_FROM;
   const toRaw = process.env.SPEEDTEST_SMTP_TO;
-  if (!host || !from || !toRaw) return null;
+  if (!host || !from || !toRaw) {
+    return null;
+  }
   const portRaw = process.env.SPEEDTEST_SMTP_PORT ?? '587';
   const port = Number.parseInt(portRaw, 10);
-  if (Number.isNaN(port)) return null;
+  if (Number.isNaN(port)) {
+    return null;
+  }
   const secureRaw = process.env.SPEEDTEST_SMTP_SECURE ?? 'auto';
-  const secure = secureRaw === 'true' ? true : secureRaw === 'false' ? false : port === 465;
+  let secure: boolean;
+  if (secureRaw === 'true') {
+    secure = true;
+  } else if (secureRaw === 'false') {
+    secure = false;
+  } else {
+    secure = port === 465;
+  }
   const to = toRaw
     .split(',')
     .map((s) => s.trim())
@@ -65,9 +76,7 @@ export function loadAlertConfig(): AlertConfig {
   const discordUrl = process.env.SPEEDTEST_DISCORD_WEBHOOK;
   const slackUrl = process.env.SPEEDTEST_SLACK_WEBHOOK;
   return {
-    webhook: webhookUrl
-      ? { url: webhookUrl, headers: parseHeadersJson(process.env.SPEEDTEST_WEBHOOK_HEADERS) }
-      : null,
+    webhook: webhookUrl ? { url: webhookUrl, headers: parseHeadersJson(process.env.SPEEDTEST_WEBHOOK_HEADERS) } : null,
     ntfy: ntfyUrl ? { url: ntfyUrl, token: process.env.SPEEDTEST_NTFY_TOKEN || undefined } : null,
     discord: discordUrl ? { url: discordUrl } : null,
     slack: slackUrl ? { url: slackUrl } : null,

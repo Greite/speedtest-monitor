@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import type { Destination } from './destinations';
 import { dispatchAlert } from './dispatch';
 import type { AlertPayload, AlertRules, DestinationName } from './types';

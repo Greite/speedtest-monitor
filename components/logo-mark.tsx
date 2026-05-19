@@ -34,15 +34,7 @@ export function LogoMark({ size = 32, className }: Props) {
         <circle cx="16" cy="16" r="14" fill={`url(#${id}-glow)`} />
 
         {/* Faded full track */}
-        <circle
-          cx="16"
-          cy="16"
-          r="11"
-          fill="none"
-          stroke={`url(#${id}-stroke)`}
-          strokeWidth="1.25"
-          opacity="0.3"
-        />
+        <circle cx="16" cy="16" r="11" fill="none" stroke={`url(#${id}-stroke)`} strokeWidth="1.25" opacity="0.3" />
 
         {/* Main 270° gauge arc: from bottom-left to bottom-right, passing through top */}
         <path
@@ -54,15 +46,7 @@ export function LogoMark({ size = 32, className }: Props) {
         />
 
         {/* Needle pointing toward upper-right */}
-        <line
-          x1="16"
-          y1="16"
-          x2="22.5"
-          y2="10.5"
-          stroke={`url(#${id}-stroke)`}
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
+        <line x1="16" y1="16" x2="22.5" y2="10.5" stroke={`url(#${id}-stroke)`} strokeWidth="2" strokeLinecap="round" />
 
         {/* Pivot dot */}
         <circle cx="16" cy="16" r="2.1" fill="oklch(0.58 0.19 250)" />

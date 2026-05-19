@@ -1,7 +1,9 @@
 // lib/measurement/runner.test.ts
 import { Database } from 'bun:sqlite';
 import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test';
+
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+
 import * as schema from '../db/schema';
 import type { EngineResult } from './types';
 
@@ -32,8 +34,7 @@ afterAll(() => {
   mock.module('../alerts/handle', () => realHandle);
 });
 
-const { runMeasurement, runMeasurementSafe, MeasurementBusyError, isMeasurementRunning } =
-  await import('./runner');
+const { runMeasurement, runMeasurementSafe, MeasurementBusyError, isMeasurementRunning } = await import('./runner');
 
 const fullResult: EngineResult = {
   downloadMbps: 300,

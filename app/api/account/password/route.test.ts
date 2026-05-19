@@ -1,6 +1,8 @@
 import { Database } from 'bun:sqlite';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+
 import * as schema from '@/lib/db/schema';
 
 const authMock = mock();
@@ -57,9 +59,7 @@ describe('POST /api/account/password', () => {
   });
 
   it('updates on valid current password', async () => {
-    const res = await POST(
-      body({ currentPassword: 'oldpassword1', newPassword: 'hunter2hunter2' }),
-    );
+    const res = await POST(body({ currentPassword: 'oldpassword1', newPassword: 'hunter2hunter2' }));
     expect(res.status).toBe(200);
     const row = findUserByEmail('me@x')!;
     expect(await verifyPassword(row.passwordHash!, 'hunter2hunter2')).toBe(true);

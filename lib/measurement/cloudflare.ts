@@ -41,9 +41,13 @@ const REQUEST_TIMEOUT_MS = 30_000;
 
 function envInt(name: string, fallback: number, min: number, max: number): number {
   const raw = process.env[name];
-  if (!raw) return fallback;
+  if (!raw) {
+    return fallback;
+  }
   const n = Number.parseInt(raw, 10);
-  if (Number.isNaN(n) || n < min || n > max) return fallback;
+  if (Number.isNaN(n) || n < min || n > max) {
+    return fallback;
+  }
   return n;
 }
 
@@ -64,8 +68,12 @@ type Meta = {
 };
 
 function coloIata(colo: Meta['colo']): string | null {
-  if (!colo) return null;
-  if (typeof colo === 'string') return colo;
+  if (!colo) {
+    return null;
+  }
+  if (typeof colo === 'string') {
+    return colo;
+  }
   return colo.iata ?? null;
 }
 
@@ -88,7 +96,9 @@ export async function fetchCloudflareMeta(): Promise<Meta> {
     if (coloIata(body.colo) === null) {
       const ray = res.headers.get('cf-ray');
       const colo = ray?.split('-')[1];
-      if (colo) body.colo = colo;
+      if (colo) {
+        body.colo = colo;
+      }
     }
     return body;
   } catch {
@@ -113,7 +123,9 @@ async function timedFetch(
       const reader = res.body.getReader();
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          break;
+        }
         bytes += value?.byteLength ?? 0;
       }
     } else {
@@ -132,9 +144,13 @@ export async function probeLatency(): Promise<{ min: number; mean: number; jitte
   await timedFetch(DOWN(0), { headers: COMMON_HEADERS }, 5_000).catch(() => null);
   for (let i = 0; i < LATENCY_PROBES; i++) {
     const t = await timedFetch(DOWN(0), { headers: COMMON_HEADERS }, 5_000).catch(() => null);
-    if (t) samples.push(t.durationMs);
+    if (t) {
+      samples.push(t.durationMs);
+    }
   }
-  if (samples.length === 0) throw new Error('no latency samples');
+  if (samples.length === 0) {
+    throw new Error('no latency samples');
+  }
   const min = Math.min(...samples);
   const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
   // Jitter = mean absolute deviation from mean (simple + robust to outliers).
@@ -144,9 +160,7 @@ export async function probeLatency(): Promise<{ min: number; mean: number; jitte
 
 export type ProbeOpts = { durationMs?: number; parallel?: number };
 
-export async function probeDownload(
-  opts: ProbeOpts = {},
-): Promise<{ mbps: number; loadedLatencyMs: number }> {
+export async function probeDownload(opts: ProbeOpts = {}): Promise<{ mbps: number; loadedLatencyMs: number }> {
   const durationMs = opts.durationMs ?? testDurationMs();
   const parallel = opts.parallel ?? parallelStreams();
 
@@ -159,7 +173,9 @@ export async function probeDownload(
     await new Promise((r) => setTimeout(r, 300));
     while (!stopLatency) {
       const t = await timedFetch(DOWN(0), { headers: COMMON_HEADERS }, 3_000).catch(() => null);
-      if (t) loadedSamples.push(t.durationMs);
+      if (t) {
+        loadedSamples.push(t.durationMs);
+      }
       await new Promise((r) => setTimeout(r, 150));
     }
   })();
@@ -177,7 +193,9 @@ export async function probeDownload(
           { headers: COMMON_HEADERS },
           REQUEST_TIMEOUT_MS,
         ).catch(() => null);
-        if (!r) continue;
+        if (!r) {
+          continue;
+        }
         if (r.status !== 200 || r.bytes === 0) {
           failures.push({ status: r.status, bytes: r.bytes });
           return;
@@ -212,7 +230,9 @@ export async function probeUpload(opts: ProbeOpts = {}): Promise<{ mbps: number 
   const body = new Uint8Array(UPLOAD_BYTES_PER_REQUEST);
   // Fill with non-zero so compression-aware proxies can't collapse the
   // payload (Cloudflare does not compress but be safe).
-  for (let i = 0; i < body.length; i += 4) body[i] = (i * 2654435761) & 0xff;
+  for (let i = 0; i < body.length; i += 4) {
+    body[i] = (i * 2654435761) & 0xff;
+  }
 
   const start = performance.now();
   const deadline = start + durationMs;
@@ -231,7 +251,9 @@ export async function probeUpload(opts: ProbeOpts = {}): Promise<{ mbps: number 
           },
           REQUEST_TIMEOUT_MS,
         ).catch(() => null);
-        if (!r) continue;
+        if (!r) {
+          continue;
+        }
         if (r.status !== 200 && r.status !== 204) {
           failures.push(r.status);
           return;

@@ -2,11 +2,12 @@ import type { Database } from 'bun:sqlite';
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
+
 import type { drizzle } from 'drizzle-orm/bun-sqlite';
+
 import * as schema from './schema';
 
 declare global {
-  // eslint-disable-next-line no-var
   var __speedtestDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
 }
 
@@ -26,14 +27,8 @@ const cjsRequire = createRequire(import.meta.url);
 const lazyRequire = new Function('r', 's', 'return r(s)') as <T>(r: NodeJS.Require, s: string) => T;
 
 function openDatabase() {
-  const { Database: BunDatabase } = lazyRequire<{ Database: typeof Database }>(
-    cjsRequire,
-    'bun:sqlite',
-  );
-  const { drizzle: bunDrizzle } = lazyRequire<{ drizzle: typeof drizzle }>(
-    cjsRequire,
-    'drizzle-orm/bun-sqlite',
-  );
+  const { Database: BunDatabase } = lazyRequire<{ Database: typeof Database }>(cjsRequire, 'bun:sqlite');
+  const { drizzle: bunDrizzle } = lazyRequire<{ drizzle: typeof drizzle }>(cjsRequire, 'drizzle-orm/bun-sqlite');
 
   const path = getDbPath();
   mkdirSync(dirname(path), { recursive: true });
@@ -62,10 +57,10 @@ export function closeDb() {
 export function pingDb(): { ok: true } | { ok: false; error: string } {
   try {
     getDb();
-    const row = globalThis.__speedtestDb?.sqlite.prepare('SELECT 1 AS ok').get() as
-      | { ok: number }
-      | undefined;
-    if (row?.ok === 1) return { ok: true };
+    const row = globalThis.__speedtestDb?.sqlite.prepare('SELECT 1 AS ok').get() as { ok: number } | undefined;
+    if (row?.ok === 1) {
+      return { ok: true };
+    }
     return { ok: false, error: 'unexpected ping result' };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };

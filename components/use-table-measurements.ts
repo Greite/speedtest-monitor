@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import type { TableQuery } from '@/lib/measurements-query';
 import type { MeasurementDto } from '@/lib/types';
 
@@ -18,16 +19,36 @@ function toSearchParams(q: TableQuery): URLSearchParams {
   p.set('sort', q.sort);
   p.set('sortDir', q.sortDir);
   const f = q.filters;
-  if (f.time?.from != null) p.set('timeFrom', String(f.time.from));
-  if (f.time?.to != null) p.set('timeTo', String(f.time.to));
-  if (f.download?.min != null) p.set('downloadMin', String(f.download.min));
-  if (f.download?.max != null) p.set('downloadMax', String(f.download.max));
-  if (f.upload?.min != null) p.set('uploadMin', String(f.upload.min));
-  if (f.upload?.max != null) p.set('uploadMax', String(f.upload.max));
-  if (f.latency?.min != null) p.set('latencyMin', String(f.latency.min));
-  if (f.latency?.max != null) p.set('latencyMax', String(f.latency.max));
-  if (f.server) p.set('server', f.server);
-  if (f.status && f.status.length > 0) p.set('status', f.status.join(','));
+  if (f.time?.from != null) {
+    p.set('timeFrom', String(f.time.from));
+  }
+  if (f.time?.to != null) {
+    p.set('timeTo', String(f.time.to));
+  }
+  if (f.download?.min != null) {
+    p.set('downloadMin', String(f.download.min));
+  }
+  if (f.download?.max != null) {
+    p.set('downloadMax', String(f.download.max));
+  }
+  if (f.upload?.min != null) {
+    p.set('uploadMin', String(f.upload.min));
+  }
+  if (f.upload?.max != null) {
+    p.set('uploadMax', String(f.upload.max));
+  }
+  if (f.latency?.min != null) {
+    p.set('latencyMin', String(f.latency.min));
+  }
+  if (f.latency?.max != null) {
+    p.set('latencyMax', String(f.latency.max));
+  }
+  if (f.server) {
+    p.set('server', f.server);
+  }
+  if (f.status && f.status.length > 0) {
+    p.set('status', f.status.join(','));
+  }
   return p;
 }
 
@@ -48,12 +69,18 @@ export function useTableMeasurements(query: TableQuery, refreshSignal: number | 
       const res = await fetch(`/api/measurements/table?${toSearchParams(query).toString()}`, {
         cache: 'no-store',
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        return;
+      }
       const body = (await res.json()) as TableResponse;
-      if (reqId !== reqIdRef.current) return;
+      if (reqId !== reqIdRef.current) {
+        return;
+      }
       setData(body);
     } finally {
-      if (reqId === reqIdRef.current) setLoading(false);
+      if (reqId === reqIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [query]);
 
@@ -62,7 +89,9 @@ export function useTableMeasurements(query: TableQuery, refreshSignal: number | 
   }, [fetchPage]);
 
   useEffect(() => {
-    if (refreshSignal == null) return;
+    if (refreshSignal == null) {
+      return;
+    }
     fetchPage();
   }, [refreshSignal, fetchPage]);
 

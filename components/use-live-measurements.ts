@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import type { MeasurementDto, WsEventDto } from '@/lib/types';
 
 type Range = '1h' | '6h' | '24h' | '7d' | '30d';
@@ -19,7 +20,9 @@ function fetchMeasurements(range: Range): Promise<MeasurementDto[]> {
 }
 
 function wsUrl() {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === 'undefined') {
+    return '';
+  }
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
   return `${proto}://${window.location.host}/ws`;
 }
@@ -34,7 +37,9 @@ export function useLiveMeasurements(initial: MeasurementDto[], range: Range = '2
 
   const handleMeasurement = useCallback((m: MeasurementDto) => {
     setState((prev) => {
-      if (prev.measurements.some((x) => x.id === m.id)) return { ...prev, running: false };
+      if (prev.measurements.some((x) => x.id === m.id)) {
+        return { ...prev, running: false };
+      }
       return {
         ...prev,
         running: false,
@@ -69,37 +74,49 @@ export function useLiveMeasurements(initial: MeasurementDto[], range: Range = '2
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     const connect = () => {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
       socket = new WebSocket(wsUrl());
       currentWsRef.current = socket;
       const thisSocket = socket;
 
       thisSocket.addEventListener('open', () => {
-        if (cancelled || currentWsRef.current !== thisSocket) return;
+        if (cancelled || currentWsRef.current !== thisSocket) {
+          return;
+        }
         retries = 0;
         setState((prev) => ({ ...prev, connected: true }));
         refetch();
       });
 
       thisSocket.addEventListener('message', (ev) => {
-        if (cancelled || currentWsRef.current !== thisSocket) return;
+        if (cancelled || currentWsRef.current !== thisSocket) {
+          return;
+        }
         try {
           const event = JSON.parse(ev.data as string) as WsEventDto;
-          if (event.type === 'measurement') handleMeasurement(event.payload);
-          else if (event.type === 'running')
+          if (event.type === 'measurement') {
+            handleMeasurement(event.payload);
+          } else if (event.type === 'running') {
             setState((prev) => ({
               ...prev,
               running: true,
               lastRunStartedAt: event.payload.startedAt,
             }));
+          }
         } catch {
           /* ignore */
         }
       });
 
       thisSocket.addEventListener('close', () => {
-        if (cancelled) return;
-        if (currentWsRef.current !== thisSocket) return;
+        if (cancelled) {
+          return;
+        }
+        if (currentWsRef.current !== thisSocket) {
+          return;
+        }
         setState((prev) => ({ ...prev, connected: false }));
         const backoff = Math.min(30_000, 1000 * 2 ** retries);
         retries += 1;
@@ -113,8 +130,12 @@ export function useLiveMeasurements(initial: MeasurementDto[], range: Range = '2
 
     return () => {
       cancelled = true;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      if (socket && currentWsRef.current === socket) currentWsRef.current = null;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+      if (socket && currentWsRef.current === socket) {
+        currentWsRef.current = null;
+      }
       socket?.close();
     };
   }, [handleMeasurement, refetch]);

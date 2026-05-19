@@ -18,8 +18,12 @@ function stripSection(html: string, marker: string): string {
 }
 
 function unitFor(kind: AlertKind): string {
-  if (kind === 'download_below' || kind === 'upload_below') return 'Mbps';
-  if (kind === 'latency_above' || kind === 'bufferbloat_above') return 'ms';
+  if (kind === 'download_below' || kind === 'upload_below') {
+    return 'Mbps';
+  }
+  if (kind === 'latency_above' || kind === 'bufferbloat_above') {
+    return 'ms';
+  }
   return '';
 }
 
@@ -53,7 +57,9 @@ function severitySubtitle(kind: AlertKind, event: AlertEvent): string {
 }
 
 function severityLabel(event: AlertEvent, kind: AlertKind): string {
-  if (event === 'resolved') return 'Service recovered';
+  if (event === 'resolved') {
+    return 'Service recovered';
+  }
   return kind === 'failure_streak' ? 'Connection degraded' : 'Threshold breached';
 }
 
@@ -85,12 +91,18 @@ export function renderAlertEmail(payload: AlertPayload, publicUrl: string | null
     `Kind: ${payload.kind}`,
     `Event: ${payload.event}`,
   ];
-  if (publicUrl) textLines.push('', `Dashboard: ${publicUrl}`);
+  if (publicUrl) {
+    textLines.push('', `Dashboard: ${publicUrl}`);
+  }
   const text = textLines.join('\n');
 
   let html = ALERT_EMAIL_HTML;
-  if (!showMetrics) html = stripSection(html, 'METRICS');
-  if (!showCta) html = stripSection(html, 'CTA');
+  if (!showMetrics) {
+    html = stripSection(html, 'METRICS');
+  }
+  if (!showCta) {
+    html = stripSection(html, 'CTA');
+  }
 
   const observedStr = payload.observed !== null ? String(payload.observed) : '';
   const thresholdStr = payload.threshold !== null ? String(payload.threshold) : '';

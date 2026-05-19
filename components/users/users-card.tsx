@@ -14,31 +14,20 @@ import { ArrowDown, ArrowUp, ArrowUpDown, KeyRound, Search, Trash2 } from 'lucid
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+
+import { AddUserDialog } from './add-user-dialog';
+import { DeleteUserDialog } from './delete-user-dialog';
+import { ResetPasswordDialog } from './reset-password-dialog';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { parseApiError } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import { AddUserDialog } from './add-user-dialog';
-import { DeleteUserDialog } from './delete-user-dialog';
-import { ResetPasswordDialog } from './reset-password-dialog';
 
 type UserRow = {
   id: number;
@@ -54,7 +43,9 @@ type RoleFilter = 'all' | 'admin' | 'viewer';
 type ProviderFilter = 'all' | 'local' | 'oidc';
 
 function formatLastLogin(ts: number | null): string {
-  if (!ts) return '-';
+  if (!ts) {
+    return '-';
+  }
   return new Date(ts).toLocaleString('sv-SE').replace('T', ' ').slice(0, 16);
 }
 
@@ -119,18 +110,14 @@ export function UsersCard() {
         accessorKey: 'email',
         header: 'Email',
         cell: ({ row }) => <span className="font-medium">{row.original.email}</span>,
-        filterFn: (row, _id, value: string) =>
-          row.original.email.toLowerCase().includes(value.toLowerCase()),
+        filterFn: (row, _id, value: string) => row.original.email.toLowerCase().includes(value.toLowerCase()),
       },
       {
         id: 'role',
         accessorKey: 'role',
         header: 'Role',
         cell: ({ row }) => (
-          <Select
-            value={row.original.role}
-            onValueChange={(v) => setRole(row.original.id, v as 'admin' | 'viewer')}
-          >
+          <Select value={row.original.role} onValueChange={(v) => setRole(row.original.id, v as 'admin' | 'viewer')}>
             <SelectTrigger size="sm" className="w-[110px] text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -140,8 +127,7 @@ export function UsersCard() {
             </SelectContent>
           </Select>
         ),
-        filterFn: (row, _id, value: RoleFilter) =>
-          value === 'all' ? true : row.original.role === value,
+        filterFn: (row, _id, value: RoleFilter) => (value === 'all' ? true : row.original.role === value),
       },
       {
         id: 'provider',
@@ -152,8 +138,7 @@ export function UsersCard() {
             {row.original.provider}
           </Badge>
         ),
-        filterFn: (row, _id, value: ProviderFilter) =>
-          value === 'all' ? true : row.original.provider === value,
+        filterFn: (row, _id, value: ProviderFilter) => (value === 'all' ? true : row.original.provider === value),
       },
       {
         id: 'lastLoginAt',
@@ -162,9 +147,7 @@ export function UsersCard() {
         sortingFn: 'basic',
         sortUndefined: 'last',
         cell: ({ row }) => (
-          <span className="text-xs text-muted-foreground">
-            {formatLastLogin(row.original.lastLoginAt)}
-          </span>
+          <span className="text-xs text-muted-foreground">{formatLastLogin(row.original.lastLoginAt)}</span>
         ),
         enableColumnFilter: false,
       },
@@ -203,9 +186,15 @@ export function UsersCard() {
 
   const columnFilters = useMemo<ColumnFiltersState>(() => {
     const out: ColumnFiltersState = [];
-    if (emailQuery.trim()) out.push({ id: 'email', value: emailQuery.trim() });
-    if (roleFilter !== 'all') out.push({ id: 'role', value: roleFilter });
-    if (providerFilter !== 'all') out.push({ id: 'provider', value: providerFilter });
+    if (emailQuery.trim()) {
+      out.push({ id: 'email', value: emailQuery.trim() });
+    }
+    if (roleFilter !== 'all') {
+      out.push({ id: 'role', value: roleFilter });
+    }
+    if (providerFilter !== 'all') {
+      out.push({ id: 'provider', value: providerFilter });
+    }
     return out;
   }, [emailQuery, roleFilter, providerFilter]);
 
@@ -219,11 +208,12 @@ export function UsersCard() {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  if (session?.user?.role !== 'admin') return null;
+  if (session?.user?.role !== 'admin') {
+    return null;
+  }
 
   const totalFiltered = table.getFilteredRowModel().rows.length;
-  const hasActiveFilter =
-    emailQuery.trim() !== '' || roleFilter !== 'all' || providerFilter !== 'all';
+  const hasActiveFilter = emailQuery.trim() !== '' || roleFilter !== 'all' || providerFilter !== 'all';
 
   return (
     <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
@@ -314,13 +304,9 @@ export function UsersCard() {
                           className="inline-flex items-center gap-1 text-left font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
-                          {sortDir === 'asc' ? (
-                            <ArrowUp className="size-3" />
-                          ) : sortDir === 'desc' ? (
-                            <ArrowDown className="size-3" />
-                          ) : (
-                            <ArrowUpDown className="size-3 opacity-40" />
-                          )}
+                          {sortDir === 'asc' && <ArrowUp className="size-3" />}
+                          {sortDir === 'desc' && <ArrowDown className="size-3" />}
+                          {!sortDir && <ArrowUpDown className="size-3 opacity-40" />}
                         </button>
                       ) : (
                         flexRender(header.column.columnDef.header, header.getContext())
@@ -332,35 +318,29 @@ export function UsersCard() {
             ))}
           </TableHeader>
           <TableBody>
-            {users === null ? (
+            {users === null && (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="py-6 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
                   Loading users…
                 </TableCell>
               </TableRow>
-            ) : totalFiltered === 0 ? (
+            )}
+            {users !== null && totalFiltered === 0 && (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="py-6 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
                   {users.length === 0 ? 'No users yet.' : 'No users match the current filters.'}
                 </TableCell>
               </TableRow>
-            ) : (
+            )}
+            {users !== null &&
+              totalFiltered > 0 &&
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
-              ))
-            )}
+              ))}
           </TableBody>
         </Table>
       </CardContent>
@@ -402,9 +382,7 @@ function Segmented<T extends string>({
             aria-pressed={active}
             className={cn(
               'h-7 rounded-sm px-2 text-xs font-medium transition-colors',
-              active
-                ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground hover:text-foreground',
+              active ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {opt.label}

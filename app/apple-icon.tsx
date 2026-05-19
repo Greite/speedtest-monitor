@@ -27,15 +27,7 @@ export default function AppleIcon() {
             <stop offset="100%" stopColor="oklch(0.86 0.12 195)" />
           </linearGradient>
         </defs>
-        <circle
-          cx="16"
-          cy="16"
-          r="11"
-          fill="none"
-          stroke="url(#g)"
-          strokeWidth="1.25"
-          opacity="0.35"
-        />
+        <circle cx="16" cy="16" r="11" fill="none" stroke="url(#g)" strokeWidth="1.25" opacity="0.35" />
         <path
           d="M 8.22 23.78 A 11 11 0 1 1 23.78 23.78"
           fill="none"
@@ -43,15 +35,7 @@ export default function AppleIcon() {
           strokeWidth="2.5"
           strokeLinecap="round"
         />
-        <line
-          x1="16"
-          y1="16"
-          x2="22.5"
-          y2="10.5"
-          stroke="url(#g)"
-          strokeWidth="2.25"
-          strokeLinecap="round"
-        />
+        <line x1="16" y1="16" x2="22.5" y2="10.5" stroke="url(#g)" strokeWidth="2.25" strokeLinecap="round" />
         <circle cx="16" cy="16" r="2.4" fill="oklch(0.7 0.17 240)" />
         <circle cx="16" cy="16" r="0.85" fill="oklch(1 0 0)" opacity="0.95" />
       </svg>

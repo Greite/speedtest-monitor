@@ -8,10 +8,16 @@ export function FocusMainOnNavigate() {
   const initialPath = useRef(pathname);
 
   useEffect(() => {
-    if (pathname === initialPath.current) return;
+    if (pathname === initialPath.current) {
+      return;
+    }
     const main = document.getElementById('main');
-    if (!main) return;
-    if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+    if (!main) {
+      return;
+    }
+    if (!main.hasAttribute('tabindex')) {
+      main.setAttribute('tabindex', '-1');
+    }
     main.focus({ preventScroll: true });
   }, [pathname]);
 

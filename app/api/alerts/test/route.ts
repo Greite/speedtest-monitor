@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { loadAlertConfig } from '@/lib/alerts/config';
 import { buildDestinations } from '@/lib/alerts/destinations';
 import type { AlertPayload, DestinationName } from '@/lib/alerts/types';
@@ -45,8 +46,6 @@ export async function POST(req: Request) {
     alertId: 0,
   };
 
-  const entries = await Promise.all(
-    targets.map(async (d) => [d.name, await d.send(payload)] as const),
-  );
+  const entries = await Promise.all(targets.map(async (d) => [d.name, await d.send(payload)] as const));
   return NextResponse.json({ results: Object.fromEntries(entries) });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { pingDb } from '@/lib/db/client';
 import { isWsReady } from '@/lib/ws/server';
 

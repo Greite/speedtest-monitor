@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+
 import { loadAuthConfig } from './config';
 
 const KEYS = [
@@ -14,10 +15,14 @@ const KEYS = [
 ];
 
 beforeEach(() => {
-  for (const k of KEYS) delete process.env[k];
+  for (const k of KEYS) {
+    delete process.env[k];
+  }
 });
 afterEach(() => {
-  for (const k of KEYS) delete process.env[k];
+  for (const k of KEYS) {
+    delete process.env[k];
+  }
 });
 
 describe('auth/config', () => {

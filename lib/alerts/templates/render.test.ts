@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+
 import type { AlertPayload } from '../types';
 import { renderAlertEmail } from './render';
 
@@ -83,10 +84,7 @@ describe('renderAlertEmail', () => {
   });
 
   it('uses ms unit for latency alerts', () => {
-    const { html } = renderAlertEmail(
-      { ...base, kind: 'latency_above', observed: 180, threshold: 50 },
-      null,
-    );
+    const { html } = renderAlertEmail({ ...base, kind: 'latency_above', observed: 180, threshold: 50 }, null);
     expect(html).toContain('>ms<');
     expect(html).not.toContain('>Mbps<');
   });

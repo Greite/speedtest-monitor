@@ -39,25 +39,39 @@ export function needsRehash(hashed: string): boolean {
   try {
     const parts = hashed.split('$');
     // ["", "argon2id", "v=19", "m=19456,t=2,p=1", salt, hash]
-    if (parts.length < 6) return true;
-    if (parts[1] !== 'argon2id') return true;
+    if (parts.length < 6) {
+      return true;
+    }
+    if (parts[1] !== 'argon2id') {
+      return true;
+    }
 
     const params = new Map<string, number>();
     for (const kv of parts[3].split(',')) {
       const [k, v] = kv.split('=');
       const n = Number(v);
-      if (!Number.isFinite(n)) return true;
+      if (!Number.isFinite(n)) {
+        return true;
+      }
       params.set(k, n);
     }
 
     const m = params.get('m');
     const t = params.get('t');
     const p = params.get('p');
-    if (m === undefined || t === undefined || p === undefined) return true;
+    if (m === undefined || t === undefined || p === undefined) {
+      return true;
+    }
 
-    if (m < OPTS.memoryCost) return true;
-    if (t < OPTS.timeCost) return true;
-    if (p !== PARALLELISM) return true;
+    if (m < OPTS.memoryCost) {
+      return true;
+    }
+    if (t < OPTS.timeCost) {
+      return true;
+    }
+    if (p !== PARALLELISM) {
+      return true;
+    }
 
     return false;
   } catch {

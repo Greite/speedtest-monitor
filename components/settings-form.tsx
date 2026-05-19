@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,21 +29,12 @@ export function SettingsForm({
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <IntervalCard initialMinutes={initialMinutes} envDefault={envDefaultMinutes} />
-      <RetentionCard
-        initialRetentionDays={initialRetentionDays}
-        envDefault={envDefaultRetentionDays}
-      />
+      <RetentionCard initialRetentionDays={initialRetentionDays} envDefault={envDefaultRetentionDays} />
     </div>
   );
 }
 
-function IntervalCard({
-  initialMinutes,
-  envDefault,
-}: {
-  initialMinutes: number;
-  envDefault: number;
-}) {
+function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; envDefault: number }) {
   const { data: session } = useSession();
   const readOnly = session?.user?.role !== 'admin';
   const [value, setValue] = useState(String(initialMinutes));
@@ -55,7 +47,9 @@ function IntervalCard({
   const dirty = parsed !== saved;
 
   const onSave = async () => {
-    if (!valid) return;
+    if (!valid) {
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -113,10 +107,7 @@ function IntervalCard({
             className="font-mono tabular-nums"
           />
           <div id="interval-hint" className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge
-              variant="outline"
-              className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide"
-            >
+            <Badge variant="outline" className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide">
               env default: {envDefault}
             </Badge>
             between 1 and 1440 - changes apply immediately
@@ -153,13 +144,7 @@ function IntervalCard({
   );
 }
 
-function RetentionCard({
-  initialRetentionDays,
-  envDefault,
-}: {
-  initialRetentionDays: number;
-  envDefault: number;
-}) {
+function RetentionCard({ initialRetentionDays, envDefault }: { initialRetentionDays: number; envDefault: number }) {
   const { data: session } = useSession();
   const readOnly = session?.user?.role !== 'admin';
   const [value, setValue] = useState(String(initialRetentionDays));
@@ -172,7 +157,9 @@ function RetentionCard({
   const dirty = parsed !== saved;
 
   const onSave = async () => {
-    if (!valid) return;
+    if (!valid) {
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -201,9 +188,7 @@ function RetentionCard({
     }
   };
 
-  const describedBy = [`retention-hint`, error ? `retention-error` : null]
-    .filter(Boolean)
-    .join(' ');
+  const describedBy = [`retention-hint`, error ? `retention-error` : null].filter(Boolean).join(' ');
 
   return (
     <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
@@ -231,14 +216,8 @@ function RetentionCard({
             aria-describedby={describedBy || undefined}
             className="font-mono tabular-nums"
           />
-          <div
-            id="retention-hint"
-            className="flex items-center gap-2 text-xs text-muted-foreground"
-          >
-            <Badge
-              variant="outline"
-              className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide"
-            >
+          <div id="retention-hint" className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline" className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide">
               env default: {envDefault}
             </Badge>
             between 1 and 3650 - purge runs daily at 03:00

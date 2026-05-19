@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { apiError } from '@/lib/api-errors';
 import { auth } from '@/lib/auth/handler';
 import { countUsers } from '@/lib/auth/users';
@@ -24,7 +25,9 @@ export default auth(async (req) => {
   const noUsers = countUsers() === 0;
 
   if (pathname === '/setup' || pathname === '/api/auth/setup') {
-    if (noUsers) return NextResponse.next();
+    if (noUsers) {
+      return NextResponse.next();
+    }
     if (pathname.startsWith('/api/')) {
       return apiError('not_found', 'Setup is no longer available.', 404);
     }
@@ -32,8 +35,12 @@ export default auth(async (req) => {
   }
 
   if (pathname === '/login') {
-    if (noUsers) return NextResponse.redirect(new URL('/setup', req.nextUrl));
-    if (session?.user) return NextResponse.redirect(new URL('/', req.nextUrl));
+    if (noUsers) {
+      return NextResponse.redirect(new URL('/setup', req.nextUrl));
+    }
+    if (session?.user) {
+      return NextResponse.redirect(new URL('/', req.nextUrl));
+    }
     return NextResponse.next();
   }
 
@@ -69,7 +76,5 @@ export default auth(async (req) => {
 });
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon|icon-|apple-icon-|icons/).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon|icon-|apple-icon-|icons/).*)'],
 };

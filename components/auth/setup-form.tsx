@@ -86,13 +86,7 @@ export function SetupForm() {
           Fields marked with <span className="text-destructive">*</span> are required.
         </p>
         {error || Object.keys(fieldErrors).length > 0 ? (
-          <Alert
-            ref={summaryRef}
-            tabIndex={-1}
-            variant="destructive"
-            role="alert"
-            className="outline-none"
-          >
+          <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert" className="outline-none">
             <AlertDescription>
               <p className="font-medium">Please fix the following:</p>
               <ul className="mt-1 list-disc pl-5 text-sm">

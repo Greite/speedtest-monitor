@@ -10,7 +10,9 @@ export function createNtfyDestination(cfg: NtfyConfig) {
         'X-Priority': payload.event === 'fired' ? 'urgent' : 'default',
         'X-Tags': payload.event === 'fired' ? 'warning,rotating_light' : 'white_check_mark',
       };
-      if (cfg.token) headers.Authorization = `Bearer ${cfg.token}`;
+      if (cfg.token) {
+        headers.Authorization = `Bearer ${cfg.token}`;
+      }
       try {
         const res = await fetch(cfg.url, { method: 'POST', headers, body: payload.body });
         if (!res.ok) {

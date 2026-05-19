@@ -39,7 +39,6 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from './schema';
 
 declare global {
-  // eslint-disable-next-line no-var
   var __speedtestDb: { sqlite: Database; db: ReturnType<typeof drizzle> } | undefined;
 }
 

@@ -1,6 +1,7 @@
 import { ArrowLeft, ExternalLink, GitCommit } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import { Markdown } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,10 +68,8 @@ export default function ChangelogPage() {
             <p className="text-sm font-medium">No releases available</p>
             <p className="max-w-sm text-xs text-muted-foreground">
               Releases are fetched from GitHub during the build step. Run{' '}
-              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.85em]">
-                bun run releases:fetch
-              </code>{' '}
-              to populate them locally.
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.85em]">bun run releases:fetch</code> to
+              populate them locally.
             </p>
           </CardContent>
         </Card>

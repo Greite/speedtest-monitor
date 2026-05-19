@@ -1,21 +1,14 @@
 'use client';
 
-import {
-  Check,
-  ChevronRight,
-  LogOut,
-  Menu,
-  Monitor,
-  Moon,
-  Play,
-  Settings,
-  Sun,
-} from 'lucide-react';
+import { Check, ChevronRight, LogOut, Menu, Monitor, Moon, Play, Settings, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+
+import { useLiveMeasurements } from './use-live-measurements';
+
 import { LogoMark } from '@/components/logo-mark';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -36,7 +29,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { useLiveMeasurements } from './use-live-measurements';
 
 type ThemeChoice = 'light' | 'dark' | 'system';
 
@@ -51,10 +43,7 @@ function LiveDot({ running, connected }: { running: boolean; connected: boolean 
   return (
     <span aria-hidden className="relative inline-flex size-2 items-center justify-center">
       <span
-        className={cn(
-          'absolute inset-0 rounded-full motion-safe:transition-colors motion-safe:duration-300',
-          tone,
-        )}
+        className={cn('absolute inset-0 rounded-full motion-safe:transition-colors motion-safe:duration-300', tone)}
       />
       {connected && running ? (
         <span className={cn('pulse-ring absolute inset-0 rounded-full', 'text-latency-ok')} />
@@ -64,8 +53,12 @@ function LiveDot({ running, connected }: { running: boolean; connected: boolean 
 }
 
 function liveLabel({ running, connected }: { running: boolean; connected: boolean }) {
-  if (!connected) return 'Disconnected';
-  if (running) return 'Measuring…';
+  if (!connected) {
+    return 'Disconnected';
+  }
+  if (running) {
+    return 'Measuring…';
+  }
   return 'Idle';
 }
 
@@ -171,17 +164,23 @@ export function Topbar() {
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
     const mq = window.matchMedia('(min-width: 768px)');
     const onChange = (e: MediaQueryListEvent) => {
-      if (e.matches) setMenuOpen(false);
+      if (e.matches) {
+        setMenuOpen(false);
+      }
     };
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
   async function handleRun() {
-    if (running || running2 || !connected) return;
+    if (running || running2 || !connected) {
+      return;
+    }
     setRunning2(true);
     try {
       await triggerRun();
@@ -233,10 +232,7 @@ export function Topbar() {
             size="sm"
             onClick={handleRun}
             disabled={isBusy || !connected}
-            className={cn(
-              'bg-brand text-brand-foreground hover:bg-brand/90',
-              !isBusy && connected && 'brand-glow',
-            )}
+            className={cn('bg-brand text-brand-foreground hover:bg-brand/90', !isBusy && connected && 'brand-glow')}
             title={connected ? undefined : 'Waiting for live connection…'}
           >
             <Play aria-hidden className={cn('size-3.5', isBusy && 'animate-pulse')} />
@@ -287,21 +283,13 @@ export function Topbar() {
             onClick={handleRun}
             disabled={isBusy || !connected}
             aria-label="Run now"
-            className={cn(
-              'bg-brand text-brand-foreground hover:bg-brand/90',
-              !isBusy && connected && 'brand-glow',
-            )}
+            className={cn('bg-brand text-brand-foreground hover:bg-brand/90', !isBusy && connected && 'brand-glow')}
           >
             <Play aria-hidden className={cn(isBusy && 'animate-pulse')} />
           </Button>
           <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
             <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Open menu"
-                aria-expanded={menuOpen}
-              >
+              <Button variant="ghost" size="icon-sm" aria-label="Open menu" aria-expanded={menuOpen}>
                 <Menu aria-hidden />
               </Button>
             </DialogTrigger>
@@ -311,10 +299,7 @@ export function Topbar() {
                 'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right',
               )}
             >
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 -z-10 app-backdrop"
-              />
+              <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 app-backdrop" />
               <DialogHeader className="border-b border-border/50 px-5 py-4 text-left">
                 <DialogTitle className="flex items-center gap-2.5" aria-label="Speedtest Monitor">
                   <LogoMark size={28} />
@@ -325,16 +310,9 @@ export function Topbar() {
                 <DialogDescription className="sr-only">Main navigation menu</DialogDescription>
               </DialogHeader>
 
-              <nav
-                aria-label="Main"
-                className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5"
-              >
+              <nav aria-label="Main" className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
                 {role ? (
-                  <section
-                    aria-labelledby="m-account"
-                    className="drawer-section"
-                    style={{ animationDelay: '0ms' }}
-                  >
+                  <section aria-labelledby="m-account" className="drawer-section" style={{ animationDelay: '0ms' }}>
                     <h3
                       id="m-account"
                       className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -347,10 +325,7 @@ export function Topbar() {
                         {role}
                       </span>
                       {session?.user?.email ? (
-                        <span
-                          className="min-w-0 truncate text-sm text-muted-foreground"
-                          title={session.user.email}
-                        >
+                        <span className="min-w-0 truncate text-sm text-muted-foreground" title={session.user.email}>
                           {session.user.email}
                         </span>
                       ) : null}
@@ -358,11 +333,7 @@ export function Topbar() {
                   </section>
                 ) : null}
 
-                <section
-                  aria-labelledby="m-live"
-                  className="drawer-section"
-                  style={{ animationDelay: '40ms' }}
-                >
+                <section aria-labelledby="m-live" className="drawer-section" style={{ animationDelay: '40ms' }}>
                   <h3
                     id="m-live"
                     className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -380,11 +351,9 @@ export function Topbar() {
                       <span className="font-medium">{label}</span>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {connected
-                        ? isBusy
-                          ? 'Running a measurement now…'
-                          : 'Live connection active.'
-                        : 'Reconnecting to live feed…'}
+                      {!connected && 'Reconnecting to live feed…'}
+                      {connected && isBusy && 'Running a measurement now…'}
+                      {connected && !isBusy && 'Live connection active.'}
                     </p>
                     <Button
                       size="sm"
@@ -403,31 +372,17 @@ export function Topbar() {
                   </div>
                 </section>
 
-                <section
-                  aria-labelledby="m-theme"
-                  className="drawer-section"
-                  style={{ animationDelay: '80ms' }}
-                >
+                <section aria-labelledby="m-theme" className="drawer-section" style={{ animationDelay: '80ms' }}>
                   <h3
                     id="m-theme"
                     className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
                   >
                     Theme
                   </h3>
-                  <ThemeSegmented
-                    mounted={mounted}
-                    theme={theme}
-                    setTheme={setTheme}
-                    withLabels
-                    fullWidth
-                  />
+                  <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} withLabels fullWidth />
                 </section>
 
-                <section
-                  aria-labelledby="m-nav"
-                  className="drawer-section"
-                  style={{ animationDelay: '120ms' }}
-                >
+                <section aria-labelledby="m-nav" className="drawer-section" style={{ animationDelay: '120ms' }}>
                   <h3
                     id="m-nav"
                     className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
@@ -459,9 +414,7 @@ export function Topbar() {
                                 <Icon
                                   className={cn(
                                     'size-4',
-                                    active
-                                      ? 'text-brand'
-                                      : 'text-muted-foreground group-hover:text-foreground',
+                                    active ? 'text-brand' : 'text-muted-foreground group-hover:text-foreground',
                                   )}
                                   aria-hidden
                                 />
@@ -472,9 +425,7 @@ export function Topbar() {
                               aria-hidden
                               className={cn(
                                 'size-4 transition-transform',
-                                active
-                                  ? 'text-brand'
-                                  : 'text-muted-foreground group-hover:translate-x-0.5',
+                                active ? 'text-brand' : 'text-muted-foreground group-hover:translate-x-0.5',
                               )}
                             />
                           </Link>

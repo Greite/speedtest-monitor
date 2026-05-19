@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, Gauge, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   computeDelta,
@@ -41,9 +42,7 @@ type Averages = {
 };
 
 function useRelativeTime(timestamp: number | null) {
-  const [rendered, setRendered] = useState<string | null>(
-    timestamp ? formatRelativeTime(timestamp) : null,
-  );
+  const [rendered, setRendered] = useState<string | null>(timestamp ? formatRelativeTime(timestamp) : null);
   useEffect(() => {
     if (timestamp == null) {
       setRendered(null);
@@ -57,10 +56,16 @@ function useRelativeTime(timestamp: number | null) {
 }
 
 function speedLevel(value: number | null | undefined, average: number | null): LatencyLevel | null {
-  if (value == null || average == null || average === 0) return null;
+  if (value == null || average == null || average === 0) {
+    return null;
+  }
   const ratio = value / average;
-  if (ratio >= 0.95) return 'ok';
-  if (ratio >= 0.7) return 'warn';
+  if (ratio >= 0.95) {
+    return 'ok';
+  }
+  if (ratio >= 0.7) {
+    return 'warn';
+  }
   return 'bad';
 }
 
@@ -133,22 +138,12 @@ export function KpiCards({
       <Kpi
         label="Latency"
         icon={<Gauge className="size-4 text-muted-foreground" />}
-        value={
-          latest
-            ? `${formatMs(latest.latencyUnloadedMs)} / ${formatMs(latest.latencyLoadedMs)}`
-            : '—'
-        }
+        value={latest ? `${formatMs(latest.latencyUnloadedMs)} / ${formatMs(latest.latencyLoadedMs)}` : '—'}
         level={latest ? latencyCurrentLevel : null}
         delta={null}
         sub="unloaded / loaded"
         spark={series.latency}
-        sparkColor={
-          latencyCurrentLevel === 'bad'
-            ? 'var(--color-latency-bad)'
-            : latencyCurrentLevel === 'warn'
-              ? 'var(--color-latency-warn)'
-              : 'var(--color-latency-ok)'
-        }
+        sparkColor={`var(--color-latency-${latencyCurrentLevel ?? 'ok'})`}
         accentDot={latencyCurrentLevel ? levelColor[latencyCurrentLevel] : 'bg-muted-foreground'}
         accentText={latencyCurrentLevel ? levelText[latencyCurrentLevel] : undefined}
         flashKey={latest?.id}
@@ -187,9 +182,7 @@ function Kpi({
   flashKey?: number;
   busy?: boolean;
 }) {
-  const summary = level
-    ? `${label} ${value}, status ${levelLabel[level]}. ${sub}.`
-    : `${label} ${value}. ${sub}.`;
+  const summary = level ? `${label} ${value}, status ${levelLabel[level]}. ${sub}.` : `${label} ${value}. ${sub}.`;
 
   const hasSpark = spark.filter((v): v is number => v != null).length >= 2;
 
@@ -222,24 +215,14 @@ function Kpi({
               {label}
             </span>
             {level ? (
-              <span
-                className="inline-flex items-center gap-1.5 normal-case tracking-normal"
-                aria-hidden
-              >
+              <span className="inline-flex items-center gap-1.5 normal-case tracking-normal" aria-hidden>
                 <span className="relative inline-block size-2">
                   <span className={cn('absolute inset-0 rounded-full', levelColor[level])} />
                   {busy ? (
-                    <span
-                      className={cn(
-                        'pulse-ring absolute inset-0 rounded-full',
-                        accentText ?? 'text-foreground',
-                      )}
-                    />
+                    <span className={cn('pulse-ring absolute inset-0 rounded-full', accentText ?? 'text-foreground')} />
                   ) : null}
                 </span>
-                <span className={cn('text-[11px] font-medium', accentText)}>
-                  {levelLabel[level]}
-                </span>
+                <span className={cn('text-[11px] font-medium', accentText)}>{levelLabel[level]}</span>
               </span>
             ) : null}
           </CardTitle>
@@ -257,37 +240,25 @@ function Kpi({
           </div>
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground" aria-hidden>
             {delta ? <DeltaBadge delta={delta} suffix={deltaSuffix} /> : null}
-            <span
-              className={cn('inline-block size-1 rounded-full', accentDot, !delta && 'hidden')}
-            />
+            <span className={cn('inline-block size-1 rounded-full', accentDot, !delta && 'hidden')} />
             <span className="truncate">{sub}</span>
           </div>
         </CardContent>
       </div>
       {hasSpark ? (
         <div className="border-t border-border/40 bg-background/30">
-          <Sparkline
-            data={spark}
-            color={sparkColor}
-            className="pointer-events-none block h-10 w-full opacity-90"
-          />
+          <Sparkline data={spark} color={sparkColor} className="pointer-events-none block h-10 w-full opacity-90" />
         </div>
       ) : null}
     </Card>
   );
 }
 
-function Sparkline({
-  data,
-  color,
-  className,
-}: {
-  data: (number | null)[];
-  color: string;
-  className?: string;
-}) {
+function Sparkline({ data, color, className }: { data: (number | null)[]; color: string; className?: string }) {
   const valid = data.filter((v): v is number => v != null);
-  if (valid.length < 2) return null;
+  if (valid.length < 2) {
+    return null;
+  }
   const w = 100;
   const h = 24;
   const min = Math.min(...valid);
@@ -310,13 +281,7 @@ function Sparkline({
       className={className}
     >
       <defs>
-        <linearGradient
-          id={`spark-${color.replace(/[^a-z0-9]/gi, '')}`}
-          x1="0"
-          y1="0"
-          x2="0"
-          y2="1"
-        >
+        <linearGradient id={`spark-${color.replace(/[^a-z0-9]/gi, '')}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.35" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
@@ -345,8 +310,7 @@ function DeltaBadge({ delta, suffix }: { delta: NonNullable<Delta>; suffix?: str
     );
   }
   const Icon = delta.sign === 'up' ? TrendingUp : TrendingDown;
-  const tone =
-    delta.sign === 'up' ? 'bg-latency-ok/12 text-latency-ok' : 'bg-latency-bad/12 text-latency-bad';
+  const tone = delta.sign === 'up' ? 'bg-latency-ok/12 text-latency-ok' : 'bg-latency-bad/12 text-latency-bad';
   return (
     <span
       className={cn(

@@ -6,6 +6,8 @@ import { countUsers } from '@/lib/auth/users';
 export const dynamic = 'force-dynamic';
 
 export default function SetupPage() {
-  if (countUsers() !== 0) notFound();
+  if (countUsers() !== 0) {
+    notFound();
+  }
   return <SetupForm />;
 }

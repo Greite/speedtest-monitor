@@ -2,13 +2,15 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
+
+import { HistoryTable } from './history-table';
+import { KpiCards } from './kpi-cards';
+import { useLiveMeasurements } from './use-live-measurements';
+
 import { type Range, TimeRangePicker } from '@/components/time-range-picker';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { MeasurementDto } from '@/lib/types';
-import { HistoryTable } from './history-table';
-import { KpiCards } from './kpi-cards';
-import { useLiveMeasurements } from './use-live-measurements';
 
 const HistoryChart = dynamic(() => import('./history-chart').then((m) => m.HistoryChart), {
   ssr: false,
@@ -23,17 +25,13 @@ const HistoryChart = dynamic(() => import('./history-chart').then((m) => m.Histo
 
 function computeAverage(values: (number | null)[]): number | null {
   const valid = values.filter((v): v is number => v != null);
-  if (valid.length === 0) return null;
+  if (valid.length === 0) {
+    return null;
+  }
   return valid.reduce((a, b) => a + b, 0) / valid.length;
 }
 
-export function Dashboard({
-  initial,
-  initialRange,
-}: {
-  initial: MeasurementDto[];
-  initialRange: Range;
-}) {
+export function Dashboard({ initial, initialRange }: { initial: MeasurementDto[]; initialRange: Range }) {
   const [range, setRangeState] = useState<Range>(initialRange);
   const setRange = useCallback((next: Range) => {
     setRangeState(next);

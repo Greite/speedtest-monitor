@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth';
+
 import { loadAuthConfig } from './config';
 import { buildProviders } from './providers';
 import type { UserRole } from './types';
