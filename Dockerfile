@@ -1,4 +1,4 @@
-ARG BUN_IMAGE=oven/bun:1-slim
+ARG BUN_IMAGE=oven/bun:1-alpine
 
 # ---------- deps: full install for building ----------
 FROM ${BUN_IMAGE} AS deps
@@ -31,10 +31,11 @@ RUN set -eux \
       *) echo "unsupported TARGETARCH: $TARGETARCH"; exit 1 ;; \
     esac \
  # Keep only the target-arch sharp / libvips variants (Next NFT-traced every
- # platform into the standalone output).
+ # platform into the standalone output). Alpine = musl libc, so the variants
+ # we keep are `linuxmusl-*` (not `linux-*` which is the glibc build).
  && find .next/standalone/node_modules/@img -mindepth 1 -maxdepth 1 -type d \
-      ! -name "sharp-libvips-linux-$KEEP_NODEARCH" \
-      ! -name "sharp-linux-$KEEP_NODEARCH" \
+      ! -name "sharp-libvips-linuxmusl-$KEEP_NODEARCH" \
+      ! -name "sharp-linuxmusl-$KEEP_NODEARCH" \
       ! -name 'colour' \
       -exec rm -rf {} + \
  # Drop every @next/swc native binary (~125 MB per arch). Next at production
@@ -72,10 +73,10 @@ RUN set -eux \
       nodemailer@^6 \
       ws@^8.20.0 \
       zod@^4.3.6 \
- # Sharp variants: keep target arch only.
+ # Sharp variants: keep target arch only. musl variants on Alpine.
  && find node_modules/@img -mindepth 1 -maxdepth 1 -type d \
-      ! -name "sharp-libvips-linux-$KEEP_NODEARCH" \
-      ! -name "sharp-linux-$KEEP_NODEARCH" \
+      ! -name "sharp-libvips-linuxmusl-$KEEP_NODEARCH" \
+      ! -name "sharp-linuxmusl-$KEEP_NODEARCH" \
       ! -name 'colour' \
       -exec rm -rf {} + \
  # Nuke every @next/swc native binary; the JS stub from standalone is enough.
@@ -108,7 +109,7 @@ RUN set -eux \
          -o -name 'docs' -o -name '.github' -o -name '.vscode' -o -name 'coverage' \) \
       -prune -exec rm -rf {} + 2>/dev/null || true
 
-# ---------- runtime (Bun slim) ----------
+# ---------- runtime (Bun alpine) ----------
 FROM ${BUN_IMAGE} AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
@@ -119,18 +120,13 @@ ENV NODE_ENV=production \
     SPEEDTEST_INTERVAL_MINUTES=15 \
     AUTH_TRUST_HOST=true
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      ca-certificates dumb-init \
- && rm -rf /var/lib/apt/lists/* \
+RUN apk add --no-cache ca-certificates dumb-init \
  && rm -rf \
       /usr/share/doc/* \
       /usr/share/man/* \
       /usr/share/info/* \
-      /usr/share/locale/* \
-      /var/cache/apt/archives/* \
- && groupadd --system --gid 1001 nodejs \
- && useradd  --system --uid 1001 --gid nodejs --create-home --home /home/nodejs nodejs \
+ && addgroup -S -g 1001 nodejs \
+ && adduser  -S -u 1001 -G nodejs -h /home/nodejs nodejs \
  && mkdir -p /data \
  && chown nodejs:nodejs /data /app
 
