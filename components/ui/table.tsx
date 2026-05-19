@@ -20,16 +20,6 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   return <tbody data-slot="table-body" className={cn('[&_tr:last-child]:border-0', className)} {...props} />;
 }
 
-function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
-  return (
-    <tfoot
-      data-slot="table-footer"
-      className={cn('border-t bg-muted/50 font-medium [&>tr]:last:border-b-0', className)}
-      {...props}
-    />
-  );
-}
-
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   return (
     <tr
@@ -75,4 +65,4 @@ function TableCaption({ className, ...props }: React.ComponentProps<'caption'>) 
   );
 }
 
-export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow };
+export { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow };

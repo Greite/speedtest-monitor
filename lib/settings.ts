@@ -10,8 +10,8 @@ const MAX_INTERVAL = 1440;
 
 const KEY_RETENTION = 'retention_days';
 const DEFAULT_RETENTION = 90;
-export const MIN_RETENTION_DAYS = 1;
-export const MAX_RETENTION_DAYS = 3650;
+const MIN_RETENTION_DAYS = 1;
+const MAX_RETENTION_DAYS = 3650;
 
 function envIntervalMinutes(): number {
   const raw = process.env.SPEEDTEST_INTERVAL_MINUTES;

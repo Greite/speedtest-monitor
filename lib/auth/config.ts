@@ -1,4 +1,4 @@
-export type OidcConfig = {
+type OidcConfig = {
   issuer: string;
   clientId: string;
   clientSecret: string;
@@ -7,7 +7,7 @@ export type OidcConfig = {
   allowNewUsers: boolean;
 };
 
-export type SeedAdmin = { email: string; password: string };
+type SeedAdmin = { email: string; password: string };
 
 export type AuthConfig = {
   secret: string;

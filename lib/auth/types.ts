@@ -1,9 +1,9 @@
 import type {} from 'next-auth';
 import type {} from 'next-auth/jwt';
 
-import type { User, UserProvider, UserRole } from '../db/schema';
+import type { UserRole } from '../db/schema';
 
-export type { User, UserProvider, UserRole };
+export type { UserRole };
 
 export type SessionUser = {
   id: string;

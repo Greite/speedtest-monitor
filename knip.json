@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "app/**/route.{ts,tsx}",
+    "app/**/page.{ts,tsx}",
+    "app/**/layout.{ts,tsx}",
+    "app/**/{error,not-found,loading,template,default}.{ts,tsx}",
+    "app/**/{icon,apple-icon,favicon,opengraph-image,twitter-image,sitemap,robots,manifest}.{ts,tsx}"
+  ],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,tsx}",
+    "*.{ts,mjs}",
+    "!**/*.d.ts",
+    "!lib/generated/**"
+  ],
+  "ignoreDependencies": ["tailwindcss", "tw-animate-css"],
+  "ignoreIssues": {
+    "**": ["enumMembers"]
+  }
+}

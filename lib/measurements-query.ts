@@ -1,17 +1,17 @@
 import { z } from 'zod';
 
-export const SORT_COLUMNS = ['timestamp', 'downloadMbps', 'uploadMbps', 'latencyLoadedMs', 'status'] as const;
+const SORT_COLUMNS = ['timestamp', 'downloadMbps', 'uploadMbps', 'latencyLoadedMs', 'status'] as const;
 
 export type SortColumn = (typeof SORT_COLUMNS)[number];
 
-export const PAGE_SIZES = [10, 25, 50, 100] as const;
-export type PageSize = (typeof PAGE_SIZES)[number];
+const PAGE_SIZES = [10, 25, 50, 100] as const;
+type PageSize = (typeof PAGE_SIZES)[number];
 
-export const STATUSES = ['success', 'error', 'timeout'] as const;
-export type StatusValue = (typeof STATUSES)[number];
+const STATUSES = ['success', 'error', 'timeout'] as const;
+type StatusValue = (typeof STATUSES)[number];
 
-export type NumericRange = { min?: number; max?: number };
-export type TimeRange = { from?: number; to?: number };
+type NumericRange = { min?: number; max?: number };
+type TimeRange = { from?: number; to?: number };
 
 export type TableFilters = {
   time?: TimeRange;

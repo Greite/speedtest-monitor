@@ -66,5 +66,3 @@ export function pingDb(): { ok: true } | { ok: false; error: string } {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
-
-export { schema };

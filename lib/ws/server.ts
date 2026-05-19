@@ -3,7 +3,7 @@ import type { WebSocket, WebSocketServer } from 'ws';
 import type { AlertEvent, AlertKind } from '../db/schema';
 import type { MeasurementDto } from '../types';
 
-export type AlertDto = {
+type AlertDto = {
   id: number;
   timestamp: number;
   kind: AlertKind;
