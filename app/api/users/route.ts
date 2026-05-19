@@ -4,16 +4,19 @@ import { z } from 'zod';
 import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
 import { hashPassword } from '@/lib/auth/hash';
-import { createUser, findUserByEmail, listUsers } from '@/lib/auth/users';
+import { createUser, findUserByEmail, listUsers, setCredentialPassword } from '@/lib/auth/users';
 import type { User } from '@/lib/db/schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function publicShape(u: User) {
-  const { passwordHash, ...rest } = u;
   return {
-    ...rest,
+    id: u.id,
+    email: u.email,
+    role: u.role,
+    provider: u.provider,
+    name: u.name,
     createdAt: u.createdAt.getTime(),
     lastLoginAt: u.lastLoginAt ? u.lastLoginAt.getTime() : null,
   };
@@ -47,12 +50,13 @@ export async function POST(req: Request) {
   if (findUserByEmail(email)) {
     return apiError('email_in_use', 'An account with this email already exists.', 409);
   }
-  const user = createUser({
+  const created = createUser({
     email,
-    passwordHash: await hashPassword(parsed.data.password),
+    name: parsed.data.name ?? '',
+    emailVerified: true,
     role: parsed.data.role ?? 'viewer',
     provider: 'local',
-    name: parsed.data.name ?? null,
   });
-  return NextResponse.json({ user: publicShape(user) });
+  setCredentialPassword(created.id, await hashPassword(parsed.data.password));
+  return NextResponse.json({ user: publicShape(created) });
 }

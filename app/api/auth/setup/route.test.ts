@@ -6,10 +6,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '@/lib/db/schema';
 
 mock.module('@/lib/auth/handler', () => ({
-  signIn: mock().mockResolvedValue(undefined),
-  auth: mock(),
-  handlers: { GET: mock(), POST: mock() },
-  signOut: mock(),
+  auth: { api: { getSession: mock().mockResolvedValue(null) } },
 }));
 
 const { POST } = await import('./route');
@@ -18,16 +15,33 @@ beforeEach(() => {
   const sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });
   sqlite.exec(`
-    CREATE TABLE users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE user (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL DEFAULT '',
       email TEXT NOT NULL UNIQUE,
-      password_hash TEXT,
+      email_verified INTEGER NOT NULL DEFAULT 0,
+      image TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
       role TEXT NOT NULL DEFAULT 'viewer',
       provider TEXT NOT NULL DEFAULT 'local',
       oidc_subject TEXT UNIQUE,
-      name TEXT,
-      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
       last_login_at INTEGER
+    );
+    CREATE TABLE account (
+      id TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL,
+      provider_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      access_token TEXT,
+      refresh_token TEXT,
+      id_token TEXT,
+      access_token_expires_at INTEGER,
+      refresh_token_expires_at INTEGER,
+      scope TEXT,
+      password TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
     );
   `);
   globalThis.__speedtestDb = { sqlite, db };
@@ -42,7 +56,7 @@ const body = (j: unknown) =>
   });
 
 describe('POST /api/auth/setup', () => {
-  it('creates the first admin and signs in', async () => {
+  it('creates the first admin', async () => {
     const res = await POST(body({ email: 'a@b.c', password: 'hunter2hunter2' }));
     expect(res.status).toBe(204);
     const { countAdmins } = await import('@/lib/auth/users');

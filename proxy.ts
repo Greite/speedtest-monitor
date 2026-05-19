@@ -1,12 +1,12 @@
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { apiError } from '@/lib/api-errors';
 import { auth } from '@/lib/auth/handler';
 import { countUsers } from '@/lib/auth/users';
 
-export default auth(async (req) => {
+export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = req.auth;
 
   if (
     (pathname.startsWith('/api/auth/') && !pathname.startsWith('/api/auth/setup')) ||
@@ -34,6 +34,8 @@ export default auth(async (req) => {
     return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
 
+  const session = await auth.api.getSession({ headers: req.headers });
+
   if (pathname === '/login') {
     if (noUsers) {
       return NextResponse.redirect(new URL('/setup', req.nextUrl));
@@ -60,7 +62,7 @@ export default auth(async (req) => {
     return NextResponse.redirect(url);
   }
 
-  const role = session.user.role;
+  const role = (session.user as { role?: 'admin' | 'viewer' }).role;
   const isMutation = req.method !== 'GET' && req.method !== 'HEAD';
   const isUsersApi = pathname.startsWith('/api/users');
   const isAlertsTest = pathname === '/api/alerts/test';
@@ -73,7 +75,7 @@ export default auth(async (req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon|icon-|apple-icon-|icons/).*)'],

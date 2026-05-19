@@ -1,6 +1,5 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import { useRef, useState } from 'react';
 
 import { LogoMark } from '@/components/logo-mark';
@@ -10,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
 import { RequiredMark } from '@/components/ui/required-mark';
+import { authClient } from '@/lib/auth/client';
 
 export function LoginForm({
   oidcAvailable,
@@ -32,12 +32,8 @@ export function LoginForm({
     e.preventDefault();
     setError(null);
     setPending(true);
-    const res = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    });
-    if (res?.error) {
+    const res = await authClient.signIn.email({ email, password });
+    if (res.error) {
       setError('Invalid email or password');
       setPending(false);
       requestAnimationFrame(() => errorRef.current?.focus());
@@ -46,6 +42,19 @@ export function LoginForm({
     setRedirecting(true);
     router.replace(callbackUrl);
     router.refresh();
+  }
+
+  async function onOidc() {
+    setError(null);
+    setPending(true);
+    const res = await authClient.signIn.oauth2({
+      providerId: 'oidc',
+      callbackURL: callbackUrl,
+    });
+    if (res.error) {
+      setError('SSO sign-in failed. Try again.');
+      setPending(false);
+    }
   }
 
   return (
@@ -132,7 +141,7 @@ export function LoginForm({
                 <span>or</span>
                 <span className="h-px flex-1 bg-border/70" />
               </div>
-              <Button type="button" variant="outline" onClick={() => signIn('oidc', { callbackUrl })}>
+              <Button type="button" variant="outline" disabled={pending} onClick={onOidc}>
                 Sign in with {oidcName}
               </Button>
             </>

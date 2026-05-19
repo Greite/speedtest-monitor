@@ -10,9 +10,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function publicShape(u: User) {
-  const { passwordHash, ...rest } = u;
   return {
-    ...rest,
+    id: u.id,
+    email: u.email,
+    role: u.role,
+    provider: u.provider,
+    name: u.name,
     createdAt: u.createdAt.getTime(),
     lastLoginAt: u.lastLoginAt ? u.lastLoginAt.getTime() : null,
   };
@@ -30,11 +33,10 @@ type Params = { params: Promise<{ id: string }> };
 export async function PATCH(req: Request, { params }: Params) {
   await requireAdmin();
   const { id } = await params;
-  const userId = Number.parseInt(id, 10);
-  if (!Number.isInteger(userId)) {
-    return apiError('invalid_id', 'User id must be an integer.', 400);
+  if (!id) {
+    return apiError('invalid_id', 'User id is required.', 400);
   }
-  const target = findUserById(userId);
+  const target = findUserById(id);
   if (!target) {
     return apiError('not_found', 'User not found.', 404);
   }
@@ -54,24 +56,24 @@ export async function PATCH(req: Request, { params }: Params) {
     return apiError('last_admin', 'Cannot demote the last admin.', 409);
   }
 
-  const updated = updateUser(userId, parsed.data);
+  const patch = { ...parsed.data, name: parsed.data.name ?? undefined };
+  const updated = updateUser(id, patch);
   return NextResponse.json({ user: publicShape(updated!) });
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
   await requireAdmin();
   const { id } = await params;
-  const userId = Number.parseInt(id, 10);
-  if (!Number.isInteger(userId)) {
-    return apiError('invalid_id', 'User id must be an integer.', 400);
+  if (!id) {
+    return apiError('invalid_id', 'User id is required.', 400);
   }
-  const target = findUserById(userId);
+  const target = findUserById(id);
   if (!target) {
     return new NextResponse(null, { status: 204 });
   }
   if (target.role === 'admin' && countAdmins() <= 1) {
     return apiError('last_admin', 'Cannot delete the last admin.', 409);
   }
-  deleteUser(userId);
+  deleteUser(id);
   return new NextResponse(null, { status: 204 });
 }

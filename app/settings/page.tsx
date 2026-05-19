@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
+import { headers } from 'next/headers';
 import Link from 'next/link';
 
 import { PasswordChangeCard } from '@/components/auth/password-change-card';
@@ -18,8 +19,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
-  const session = await auth();
-  const readOnly = session?.user?.role !== 'admin';
+  const session = await auth.api.getSession({ headers: await headers() });
+  const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const intervalMinutes = getIntervalMinutes();
   const envDefaultMinutes = getEnvDefaultIntervalMinutes();
   const retentionDays = getRetentionDays();

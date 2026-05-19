@@ -1,7 +1,6 @@
 'use client';
 
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -14,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { parseApiError } from '@/lib/api-client';
+import { authClient } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
 
 type Configured = {
@@ -56,8 +56,8 @@ function numOrNull(v: string): number | null {
 type TestState = { ok: boolean; message: string } | 'pending';
 
 export function AlertsCard() {
-  const { data: session } = useSession();
-  const readOnly = session?.user?.role !== 'admin';
+  const { data: session } = authClient.useSession();
+  const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const [rules, setRules] = useState<Rules | null>(null);
   const [savedRules, setSavedRules] = useState<Rules | null>(null);
   const [status, setStatus] = useState<string | null>(null);

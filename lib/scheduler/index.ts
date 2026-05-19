@@ -1,6 +1,7 @@
 import cron, { type ScheduledTask } from 'node-cron';
 
 import { ensureSeededAdmin } from '../auth/bootstrap';
+import { migrateLegacyAuth } from '../auth/migrate-legacy';
 import { runMigrations } from '../db/migrate';
 import { runMeasurementSafe } from '../measurement/runner';
 import { purgeByRetention } from '../measurements';
@@ -26,6 +27,7 @@ export function cronExprForMinutes(minutes: number): string {
 
 export async function bootScheduler() {
   runMigrations();
+  migrateLegacyAuth();
   await ensureSeededAdmin();
   rescheduleFromSettings();
   startPurgeCron();

@@ -19,7 +19,7 @@ import { parseApiError } from '@/lib/api-client';
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: { id: number; email: string } | null;
+  user: { id: string; email: string } | null;
   onDeleted: () => void | Promise<void>;
 };
 

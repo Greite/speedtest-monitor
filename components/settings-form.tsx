@@ -1,7 +1,6 @@
 'use client';
 
 import { AlertCircle } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -12,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { parseApiError } from '@/lib/api-client';
+import { authClient } from '@/lib/auth/client';
 
 type Props = {
   initialMinutes: number;
@@ -35,8 +35,8 @@ export function SettingsForm({
 }
 
 function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; envDefault: number }) {
-  const { data: session } = useSession();
-  const readOnly = session?.user?.role !== 'admin';
+  const { data: session } = authClient.useSession();
+  const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const [value, setValue] = useState(String(initialMinutes));
   const [saved, setSaved] = useState(initialMinutes);
   const [saving, setSaving] = useState(false);
@@ -145,8 +145,8 @@ function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; 
 }
 
 function RetentionCard({ initialRetentionDays, envDefault }: { initialRetentionDays: number; envDefault: number }) {
-  const { data: session } = useSession();
-  const readOnly = session?.user?.role !== 'admin';
+  const { data: session } = authClient.useSession();
+  const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const [value, setValue] = useState(String(initialRetentionDays));
   const [saved, setSaved] = useState(initialRetentionDays);
   const [saving, setSaving] = useState(false);

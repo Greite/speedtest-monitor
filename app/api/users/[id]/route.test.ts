@@ -5,12 +5,13 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 
 import * as schema from '@/lib/db/schema';
 
-const authMock = mock();
+mock.module('next/headers', () => ({
+  headers: () => Promise.resolve(new Headers()),
+}));
+
+const getSession = mock();
 mock.module('@/lib/auth/handler', () => ({
-  auth: authMock,
-  signIn: mock(),
-  signOut: mock(),
-  handlers: { GET: mock(), POST: mock() },
+  auth: { api: { getSession } },
 }));
 
 const { PATCH, DELETE } = await import('./route');
@@ -20,23 +21,40 @@ beforeEach(() => {
   const sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });
   sqlite.exec(`
-    CREATE TABLE users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE user (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL DEFAULT '',
       email TEXT NOT NULL UNIQUE,
-      password_hash TEXT,
+      email_verified INTEGER NOT NULL DEFAULT 0,
+      image TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
       role TEXT NOT NULL DEFAULT 'viewer',
       provider TEXT NOT NULL DEFAULT 'local',
       oidc_subject TEXT UNIQUE,
-      name TEXT,
-      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
       last_login_at INTEGER
+    );
+    CREATE TABLE account (
+      id TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL,
+      provider_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      access_token TEXT,
+      refresh_token TEXT,
+      id_token TEXT,
+      access_token_expires_at INTEGER,
+      refresh_token_expires_at INTEGER,
+      scope TEXT,
+      password TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
     );
   `);
   globalThis.__speedtestDb = { sqlite, db };
-  authMock.mockResolvedValue({ user: { id: '1', email: 'admin@x.y', role: 'admin' } });
+  getSession.mockResolvedValue({ user: { id: 'admin-id', email: 'admin@x.y', role: 'admin' } });
 });
 
-const pathReq = (id: number, body: unknown) =>
+const pathReq = (id: string, body: unknown) =>
   new Request(`http://x/api/users/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -45,15 +63,10 @@ const pathReq = (id: number, body: unknown) =>
 
 describe('/api/users/[id]', () => {
   it('PATCH role updates', async () => {
-    const admin = createUser({
-      email: 'a@x.y',
-      passwordHash: 'h',
-      role: 'admin',
-      provider: 'local',
-    });
-    const u = createUser({ email: 'b@x.y', passwordHash: 'h', role: 'viewer', provider: 'local' });
+    const admin = createUser({ email: 'a@x.y', role: 'admin', provider: 'local' });
+    const u = createUser({ email: 'b@x.y', role: 'viewer', provider: 'local' });
     const res = await PATCH(pathReq(u.id, { role: 'admin' }), {
-      params: Promise.resolve({ id: String(u.id) }),
+      params: Promise.resolve({ id: u.id }),
     });
     expect(res.status).toBe(200);
     expect(findUserById(u.id)?.role).toBe('admin');
@@ -61,37 +74,27 @@ describe('/api/users/[id]', () => {
   });
 
   it('PATCH blocks last-admin demote', async () => {
-    const admin = createUser({
-      email: 'a@x.y',
-      passwordHash: 'h',
-      role: 'admin',
-      provider: 'local',
-    });
+    const admin = createUser({ email: 'a@x.y', role: 'admin', provider: 'local' });
     const res = await PATCH(pathReq(admin.id, { role: 'viewer' }), {
-      params: Promise.resolve({ id: String(admin.id) }),
+      params: Promise.resolve({ id: admin.id }),
     });
     expect(res.status).toBe(409);
     expect(countAdmins()).toBe(1);
   });
 
   it('DELETE blocks last admin', async () => {
-    const admin = createUser({
-      email: 'a@x.y',
-      passwordHash: 'h',
-      role: 'admin',
-      provider: 'local',
-    });
+    const admin = createUser({ email: 'a@x.y', role: 'admin', provider: 'local' });
     const res = await DELETE(new Request(`http://x/api/users/${admin.id}`, { method: 'DELETE' }), {
-      params: Promise.resolve({ id: String(admin.id) }),
+      params: Promise.resolve({ id: admin.id }),
     });
     expect(res.status).toBe(409);
   });
 
   it('DELETE removes a non-last-admin user', async () => {
-    createUser({ email: 'a@x.y', passwordHash: 'h', role: 'admin', provider: 'local' });
-    const u = createUser({ email: 'b@x.y', passwordHash: 'h', role: 'viewer', provider: 'local' });
+    createUser({ email: 'a@x.y', role: 'admin', provider: 'local' });
+    const u = createUser({ email: 'b@x.y', role: 'viewer', provider: 'local' });
     const res = await DELETE(new Request(`http://x/api/users/${u.id}`, { method: 'DELETE' }), {
-      params: Promise.resolve({ id: String(u.id) }),
+      params: Promise.resolve({ id: u.id }),
     });
     expect(res.status).toBe(204);
     expect(findUserById(u.id)).toBeUndefined();

@@ -1,5 +1,7 @@
+import { headers } from 'next/headers';
+
 import { auth } from './handler';
-import type { SessionUser } from './types';
+import type { SessionUser, UserRole } from './types';
 
 class AuthError extends Error {
   constructor(
@@ -11,15 +13,20 @@ class AuthError extends Error {
 }
 
 export async function requireSession(): Promise<SessionUser> {
-  const session = await auth();
-  if (!session?.user?.email || !session.user.role || !session.user.id) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const u = session?.user;
+  if (!u?.id || !u.email) {
+    throw new AuthError(401, 'unauthorized');
+  }
+  const role = (u as { role?: UserRole }).role;
+  if (!role) {
     throw new AuthError(401, 'unauthorized');
   }
   return {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name ?? null,
-    role: session.user.role,
+    id: u.id,
+    email: u.email,
+    name: u.name ?? null,
+    role,
   };
 }
 

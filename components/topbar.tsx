@@ -3,7 +3,6 @@
 import { Check, ChevronRight, LogOut, Menu, Monitor, Moon, Play, Settings, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
@@ -28,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { authClient } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
 
 type ThemeChoice = 'light' | 'dark' | 'system';
@@ -150,8 +150,8 @@ function ThemeMenu({
 }
 
 export function Topbar() {
-  const { data: session } = useSession();
-  const role = session?.user?.role ?? null;
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role ?? null;
   const { running, connected, triggerRun } = useLiveMeasurements([], '24h');
   const { theme, setTheme } = useTheme();
   const router = useRouter();
@@ -192,7 +192,7 @@ export function Topbar() {
   }
 
   async function handleLogout() {
-    await signOut({ redirect: false });
+    await authClient.signOut();
     router.replace('/login');
     router.refresh();
   }

@@ -1,6 +1,5 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import { useRef, useState } from 'react';
 
 import { LogoMark } from '@/components/logo-mark';
@@ -11,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
 import { RequiredMark } from '@/components/ui/required-mark';
 import { parseApiError } from '@/lib/api-client';
+import { authClient } from '@/lib/auth/client';
 
 export function SetupForm() {
   const router = useRouter();
@@ -58,8 +58,8 @@ export function SetupForm() {
       focusSummary();
       return;
     }
-    const signInRes = await signIn('credentials', { email, password, redirect: false });
-    if (signInRes?.error) {
+    const signInRes = await authClient.signIn.email({ email, password });
+    if (signInRes.error) {
       setError('Account created but sign-in failed. Go to /login.');
       setPending(false);
       return;

@@ -1,6 +1,6 @@
 import { loadAuthConfig } from './config';
 import { hashPassword, verifyPassword } from './hash';
-import { createUser, findUserByEmail, updateUser } from './users';
+import { createUser, findUserByEmail, getCredentialPasswordHash, setCredentialPassword, updateUser } from './users';
 
 export async function ensureSeededAdmin(): Promise<void> {
   let cfg: ReturnType<typeof loadAuthConfig>;
@@ -17,24 +17,23 @@ export async function ensureSeededAdmin(): Promise<void> {
 
   const existing = findUserByEmail(seed.email);
   if (!existing) {
-    createUser({
+    const created = createUser({
       email: seed.email,
-      passwordHash: await hashPassword(seed.password),
+      name: '',
+      emailVerified: true,
       role: 'admin',
       provider: 'local',
     });
+    setCredentialPassword(created.id, await hashPassword(seed.password));
     return;
   }
 
-  const stillValid = existing.passwordHash ? await verifyPassword(existing.passwordHash, seed.password) : false;
-  const patch: Parameters<typeof updateUser>[1] = {};
+  const currentHash = getCredentialPasswordHash(existing.id);
+  const stillValid = currentHash ? await verifyPassword(currentHash, seed.password) : false;
   if (existing.role !== 'admin') {
-    patch.role = 'admin';
+    updateUser(existing.id, { role: 'admin' });
   }
   if (!stillValid) {
-    patch.passwordHash = await hashPassword(seed.password);
-  }
-  if (Object.keys(patch).length > 0) {
-    updateUser(existing.id, patch);
+    setCredentialPassword(existing.id, await hashPassword(seed.password));
   }
 }

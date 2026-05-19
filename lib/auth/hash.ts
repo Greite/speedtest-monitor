@@ -29,6 +29,12 @@ export async function verifyPassword(hashed: string, plain: string): Promise<boo
   }
 }
 
+// Better Auth's email-password adapter passes `{ password, hash }` to its
+// custom verify hook. Thin adapter over verifyPassword.
+export async function verifyPasswordPair(data: { password: string; hash: string }): Promise<boolean> {
+  return verifyPassword(data.hash, data.password);
+}
+
 /**
  * Returns true when the stored hash was produced with parameters weaker than
  * the current OPTS (i.e. it should be re-hashed on next successful login).

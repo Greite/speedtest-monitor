@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { apiError, apiValidationError } from '@/lib/api-errors';
-import { signIn } from '@/lib/auth/handler';
 import { hashPassword } from '@/lib/auth/hash';
-import { countUsers, createUser } from '@/lib/auth/users';
+import { countUsers, createUser, setCredentialPassword } from '@/lib/auth/users';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,16 +28,13 @@ export async function POST(req: Request) {
     return apiValidationError(parsed.error);
   }
   const email = parsed.data.email.toLowerCase().trim();
-  const passwordHash = await hashPassword(parsed.data.password);
-  createUser({ email, passwordHash, role: 'admin', provider: 'local' });
-  try {
-    await signIn('credentials', {
-      email,
-      password: parsed.data.password,
-      redirect: false,
-    });
-  } catch {
-    // Fall through - the user can sign in manually afterwards.
-  }
+  const created = createUser({
+    email,
+    name: '',
+    emailVerified: true,
+    role: 'admin',
+    provider: 'local',
+  });
+  setCredentialPassword(created.id, await hashPassword(parsed.data.password));
   return new NextResponse(null, { status: 204 });
 }

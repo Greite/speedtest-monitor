@@ -11,7 +11,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown, KeyRound, Search, Trash2 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -27,10 +26,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { parseApiError } from '@/lib/api-client';
+import { authClient } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
 
 type UserRow = {
-  id: number;
+  id: string;
   email: string;
   role: 'admin' | 'viewer';
   provider: 'local' | 'oidc';
@@ -50,7 +50,7 @@ function formatLastLogin(ts: number | null): string {
 }
 
 export function UsersCard() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const [users, setUsers] = useState<UserRow[] | null>(null);
 
   const [emailQuery, setEmailQuery] = useState('');
@@ -59,8 +59,8 @@ export function UsersCard() {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'email', desc: false }]);
 
   const [addOpen, setAddOpen] = useState(false);
-  const [resetTarget, setResetTarget] = useState<{ id: number; email: string } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; email: string } | null>(null);
+  const [resetTarget, setResetTarget] = useState<{ id: string; email: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; email: string } | null>(null);
 
   const refresh = useCallback(async () => {
     const res = await fetch('/api/users');
@@ -78,7 +78,7 @@ export function UsersCard() {
   }, [refresh]);
 
   const setRole = useCallback(
-    async (id: number, role: 'admin' | 'viewer') => {
+    async (id: string, role: 'admin' | 'viewer') => {
       const res = await fetch(`/api/users/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -208,7 +208,7 @@ export function UsersCard() {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  if (session?.user?.role !== 'admin') {
+  if ((session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin') {
     return null;
   }
 
