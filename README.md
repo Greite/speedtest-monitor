@@ -88,10 +88,12 @@ speedtest-monitor requires authentication for all routes. Two roles exist:
 
 ```
 AUTH_SECRET=<run: openssl rand -base64 32>
-AUTH_TRUST_HOST=true      # set when behind a reverse proxy (Traefik, Caddy, Nginx, ...)
+BETTER_AUTH_URL=https://speedtest.example.com   # required when served behind a reverse proxy
 ```
 
-Missing `AUTH_SECRET` is a fatal boot error.
+Missing `AUTH_SECRET` is a fatal boot error. `BETTER_AUTH_URL` defaults to
+`http://localhost:${PORT}` when unset, which is fine for local dev but must be
+overridden in production so callbacks and OIDC redirects work.
 
 ### First run: create the first admin
 
@@ -143,6 +145,18 @@ users. The last remaining admin cannot be demoted or deleted.
 3. Scripts and cURL commands that previously called `/api/*` anonymously will now receive
    `401 Unauthorized`. Add an authenticated session cookie or migrate to the session-aware
    clients.
+
+### Upgrading from the next-auth release
+
+The auth stack moved from next-auth v5 beta to Better Auth. Same env vars, but:
+
+1. Set `BETTER_AUTH_URL` to your public origin (`AUTH_TRUST_HOST` is no longer used).
+2. On first boot, the existing `users` table is copied into the new
+   `user`/`account` tables. Argon2id password hashes verify without re-hashing.
+3. Sessions are now stored in the database (no longer JWT), so every user must
+   sign in again after the upgrade.
+4. User ids changed from auto-increment integers to UUIDs. Any external script
+   that hard-coded a numeric user id needs to be updated.
 
 ### Upgrading the measurement engine
 
@@ -211,7 +225,7 @@ All routes require an authenticated session (cookie or OIDC). Mutating routes re
 | `/api/users/[id]/reset-password` | POST | Reset a user's password (admin) |
 | `/api/account/password` | PATCH | Change your own password |
 | `/api/auth/setup` | POST | First-run admin creation (only while no user exists) |
-| `/api/auth/[...nextauth]` | * | NextAuth endpoints (sign-in, callback, session, ...) |
+| `/api/auth/[...all]` | * | Better Auth endpoints (sign-in, callback, session, ...) |
 | `/ws` | WebSocket | Pushes `measurement`, `running`, `settings_updated` events |
 
 ## Tests
