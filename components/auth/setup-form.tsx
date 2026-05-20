@@ -72,115 +72,129 @@ export function SetupForm() {
     <main
       id="main"
       tabIndex={-1}
-      className="mx-auto flex min-h-[100dvh] max-w-sm scroll-mt-16 flex-col justify-center px-4 py-8 outline-none"
+      className="relative mx-auto flex min-h-[100dvh] w-full max-w-sm scroll-mt-16 flex-col justify-center px-4 py-8 outline-none"
     >
-      <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <div className="mb-2 flex flex-col items-center gap-3">
-          <LogoMark size={44} />
-          <h1 className="text-2xl font-semibold tracking-tight">Create the first admin</h1>
-          <p className="text-center text-sm text-muted-foreground">
-            This page is only accessible until the first user is created.
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 app-backdrop" />
+      <div className="rounded-2xl border border-border/60 bg-card/80 p-8 shadow-sm backdrop-blur-sm">
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <LogoMark size={48} />
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+              Speedtest·Monitor
+            </span>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Create the first admin<span className="text-brand">.</span>
+            </h1>
+            <p className="text-center text-sm text-muted-foreground">
+              This page is only accessible until the first user is created.
+            </p>
+          </div>
+        </div>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+          <p className="text-xs text-muted-foreground">
+            Fields marked with <span className="text-destructive">*</span> are required.
           </p>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Fields marked with <span className="text-destructive">*</span> are required.
-        </p>
-        {error || Object.keys(fieldErrors).length > 0 ? (
-          <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert" className="outline-none">
-            <AlertDescription>
-              <p className="font-medium">Please fix the following:</p>
-              <ul className="mt-1 list-disc pl-5 text-sm">
-                {error && Object.keys(fieldErrors).length === 0 ? <li>{error}</li> : null}
-                {fieldErrors.email ? (
-                  <li>
-                    <a href="#email" className="underline">
-                      Email: {fieldErrors.email.join(' ')}
-                    </a>
-                  </li>
-                ) : null}
-                {fieldErrors.password ? (
-                  <li>
-                    <a href="#password" className="underline">
-                      Password: {fieldErrors.password.join(' ')}
-                    </a>
-                  </li>
-                ) : null}
-                {fieldErrors.confirm ? (
-                  <li>
-                    <a href="#confirm" className="underline">
-                      Confirm password: {fieldErrors.confirm.join(' ')}
-                    </a>
-                  </li>
-                ) : null}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email">
-            Email
-            <RequiredMark />
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-invalid={fieldErrors.email ? true : undefined}
-            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
-          />
-          {fieldErrors.email ? (
-            <p id="email-error" className="text-xs text-destructive">
-              {fieldErrors.email.join(' ')}
-            </p>
+          {error || Object.keys(fieldErrors).length > 0 ? (
+            <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert" className="outline-none">
+              <AlertDescription>
+                <p className="font-medium">Please fix the following:</p>
+                <ul className="mt-1 list-disc pl-5 text-sm">
+                  {error && Object.keys(fieldErrors).length === 0 ? <li>{error}</li> : null}
+                  {fieldErrors.email ? (
+                    <li>
+                      <a href="#email" className="underline">
+                        Email: {fieldErrors.email.join(' ')}
+                      </a>
+                    </li>
+                  ) : null}
+                  {fieldErrors.password ? (
+                    <li>
+                      <a href="#password" className="underline">
+                        Password: {fieldErrors.password.join(' ')}
+                      </a>
+                    </li>
+                  ) : null}
+                  {fieldErrors.confirm ? (
+                    <li>
+                      <a href="#confirm" className="underline">
+                        Confirm password: {fieldErrors.confirm.join(' ')}
+                      </a>
+                    </li>
+                  ) : null}
+                </ul>
+              </AlertDescription>
+            </Alert>
           ) : null}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="password">
-            Password (min 10 chars)
-            <RequiredMark />
-          </Label>
-          <PasswordInput
-            id="password"
-            required
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            aria-invalid={fieldErrors.password ? true : undefined}
-            aria-describedby={fieldErrors.password ? 'password-error' : undefined}
-          />
-          {fieldErrors.password ? (
-            <p id="password-error" className="text-xs text-destructive">
-              {fieldErrors.password.join(' ')}
-            </p>
-          ) : null}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="confirm">
-            Confirm password
-            <RequiredMark />
-          </Label>
-          <PasswordInput
-            id="confirm"
-            required
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            aria-invalid={fieldErrors.confirm ? true : undefined}
-            aria-describedby={fieldErrors.confirm ? 'confirm-error' : undefined}
-          />
-          {fieldErrors.confirm ? (
-            <p id="confirm-error" className="text-xs text-destructive">
-              {fieldErrors.confirm.join(' ')}
-            </p>
-          ) : null}
-        </div>
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Creating...' : 'Create admin'}
-        </Button>
-      </form>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email">
+              Email
+              <RequiredMark />
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={fieldErrors.email ? true : undefined}
+              aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+            />
+            {fieldErrors.email ? (
+              <p id="email-error" className="text-xs text-destructive">
+                {fieldErrors.email.join(' ')}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="password">
+              Password (min 10 chars)
+              <RequiredMark />
+            </Label>
+            <PasswordInput
+              id="password"
+              required
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={fieldErrors.password ? true : undefined}
+              aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+            />
+            {fieldErrors.password ? (
+              <p id="password-error" className="text-xs text-destructive">
+                {fieldErrors.password.join(' ')}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="confirm">
+              Confirm password
+              <RequiredMark />
+            </Label>
+            <PasswordInput
+              id="confirm"
+              required
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              aria-invalid={fieldErrors.confirm ? true : undefined}
+              aria-describedby={fieldErrors.confirm ? 'confirm-error' : undefined}
+            />
+            {fieldErrors.confirm ? (
+              <p id="confirm-error" className="text-xs text-destructive">
+                {fieldErrors.confirm.join(' ')}
+              </p>
+            ) : null}
+          </div>
+          <Button
+            type="submit"
+            disabled={pending}
+            className="bg-brand text-brand-foreground hover:bg-brand/90 brand-glow"
+          >
+            {pending ? 'Creating...' : 'Create admin'}
+          </Button>
+        </form>
+      </div>
     </main>
   );
 }
