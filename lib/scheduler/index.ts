@@ -31,6 +31,7 @@ export async function bootScheduler() {
   await ensureSeededAdmin();
   rescheduleFromSettings();
   startPurgeCron();
+  globalThis.__speedtestReschedule = rescheduleFromSettings;
 }
 
 export function rescheduleFromSettings() {
@@ -66,4 +67,5 @@ export function stopScheduler() {
   globalThis.__speedtestScheduler = undefined;
   globalThis.__speedtestPurge?.stop();
   globalThis.__speedtestPurge = undefined;
+  globalThis.__speedtestReschedule = undefined;
 }
