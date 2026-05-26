@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { MeasurementDto, WsEventDto } from '@/lib/types';
 
-type Range = '1h' | '6h' | '24h' | '7d' | '30d';
+type Range = '6h' | '12h' | '24h' | '7d' | '30d';
 
 type State = {
   measurements: MeasurementDto[];

@@ -4,11 +4,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
-export type Range = '1h' | '6h' | '24h' | '7d' | '30d';
+export type Range = '6h' | '12h' | '24h' | '7d' | '30d';
 
 const RANGES: { value: Range; label: string }[] = [
-  { value: '1h', label: '1h' },
   { value: '6h', label: '6h' },
+  { value: '12h', label: '12h' },
   { value: '24h', label: '24h' },
   { value: '7d', label: '7d' },
   { value: '30d', label: '30d' },
@@ -27,8 +27,8 @@ export function TimeRangePicker({
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const buttonsRef = useRef<Record<Range, HTMLButtonElement | null>>({
-    '1h': null,
     '6h': null,
+    '12h': null,
     '24h': null,
     '7d': null,
     '30d': null,

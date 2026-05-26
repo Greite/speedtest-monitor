@@ -4,11 +4,11 @@ import { getDb } from './db/client';
 import { alerts, type Measurement, measurements } from './db/schema';
 import type { SortColumn, TableQuery } from './measurements-query';
 
-export type Range = '1h' | '6h' | '24h' | '7d' | '30d';
+export type Range = '6h' | '12h' | '24h' | '7d' | '30d';
 
 const RANGE_MS: Record<Range, number> = {
-  '1h': 60 * 60 * 1000,
   '6h': 6 * 60 * 60 * 1000,
+  '12h': 12 * 60 * 60 * 1000,
   '24h': 24 * 60 * 60 * 1000,
   '7d': 7 * 24 * 60 * 60 * 1000,
   '30d': 30 * 24 * 60 * 60 * 1000,

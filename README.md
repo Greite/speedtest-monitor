@@ -213,7 +213,7 @@ All routes require an authenticated session (cookie or OIDC). Mutating routes re
 | Route | Method | Description |
 |---|---|---|
 | `/api/health` | GET | Liveness probe (no auth) |
-| `/api/measurements?range=1h\|6h\|24h\|7d\|30d` | GET | History for the given range |
+| `/api/measurements?range=6h\|12h\|24h\|7d\|30d` | GET | History for the given range |
 | `/api/measurements/table` | GET | Paginated history with server-side sort/filter (used by the dashboard table) |
 | `/api/measurements/run` | POST | Trigger a manual run (409 if already running) |
 | `/api/settings` | GET | Current interval + env default |
