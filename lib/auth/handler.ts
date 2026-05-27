@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import { genericOAuth } from 'better-auth/plugins';
+import { eq } from 'drizzle-orm';
 
 import { loadAuthConfig } from './config';
 import { hashPassword, verifyPasswordPair } from './hash';
@@ -62,9 +63,7 @@ function build() {
       session: {
         create: {
           after: async (created) => {
-            const db = getDb();
-            const { eq } = await import('drizzle-orm');
-            db.update(user).set({ lastLoginAt: new Date() }).where(eq(user.id, created.userId)).run();
+            getDb().update(user).set({ lastLoginAt: new Date() }).where(eq(user.id, created.userId)).run();
           },
         },
       },

@@ -15,7 +15,6 @@ import {
   getCredentialPasswordHash,
   listUsers,
   setCredentialPassword,
-  updateLastLogin,
   updateUser,
 } from './users';
 
@@ -72,14 +71,12 @@ describe('auth/users', () => {
     expect(countAdmins()).toBe(1);
   });
 
-  it('updateUser patches fields, updateLastLogin sets timestamp', () => {
+  it('updateUser patches fields', () => {
     const u = createUser({ email: 'a@x', role: 'viewer', provider: 'local' });
     updateUser(u.id, { role: 'admin', name: 'Alice' });
     const after = findUserById(u.id);
     expect(after?.role).toBe('admin');
     expect(after?.name).toBe('Alice');
-    updateLastLogin(u.id);
-    expect(findUserById(u.id)?.lastLoginAt).toBeInstanceOf(Date);
   });
 
   it('findUserByOidcSubject', () => {

@@ -1,4 +1,4 @@
-import type { Measurement } from './db/schema';
+import type { AlertEvent, AlertKind, Measurement } from './db/schema';
 
 export type MeasurementDto = {
   id: number;
@@ -38,7 +38,22 @@ export function toMeasurementDto(row: Measurement): MeasurementDto {
   };
 }
 
+export type AlertDto = {
+  id: number;
+  timestamp: number;
+  kind: AlertKind;
+  event: AlertEvent;
+  measurementId: number | null;
+  threshold: number | null;
+  observed: number | null;
+  // `error` strings are intentionally stripped — they may carry webhook URLs
+  // (which are themselves bearer secrets for Slack/Discord). Full details
+  // remain available via the admin-gated REST endpoint.
+  deliveryStatus: Record<string, { ok: boolean; httpStatus?: number }>;
+};
+
 export type WsEventDto =
   | { type: 'measurement'; payload: MeasurementDto }
   | { type: 'running'; payload: { startedAt: number } }
-  | { type: 'settings_updated'; payload: { intervalMinutes: number } };
+  | { type: 'settings_updated'; payload: { intervalMinutes: number } }
+  | { type: 'alert'; payload: AlertDto };

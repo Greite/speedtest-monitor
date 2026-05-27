@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { apiError } from '@/lib/api-errors';
 import { listMeasurementsPaged } from '@/lib/measurements';
 import { parseTableQuery, type TableQuery } from '@/lib/measurements-query';
 import { toMeasurementDto } from '@/lib/types';
@@ -13,7 +14,7 @@ export function GET(req: Request) {
   try {
     query = parseTableQuery(url.searchParams);
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'invalid query' }, { status: 400 });
+    return apiError('invalid_query', err instanceof Error ? err.message : 'Invalid query.', 400);
   }
   const { rows, totalCount } = listMeasurementsPaged(query);
   return NextResponse.json({

@@ -1,27 +1,8 @@
 import type { WebSocket, WebSocketServer } from 'ws';
 
-import type { AlertEvent, AlertKind } from '../db/schema';
-import type { MeasurementDto } from '../types';
+import type { WsEventDto } from '../types';
 
-type AlertDto = {
-  id: number;
-  timestamp: number;
-  kind: AlertKind;
-  event: AlertEvent;
-  measurementId: number | null;
-  threshold: number | null;
-  observed: number | null;
-  // `error` strings are intentionally stripped — they may carry webhook URLs
-  // (which are themselves bearer secrets for Slack/Discord). Full details
-  // remain available via the admin-gated REST endpoint.
-  deliveryStatus: Record<string, { ok: boolean; httpStatus?: number }>;
-};
-
-export type WsEvent =
-  | { type: 'measurement'; payload: MeasurementDto }
-  | { type: 'running'; payload: { startedAt: number } }
-  | { type: 'settings_updated'; payload: { intervalMinutes: number } }
-  | { type: 'alert'; payload: AlertDto };
+export type WsEvent = WsEventDto;
 
 declare global {
   var __speedtestWss: WebSocketServer | undefined;

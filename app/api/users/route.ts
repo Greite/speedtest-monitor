@@ -4,26 +4,14 @@ import { z } from 'zod';
 import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
 import { hashPassword } from '@/lib/auth/hash';
-import { createUser, findUserByEmail, listUsers, setCredentialPassword } from '@/lib/auth/users';
-import type { User } from '@/lib/db/schema';
+import { emailSchema } from '@/lib/auth/schema';
+import { createUser, findUserByEmail, listUsers, setCredentialPassword, toPublicUser } from '@/lib/auth/users';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function publicShape(u: User) {
-  return {
-    id: u.id,
-    email: u.email,
-    role: u.role,
-    provider: u.provider,
-    name: u.name,
-    createdAt: u.createdAt.getTime(),
-    lastLoginAt: u.lastLoginAt ? u.lastLoginAt.getTime() : null,
-  };
-}
-
 const createSchema = z.object({
-  email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email'),
+  email: emailSchema,
   password: z.string().min(10).max(1024),
   role: z.enum(['admin', 'viewer']).optional(),
   name: z.string().max(200).optional(),
@@ -31,7 +19,7 @@ const createSchema = z.object({
 
 export async function GET() {
   await requireAdmin();
-  return NextResponse.json({ users: listUsers().map(publicShape) });
+  return NextResponse.json({ users: listUsers().map(toPublicUser) });
 }
 
 export async function POST(req: Request) {
@@ -58,5 +46,5 @@ export async function POST(req: Request) {
     provider: 'local',
   });
   setCredentialPassword(created.id, await hashPassword(parsed.data.password));
-  return NextResponse.json({ user: publicShape(created) });
+  return NextResponse.json({ user: toPublicUser(created) });
 }

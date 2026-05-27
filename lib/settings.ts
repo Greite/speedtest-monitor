@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import { getDb } from './db/client';
 import { settings } from './db/schema';
+import { envInt } from './utils';
 
 const KEY_INTERVAL = 'interval_minutes';
 const DEFAULT_INTERVAL = 15;
@@ -14,27 +15,11 @@ const MIN_RETENTION_DAYS = 1;
 const MAX_RETENTION_DAYS = 3650;
 
 function envIntervalMinutes(): number {
-  const raw = process.env.SPEEDTEST_INTERVAL_MINUTES;
-  if (!raw) {
-    return DEFAULT_INTERVAL;
-  }
-  const n = Number.parseInt(raw, 10);
-  if (Number.isNaN(n) || n < MIN_INTERVAL || n > MAX_INTERVAL) {
-    return DEFAULT_INTERVAL;
-  }
-  return n;
+  return envInt('SPEEDTEST_INTERVAL_MINUTES', DEFAULT_INTERVAL, MIN_INTERVAL, MAX_INTERVAL);
 }
 
 function envRetentionDays(): number {
-  const raw = process.env.SPEEDTEST_RETENTION_DAYS;
-  if (!raw) {
-    return DEFAULT_RETENTION;
-  }
-  const n = Number.parseInt(raw, 10);
-  if (Number.isNaN(n) || n < MIN_RETENTION_DAYS || n > MAX_RETENTION_DAYS) {
-    return DEFAULT_RETENTION;
-  }
-  return n;
+  return envInt('SPEEDTEST_RETENTION_DAYS', DEFAULT_RETENTION, MIN_RETENTION_DAYS, MAX_RETENTION_DAYS);
 }
 
 export function getEnvDefaultIntervalMinutes(): number {

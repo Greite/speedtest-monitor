@@ -3,23 +3,10 @@ import { z } from 'zod';
 
 import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
-import { countAdmins, deleteUser, findUserById, updateUser } from '@/lib/auth/users';
-import type { User } from '@/lib/db/schema';
+import { countAdmins, deleteUser, findUserById, toPublicUser, updateUser } from '@/lib/auth/users';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-function publicShape(u: User) {
-  return {
-    id: u.id,
-    email: u.email,
-    role: u.role,
-    provider: u.provider,
-    name: u.name,
-    createdAt: u.createdAt.getTime(),
-    lastLoginAt: u.lastLoginAt ? u.lastLoginAt.getTime() : null,
-  };
-}
 
 const patchSchema = z
   .object({
@@ -58,7 +45,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const patch = { ...parsed.data, name: parsed.data.name ?? undefined };
   const updated = updateUser(id, patch);
-  return NextResponse.json({ user: publicShape(updated!) });
+  return NextResponse.json({ user: toPublicUser(updated!) });
 }
 
 export async function DELETE(_req: Request, { params }: Params) {

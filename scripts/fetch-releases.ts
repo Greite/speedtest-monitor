@@ -1,6 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
+import type { Release } from '@/lib/releases';
+
 const REPO = process.env.RELEASES_REPO ?? 'Greite/speedtest-monitor';
 const OUT_PATH = resolve(process.cwd(), 'lib/generated/releases.json');
 
@@ -12,15 +14,6 @@ type GithubRelease = {
   created_at: string;
   body: string | null;
   draft: boolean;
-  prerelease: boolean;
-};
-
-export type Release = {
-  tag: string;
-  name: string;
-  url: string;
-  date: string;
-  body: string;
   prerelease: boolean;
 };
 

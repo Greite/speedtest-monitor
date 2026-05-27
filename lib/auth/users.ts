@@ -1,22 +1,44 @@
 import { randomUUID } from 'node:crypto';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import { getDb } from '../db/client';
 import { account, type NewUser, type User, user } from '../db/schema';
+
+export type PublicUser = {
+  id: string;
+  email: string;
+  role: User['role'];
+  provider: User['provider'];
+  name: string;
+  createdAt: number;
+  lastLoginAt: number | null;
+};
+
+export function toPublicUser(u: User): PublicUser {
+  return {
+    id: u.id,
+    email: u.email,
+    role: u.role,
+    provider: u.provider,
+    name: u.name,
+    createdAt: u.createdAt.getTime(),
+    lastLoginAt: u.lastLoginAt ? u.lastLoginAt.getTime() : null,
+  };
+}
 
 function lower(email: string): string {
   return email.toLowerCase().trim();
 }
 
 export function countUsers(): number {
-  const db = getDb();
-  return db.select().from(user).all().length;
+  const row = getDb().select({ n: sql<number>`count(*)` }).from(user).get();
+  return row?.n ?? 0;
 }
 
 export function countAdmins(): number {
-  const db = getDb();
-  return db.select().from(user).where(eq(user.role, 'admin')).all().length;
+  const row = getDb().select({ n: sql<number>`count(*)` }).from(user).where(eq(user.role, 'admin')).get();
+  return row?.n ?? 0;
 }
 
 export function findUserByEmail(email: string): User | undefined {
@@ -73,11 +95,6 @@ export function updateUser(id: string, patch: Partial<Omit<NewUser, 'id' | 'crea
     .where(eq(user.id, id))
     .returning()
     .get();
-}
-
-export function updateLastLogin(id: string): void {
-  const db = getDb();
-  db.update(user).set({ lastLoginAt: new Date() }).where(eq(user.id, id)).run();
 }
 
 export function deleteUser(id: string): void {

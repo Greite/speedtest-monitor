@@ -13,6 +13,7 @@
 //   GET  /meta            -> { clientIp, asOrganization, city, country, colo }
 //     (only returns data when Referer: https://speed.cloudflare.com/ is set)
 
+import { envInt } from '../utils';
 import type { EngineResult } from './types';
 
 const ORIGIN = 'https://speed.cloudflare.com';
@@ -38,18 +39,6 @@ const UPLOAD_BYTES_PER_REQUEST = 25_000_000; //    25 MB per /__up request
 // Absolute ceiling per fetch call — protects against a stuck request hanging
 // the phase. Generous because 100 MB can take ~10 s on a 100 Mbps link.
 const REQUEST_TIMEOUT_MS = 30_000;
-
-function envInt(name: string, fallback: number, min: number, max: number): number {
-  const raw = process.env[name];
-  if (!raw) {
-    return fallback;
-  }
-  const n = Number.parseInt(raw, 10);
-  if (Number.isNaN(n) || n < min || n > max) {
-    return fallback;
-  }
-  return n;
-}
 
 function testDurationMs(): number {
   return envInt('SPEEDTEST_TEST_DURATION_S', DEFAULT_DURATION_S, 2, 120) * 1000;

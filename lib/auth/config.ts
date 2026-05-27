@@ -36,7 +36,6 @@ export function loadAuthConfig(): AuthConfig {
       adminEmail: process.env.SPEEDTEST_OIDC_ADMIN_EMAIL?.toLowerCase().trim() || null,
       allowNewUsers: process.env.SPEEDTEST_OIDC_ALLOW_NEW_USERS !== 'false',
     };
-  } else if (issuer || clientId || clientSecret) {
   }
 
   const seedEmail = process.env.SPEEDTEST_ADMIN_EMAIL?.toLowerCase().trim();
