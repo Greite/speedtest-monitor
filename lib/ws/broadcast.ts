@@ -15,6 +15,11 @@ export function broadcastSettingsUpdated(intervalMinutes: number) {
 }
 
 export function broadcastAlert(row: Alert) {
+  const status = row.deliveryStatus ?? {};
+  const scrubbed: Record<string, { ok: boolean; httpStatus?: number }> = {};
+  for (const [name, entry] of Object.entries(status)) {
+    scrubbed[name] = entry.httpStatus !== undefined ? { ok: entry.ok, httpStatus: entry.httpStatus } : { ok: entry.ok };
+  }
   broadcast({
     type: 'alert',
     payload: {
@@ -25,7 +30,7 @@ export function broadcastAlert(row: Alert) {
       measurementId: row.measurementId,
       threshold: row.threshold,
       observed: row.observed,
-      deliveryStatus: row.deliveryStatus ?? {},
+      deliveryStatus: scrubbed,
     },
   });
 }

@@ -11,7 +11,10 @@ type AlertDto = {
   measurementId: number | null;
   threshold: number | null;
   observed: number | null;
-  deliveryStatus: Record<string, { ok: boolean; error?: string; httpStatus?: number }>;
+  // `error` strings are intentionally stripped — they may carry webhook URLs
+  // (which are themselves bearer secrets for Slack/Discord). Full details
+  // remain available via the admin-gated REST endpoint.
+  deliveryStatus: Record<string, { ok: boolean; httpStatus?: number }>;
 };
 
 export type WsEvent =

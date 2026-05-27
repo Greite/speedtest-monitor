@@ -5,6 +5,7 @@ import { genericOAuth } from 'better-auth/plugins';
 
 import { loadAuthConfig } from './config';
 import { hashPassword, verifyPasswordPair } from './hash';
+import { getTrustedOrigins } from './origins';
 
 import { getDb } from '@/lib/db/client';
 import { account, session, user, verification } from '@/lib/db/schema';
@@ -18,14 +19,13 @@ function build() {
   const cfg = loadAuthConfig();
   const adminEmail = cfg.oidc?.adminEmail ?? null;
   const allowNewUsers = cfg.oidc?.allowNewUsers ?? true;
-  const port = process.env.PORT ?? '3003';
-  const baseURL =
-    process.env.BETTER_AUTH_URL ?? process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? `http://localhost:${port}`;
+  const trustedOrigins = getTrustedOrigins();
+  const baseURL = trustedOrigins[0];
 
   return betterAuth({
     secret: cfg.secret,
     baseURL,
-    trustedOrigins: [baseURL, `http://localhost:${port}`, `http://127.0.0.1:${port}`],
+    trustedOrigins,
     database: drizzleAdapter(getDb(), {
       provider: 'sqlite',
       schema: { user, account, session, verification },
