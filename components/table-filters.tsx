@@ -174,7 +174,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80"
+          className="inline-flex items-center gap-2 rounded-sm text-sm font-medium text-foreground outline-none hover:text-foreground/80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
           aria-expanded={open}
           aria-controls="table-filters-panel"
         >
@@ -194,7 +194,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                 type="button"
                 onClick={p.onRemove}
                 aria-label={`Remove filter: ${p.label}`}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 <span className="max-w-[24ch] truncate">{p.label}</span>
                 <X className="size-3" aria-hidden />
@@ -212,7 +212,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
       {open ? (
         <div id="table-filters-panel" className="grid grid-cols-1 gap-4 border-t p-4 md:grid-cols-3">
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Time</legend>
+            <legend className="label-eyebrow mb-2">Time</legend>
             <div className="flex flex-col gap-1">
               <Label htmlFor="filter-time-from" className="sr-only">
                 From date and time
@@ -222,7 +222,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                 type="datetime-local"
                 value={toDateTimeLocal(timeVal.from)}
                 onChange={(e) => setTimeRange(timeCol, { from: parseTime(e.target.value), to: timeVal.to })}
-                className="h-8 text-xs"
+                className="h-11 text-xs md:h-8"
               />
               <Label htmlFor="filter-time-to" className="sr-only">
                 To date and time
@@ -232,7 +232,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                 type="datetime-local"
                 value={toDateTimeLocal(timeVal.to)}
                 onChange={(e) => setTimeRange(timeCol, { from: timeVal.from, to: parseTime(e.target.value) })}
-                className="h-8 text-xs"
+                className="h-11 text-xs md:h-8"
               />
             </div>
           </fieldset>
@@ -242,7 +242,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
           <NumericBlock label="Latency loaded (ms)" value={latVal} onChange={(n) => setNumericRange(latCol, n)} />
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="filter-server" className="text-xs uppercase tracking-wide text-muted-foreground">
+            <Label htmlFor="filter-server" className="label-eyebrow">
               Server contains
             </Label>
             <Input
@@ -251,12 +251,12 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
               value={serverVal}
               onChange={(e) => serverCol?.setFilterValue(e.target.value || undefined)}
               placeholder="e.g. Paris"
-              className="h-8 text-xs"
+              className="h-11 text-xs md:h-8"
             />
           </div>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Status</legend>
+            <legend className="label-eyebrow mb-2">Status</legend>
             <div className="flex flex-wrap gap-2">
               {STATUSES.map((s) => {
                 const active = statusVal.includes(s.value);
@@ -267,7 +267,7 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
                     onClick={() => toggleStatus(s.value)}
                     aria-pressed={active}
                     className={cn(
-                      'inline-flex min-h-[36px] items-center rounded-full border px-3 text-xs font-medium transition-colors md:min-h-[28px]',
+                      'inline-flex min-h-[44px] items-center rounded-full border px-4 text-xs font-medium outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:min-h-[28px] md:px-3',
                       active
                         ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-input bg-background text-muted-foreground hover:text-foreground',
@@ -298,7 +298,7 @@ function NumericBlock({
   const maxId = `${label}-max`.replace(/\s+/g, '-').toLowerCase();
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">{label}</legend>
+      <legend className="label-eyebrow mb-2">{label}</legend>
       <div className="flex items-center gap-2">
         <Label htmlFor={minId} className="sr-only">
           {`${label} minimum`}
@@ -309,7 +309,7 @@ function NumericBlock({
           value={value.min ?? ''}
           onChange={(e) => onChange({ min: parseNumber(e.target.value), max: value.max })}
           placeholder="min"
-          className="h-8 text-xs"
+          className="h-11 text-xs md:h-8"
         />
         <Label htmlFor={maxId} className="sr-only">
           {`${label} maximum`}
@@ -320,7 +320,7 @@ function NumericBlock({
           value={value.max ?? ''}
           onChange={(e) => onChange({ min: value.min, max: parseNumber(e.target.value) })}
           placeholder="max"
-          className="h-8 text-xs"
+          className="h-11 text-xs md:h-8"
         />
       </div>
     </fieldset>

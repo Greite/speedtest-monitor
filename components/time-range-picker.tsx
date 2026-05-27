@@ -80,7 +80,7 @@ export function TimeRangePicker({
             aria-label={`Last ${r.label}`}
             onClick={() => onChange(r.value)}
             className={cn(
-              'relative inline-flex h-8 min-w-[44px] items-center justify-center rounded-sm px-3 font-mono text-xs font-medium transition-colors md:h-7 md:min-w-0',
+              'relative inline-flex h-8 min-w-[44px] items-center justify-center rounded-sm px-3 font-mono text-xs font-medium outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 md:h-7 md:min-w-0',
               active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >

@@ -9,7 +9,16 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  OctagonAlert,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import type { NumericRange, StatusValue, TimeRange } from '@/components/table-filters';
@@ -38,11 +47,17 @@ const levelColor: Record<LatencyLevel, string> = {
   bad: 'bg-latency-bad',
 };
 
+const levelLabel: Record<LatencyLevel, string> = {
+  ok: 'Good',
+  warn: 'Fair',
+  bad: 'Poor',
+};
+
 function statusBadge(status: MeasurementDto['status']) {
   if (status === 'success') {
     return (
       <Badge className="border-latency-ok/30 bg-latency-ok/10 text-latency-ok hover:bg-latency-ok/15">
-        <span className="size-1.5 rounded-full bg-latency-ok" aria-hidden />
+        <CircleCheck className="size-3" aria-hidden strokeWidth={2.25} />
         OK
       </Badge>
     );
@@ -50,14 +65,14 @@ function statusBadge(status: MeasurementDto['status']) {
   if (status === 'timeout') {
     return (
       <Badge className="border-latency-warn/30 bg-latency-warn/10 text-latency-warn hover:bg-latency-warn/15">
-        <span className="size-1.5 rounded-full bg-latency-warn" aria-hidden />
+        <CircleAlert className="size-3" aria-hidden strokeWidth={2.25} />
         Timeout
       </Badge>
     );
   }
   return (
     <Badge className="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15">
-      <span className="size-1.5 rounded-full bg-destructive" aria-hidden />
+      <OctagonAlert className="size-3" aria-hidden strokeWidth={2.25} />
       Error
     </Badge>
   );
@@ -98,15 +113,21 @@ const columns: ColumnDef<MeasurementDto>[] = [
     id: 'latency',
     accessorKey: 'latencyLoadedMs',
     header: 'Latency (u/l)',
-    cell: ({ row }) => (
-      <span className="inline-flex items-center gap-2 font-mono">
-        <span
-          className={cn('inline-block size-2 rounded-full', levelColor[latencyLevel(row.original.latencyLoadedMs)])}
-          aria-hidden
-        />
-        {formatMs(row.original.latencyUnloadedMs)} / {formatMs(row.original.latencyLoadedMs)}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const lvl = latencyLevel(row.original.latencyLoadedMs);
+      const lvlLabel = levelLabel[lvl];
+      return (
+        <span className="inline-flex items-center gap-2 font-mono">
+          <span
+            className={cn('inline-block size-2 rounded-full', levelColor[lvl])}
+            aria-hidden
+            title={`Latency: ${lvlLabel}`}
+          />
+          <span className="sr-only">{`Latency ${lvlLabel}, `}</span>
+          {formatMs(row.original.latencyUnloadedMs)} / {formatMs(row.original.latencyLoadedMs)}
+        </span>
+      );
+    },
     enableSorting: true,
   },
   {
@@ -238,10 +259,7 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
   return (
     <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle
-          as="h2"
-          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
-        >
+        <CardTitle as="h2" className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Recent measurements
         </CardTitle>
@@ -303,16 +321,16 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
           </TableBody>
         </Table>
         <div
-          className="mt-4 flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between"
+          className="mt-4 flex flex-col gap-2 text-xs tabular-nums text-muted-foreground sm:flex-row sm:items-center sm:justify-between"
           aria-live="polite"
           aria-atomic="true"
         >
           <div>{totalCount === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalCount}`}</div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span>Rows per page</span>
+              <span className="normal-nums">Rows per page</span>
               <Select value={String(pageSize)} onValueChange={(v) => table.setPageSize(Number(v))}>
-                <SelectTrigger size="sm" className="h-7 w-[72px] text-xs" aria-label="Rows per page">
+                <SelectTrigger size="sm" className="h-11 w-[72px] text-xs md:h-7" aria-label="Rows per page">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -334,7 +352,7 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
                 aria-label="Previous page"
-                className="md:size-7"
+                className="size-11 md:size-7"
               >
                 <ChevronLeft />
               </Button>
@@ -344,7 +362,7 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
                 aria-label="Next page"
-                className="md:size-7"
+                className="size-11 md:size-7"
               >
                 <ChevronRight />
               </Button>

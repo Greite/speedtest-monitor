@@ -1,7 +1,17 @@
 'use client';
 
-import { ArrowDown, ArrowUp, Gauge, Minus, TrendingDown, TrendingUp } from 'lucide-react';
-import type { ReactNode } from 'react';
+import {
+  ArrowDown,
+  ArrowUp,
+  CircleAlert,
+  CircleCheck,
+  Gauge,
+  Minus,
+  OctagonAlert,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
+import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +43,12 @@ const levelLabel: Record<LatencyLevel, string> = {
   ok: 'Good',
   warn: 'Fair',
   bad: 'Poor',
+};
+
+const levelIcon: Record<LatencyLevel, ComponentType<SVGProps<SVGSVGElement>>> = {
+  ok: CircleCheck,
+  warn: CircleAlert,
+  bad: OctagonAlert,
 };
 
 type Averages = {
@@ -145,7 +161,6 @@ export function KpiCards({
         spark={series.latency}
         sparkColor={`var(--color-latency-${latencyCurrentLevel ?? 'ok'})`}
         accentDot={latencyCurrentLevel ? levelColor[latencyCurrentLevel] : 'bg-muted-foreground'}
-        accentText={latencyCurrentLevel ? levelText[latencyCurrentLevel] : undefined}
         flashKey={latest?.id}
         busy={busy}
       />
@@ -164,7 +179,6 @@ function Kpi({
   spark,
   sparkColor,
   accentDot,
-  accentText,
   flashKey,
   busy,
 }: {
@@ -178,7 +192,6 @@ function Kpi({
   spark: (number | null)[];
   sparkColor: string;
   accentDot: string;
-  accentText?: string;
   flashKey?: number;
   busy?: boolean;
 }) {
@@ -206,25 +219,26 @@ function Kpi({
     >
       <div ref={ref} className="flex flex-col gap-3 px-6 pt-6 pb-4">
         <CardHeader className="px-0 pb-0">
-          <CardTitle
-            as="h2"
-            className="flex items-center justify-between gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
-          >
+          <CardTitle as="h2" className="label-eyebrow flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
               {icon}
               {label}
             </span>
-            {level ? (
-              <span className="inline-flex items-center gap-1.5 normal-case tracking-normal" aria-hidden>
-                <span className="relative inline-block size-2">
-                  <span className={cn('absolute inset-0 rounded-full', levelColor[level])} />
-                  {busy ? (
-                    <span className={cn('pulse-ring absolute inset-0 rounded-full', accentText ?? 'text-foreground')} />
-                  ) : null}
-                </span>
-                <span className={cn('text-[11px] font-medium', accentText)}>{levelLabel[level]}</span>
-              </span>
-            ) : null}
+            {level
+              ? (() => {
+                  const Icon = levelIcon[level];
+                  const tone = levelText[level];
+                  return (
+                    <span className="inline-flex items-center gap-1.5 normal-case tracking-normal" aria-hidden>
+                      <span className="relative inline-flex size-3.5 items-center justify-center">
+                        <Icon className={cn('size-3.5', tone)} strokeWidth={2.25} />
+                        {busy ? <span className={cn('pulse-ring absolute inset-0 rounded-full', tone)} /> : null}
+                      </span>
+                      <span className={cn('text-[11px] font-medium', tone)}>{levelLabel[level]}</span>
+                    </span>
+                  );
+                })()
+              : null}
           </CardTitle>
         </CardHeader>
         <CardContent className="px-0 pb-0">

@@ -72,15 +72,23 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
     return (
       <Card>
         <CardHeader>
-          <CardTitle as="h2" className="text-base">
+          <CardTitle as="h2" className="label-eyebrow flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-brand" aria-hidden />
             History
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex h-64 flex-col items-center justify-center gap-2 text-center">
-            <LineChartIcon className="size-8 text-muted-foreground" aria-hidden />
+          <div className="flex h-64 flex-col items-center justify-center gap-2 px-6 text-center" role="status">
+            <span
+              className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
+              aria-hidden
+            >
+              <LineChartIcon className="size-6" />
+            </span>
             <p className="text-sm font-medium">No data for this range</p>
-            <p className="text-xs text-muted-foreground">Measurements will appear here as they run.</p>
+            <p className="max-w-sm text-xs text-muted-foreground">
+              Try a wider time range, or trigger a measurement from the toolbar. New points appear here automatically.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -97,10 +105,7 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
       )}
     >
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle
-          as="h2"
-          className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
-        >
+        <CardTitle as="h2" className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           History
         </CardTitle>
@@ -360,69 +365,27 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
   }
 
   return (
-    <div
-      style={{
-        background: 'color-mix(in oklab, var(--color-popover) 92%, transparent)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 10,
-        color: 'var(--color-popover-foreground)',
-        fontSize: 12,
-        padding: '10px 12px',
-        backdropFilter: 'blur(8px)',
-        boxShadow: '0 8px 24px -8px rgb(0 0 0 / 0.18)',
-      }}
-    >
-      <div
-        style={{
-          color: 'var(--color-muted-foreground)',
-          marginBottom: 6,
-          fontFamily: 'var(--font-mono)',
-          fontSize: 11,
-          letterSpacing: '0.04em',
-        }}
-      >
+    <div className="rounded-[10px] border border-border bg-popover/95 px-3 py-2.5 text-xs text-popover-foreground shadow-[0_8px_24px_-8px_rgb(0_0_0/0.18)] backdrop-blur-sm">
+      <div className="mb-1.5 font-mono text-[11px] tracking-[0.04em] text-muted-foreground">
         {formatDateTime(point.t)}
       </div>
       {payload.map((entry) => {
         const key = entry.graphicalItemId;
         const displayName = String(entry.name ?? entry.dataKey ?? '');
         return (
-          <div
-            key={key}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              fontFamily: 'var(--font-mono)',
-            }}
-          >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 6,
-                  height: 6,
-                  borderRadius: 9999,
-                  background: entry.color,
-                }}
-              />
-              <span style={{ color: 'var(--color-muted-foreground)' }}>{displayName}</span>
+          <div key={key} className="flex items-center justify-between gap-3 font-mono">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block size-1.5 rounded-full" style={{ background: entry.color }} aria-hidden />
+              <span className="text-muted-foreground">{displayName}</span>
             </span>
-            <span style={{ color: entry.color, fontVariantNumeric: 'tabular-nums' }}>{entry.value}</span>
+            <span className="tabular-nums" style={{ color: entry.color }}>
+              {entry.value}
+            </span>
           </div>
         );
       })}
       {(point.serverLocations || point.userLocation || point.userIp) && (
-        <div
-          style={{
-            marginTop: 8,
-            paddingTop: 8,
-            borderTop: '1px solid var(--color-border)',
-            color: 'var(--color-muted-foreground)',
-            fontSize: 11,
-          }}
-        >
+        <div className="mt-2 border-t border-border pt-2 text-[11px] text-muted-foreground">
           {point.serverLocations?.length ? <div>Server: {point.serverLocations.join(' | ')}</div> : null}
           {point.userLocation ? <div>Client: {point.userLocation}</div> : null}
           {point.userIp ? <div>IP: {point.userIp}</div> : null}
