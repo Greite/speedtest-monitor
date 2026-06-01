@@ -18,18 +18,22 @@ bun run dev                # bun server.ts -> http://localhost:3003
 
 A fresh SQLite database is created at `./speedtest.db` on the first run (override with `SPEEDTEST_DB_PATH`). Delete it if you want to start from scratch.
 
-`AUTH_SECRET` is required to boot - generate one with `openssl rand -base64 32` and put it in `.env`.
+`AUTH_SECRET` is required to boot - generate one with `openssl rand -base64 32` and put it in `.env`. The first user to sign up becomes the admin. Optional env vars:
+
+- `SPEEDTEST_ADMIN_EMAIL` / `SPEEDTEST_ADMIN_PASSWORD` - seed an admin account on boot.
+- `SPEEDTEST_OIDC_ISSUER` / `SPEEDTEST_OIDC_CLIENT_ID` / `SPEEDTEST_OIDC_CLIENT_SECRET` (and the optional `SPEEDTEST_OIDC_DISPLAY_NAME`, `SPEEDTEST_OIDC_ADMIN_EMAIL`, `SPEEDTEST_OIDC_ALLOW_NEW_USERS`) - enable SSO via a generic OIDC provider.
 
 ## Required checks
 
-Every change must pass these four commands locally (and in CI):
+Every change must pass these three commands locally (and in CI):
 
 ```bash
-bun run lint               # biome check .
-bun run typecheck          # tsc --noEmit
+bun run lint               # tsc --noEmit + biome check + biome format check
 bun run test               # bun test
 bun run build              # drizzle generate + fetch releases + build email templates + next build
 ```
+
+`bun run lint` bundles the type check and Biome; run `bun run tsc` on its own if you only want the type check.
 
 A husky `pre-commit` hook runs `lint`, `test`, and `build` automatically. Do not bypass it with `--no-verify` unless you have a very good reason.
 
@@ -37,7 +41,7 @@ Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's na
 
 ## Code style
 
-- Formatting and linting are enforced by [Biome 2](https://biomejs.dev). Run `bun run lint:fix` to auto-apply.
+- Formatting and linting are enforced by [Biome 2](https://biomejs.dev). Run `bun run biome:write` to auto-apply lint + format fixes.
 - TypeScript is strict; prefer `type` imports (`import type {...}`) to keep the bundle clean.
 - Prefer small, focused components in `components/`; shared primitives live under `components/ui/` (shadcn).
 - Dark mode styling uses semantic tokens (`bg-card`, `text-muted-foreground`, `text-speed-down`, `bg-latency-ok`, ...). Avoid raw Tailwind colors.
@@ -45,12 +49,12 @@ Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's na
 ## Architecture quick map
 
 - `server.ts` - custom Bun server. Hosts Next.js and a `ws` WebSocket on the same port (default `3003`). Routes `/ws` upgrades to the app broadcaster and delegates every other upgrade to Next's HMR.
-- `lib/scheduler/` - `node-cron` scheduler. Reprogrammable at runtime via the settings API when the interval changes.
-- `lib/measurement/cloudflare.ts` - runs `@cloudflare/speedtest` inside a `globalThis.__speedtestRunning` mutex. HTTP-only, no browser.
-- `lib/db/` - Drizzle schema + singleton `bun:sqlite` client with WAL enabled.
+- `lib/scheduler/` - `node-cron` scheduler. Reprogrammable at runtime via a global callback when the settings interval changes.
+- `lib/measurement/` - `cloudflare.ts` measures throughput against `speed.cloudflare.com` with raw `fetch` (HTTP-only, no browser, no `@cloudflare/speedtest`). `runner.ts` wraps it in a `globalThis.__speedtestRunning` mutex so only one run happens at a time.
+- `lib/db/` - Drizzle schema + singleton `bun:sqlite` client (lazy-required) with WAL, foreign keys, and `synchronous=NORMAL` enabled.
 - `lib/ws/` - WebSocket server + typed broadcasters consumed by the React hook in `components/use-live-measurements.ts`.
-- `lib/auth/` - NextAuth v5 wiring, password hashing, and first-user bootstrap.
-- `lib/alerts/` - rule evaluation, per-condition state machine, and destination adapters (webhook, ntfy, Discord, Slack, SMTP). MJML email templates compile to `templates/*.html.ts` via `bun run build:email`.
+- `lib/auth/` - [better-auth](https://better-auth.com) wiring (email/password + optional generic OIDC), `Bun.password` hashing, first-user bootstrap, and legacy account migration.
+- `lib/alerts/` - rule evaluation, per-condition state machine, and destination adapters (webhook, ntfy, Discord, Slack, SMTP). The MJML email template compiles to `lib/alerts/templates/alert-email.html.ts` via `bun run build:email`.
 - `lib/types.ts` - single `toMeasurementDto()` serialiser used by the page SSR, the API routes, and the WS broadcaster so the client always receives the same shape.
 
 ## Commits
@@ -65,12 +69,8 @@ Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's na
 
 1. Branch off `main`, keep your branch up to date with rebase (avoid merge commits).
 2. Open a PR with a short summary and a "Test plan" checklist of what you verified.
-3. Ensure the four checks above pass locally; CI runs the same commands.
+3. Ensure the three checks above pass locally; CI runs the same commands.
 4. Squash-merge is preferred to keep `main` linear.
-
-## Mockups
-
-UI iterations start from `mockups/dashboard.pen` (Pencil). When you change the visible layout in a non-trivial way, update the mockup in the same PR so design intent and code stay aligned.
 
 ## Reporting issues
 
