@@ -13,7 +13,7 @@
 //   GET  /meta            -> { clientIp, asOrganization, city, country, colo }
 //     (only returns data when Referer: https://speed.cloudflare.com/ is set)
 
-import { envInt } from '../utils';
+import { envInt } from '../env';
 import type { EngineResult } from './types';
 
 const ORIGIN = 'https://speed.cloudflare.com';

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import { getDb } from './db/client';
 import { settings } from './db/schema';
-import { envInt } from './utils';
+import { envInt } from './env';
 
 const KEY_INTERVAL = 'interval_minutes';
 const DEFAULT_INTERVAL = 15;

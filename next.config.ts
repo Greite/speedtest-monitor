@@ -33,7 +33,29 @@ const config: NextConfig = {
   // trace so the runtime image needs no separate prod-deps install.
   outputFileTracingIncludes: {
     '*': [
+      // better-auth >=1.6.14 split its code into sibling scoped packages
+      // (@better-auth/core, /drizzle-adapter, /utils...) whose entrypoints are
+      // re-export shims that import the rest of the runtime closure at load
+      // time. Forced includes copy matched files WITHOUT re-tracing their
+      // imports, and `lib/auth/handler.ts` (our custom-server source, outside
+      // Next's route trace) is what pulls drizzleAdapter + betterAuth in - so
+      // NFT never sees this graph. The whole runtime dep closure of
+      // better-auth must therefore be globbed explicitly or the standalone
+      // image 404s on a transitive package (better-call, jose, ...). Recompute
+      // with a closure walk over node_modules if a major bump changes deps.
       './node_modules/better-auth/**',
+      './node_modules/@better-auth/**',
+      './node_modules/@better-fetch/**',
+      './node_modules/@noble/**',
+      './node_modules/@opentelemetry/semantic-conventions/**',
+      './node_modules/@standard-schema/spec/**',
+      './node_modules/better-call/**',
+      './node_modules/defu/**',
+      './node_modules/jose/**',
+      './node_modules/kysely/**',
+      './node_modules/nanostores/**',
+      './node_modules/rou3/**',
+      './node_modules/set-cookie-parser/**',
       './node_modules/drizzle-orm/**',
       './node_modules/node-cron/**',
       './node_modules/nodemailer/**',
