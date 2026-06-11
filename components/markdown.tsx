@@ -134,6 +134,19 @@ function parseBlocks(src: string): Block[] {
   return blocks;
 }
 
+// Release notes come from an external source (GitHub), so link targets are
+// untrusted: only allow schemes that cannot execute script. Parsing with URL
+// mirrors browser behavior (control-character stripping, scheme detection).
+function safeHref(href: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(href, 'https://releases.invalid/');
+  } catch {
+    return null;
+  }
+  return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'mailto:' ? href : null;
+}
+
 function renderInline(text: string, keyBase: string): ReactNode[] {
   const nodes: ReactNode[] = [];
   // Tokenizer: code, bold, italic, link. Processed left-to-right.
@@ -206,11 +219,16 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
           </em>,
         );
         break;
-      case 'link':
+      case 'link': {
+        const href = safeHref(tok.href ?? '');
+        if (href === null) {
+          nodes.push(<Fragment key={key}>{tok.v}</Fragment>);
+          break;
+        }
         nodes.push(
           <a
             key={key}
-            href={tok.href}
+            href={href}
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-primary underline underline-offset-2 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -219,6 +237,7 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
           </a>,
         );
         break;
+      }
     }
   });
 
