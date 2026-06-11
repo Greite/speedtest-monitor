@@ -27,6 +27,7 @@ export async function requireSession(): Promise<SessionUser> {
     email: u.email,
     name: u.name ?? null,
     role,
+    sessionId: session?.session?.id,
   };
 }
 

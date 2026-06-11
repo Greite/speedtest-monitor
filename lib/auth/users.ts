@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 
 import { getDb } from '../db/client';
-import { account, type NewUser, type User, user } from '../db/schema';
+import { account, type NewUser, session, type User, user } from '../db/schema';
 
 export type PublicUser = {
   id: string;
@@ -100,6 +100,17 @@ export function updateUser(id: string, patch: Partial<Omit<NewUser, 'id' | 'crea
 export function deleteUser(id: string): void {
   const db = getDb();
   db.delete(user).where(eq(user.id, id)).run();
+}
+
+// Sessions must die when credentials change (CWE-613): a stolen session must
+// not survive a password reset. Pass `exceptSessionId` to keep the caller's
+// own session alive; omitted or undefined revokes everything (fail-secure).
+export function revokeUserSessions(userId: string, opts?: { exceptSessionId?: string }): void {
+  const db = getDb();
+  const where = opts?.exceptSessionId
+    ? and(eq(session.userId, userId), ne(session.id, opts.exceptSessionId))
+    : eq(session.userId, userId);
+  db.delete(session).where(where).run();
 }
 
 // Credential account helpers - Better Auth stores password hashes on

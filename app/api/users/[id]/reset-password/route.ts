@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
 import { hashPassword } from '@/lib/auth/hash';
-import { findUserById, setCredentialPassword } from '@/lib/auth/users';
+import { findUserById, revokeUserSessions, setCredentialPassword } from '@/lib/auth/users';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,5 +34,6 @@ export async function POST(req: Request, { params }: Params) {
     return apiValidationError(parsed.error);
   }
   setCredentialPassword(id, await hashPassword(parsed.data.newPassword));
+  revokeUserSessions(id);
   return NextResponse.json({ ok: true });
 }

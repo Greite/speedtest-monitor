@@ -18,8 +18,10 @@ const { POST } = await import('./route');
 const { createUser, getCredentialPasswordHash } = await import('@/lib/auth/users');
 const { verifyPassword } = await import('@/lib/auth/hash');
 
+let sqlite: Database;
+
 beforeEach(() => {
-  const sqlite = new Database(':memory:');
+  sqlite = new Database(':memory:');
   const db = drizzle(sqlite, { schema });
   sqlite.exec(`
     CREATE TABLE user (
@@ -50,10 +52,32 @@ beforeEach(() => {
       created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
       updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
     );
+    CREATE TABLE session (
+      id TEXT PRIMARY KEY,
+      expires_at INTEGER NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+      ip_address TEXT,
+      user_agent TEXT,
+      user_id TEXT NOT NULL
+    );
   `);
   globalThis.__speedtestDb = { sqlite, db };
   getSession.mockResolvedValue({ user: { id: 'admin-id', email: 'admin@x.y', role: 'admin' } });
 });
+
+const insertSession = (id: string, userId: string) => {
+  sqlite
+    .query('INSERT INTO session (id, expires_at, token, user_id) VALUES (?, ?, ?, ?)')
+    .run(id, Date.now() + 86_400_000, `tok-${id}`, userId);
+};
+
+const sessionIds = (userId: string) =>
+  sqlite
+    .query('SELECT id FROM session WHERE user_id = ? ORDER BY id')
+    .all(userId)
+    .map((r) => (r as { id: string }).id);
 
 describe('POST /api/users/:id/reset-password', () => {
   it('admin resets target password', async () => {
@@ -70,6 +94,25 @@ describe('POST /api/users/:id/reset-password', () => {
     const hash = getCredentialPasswordHash(u.id);
     expect(hash).not.toBeNull();
     expect(await verifyPassword(hash!, 'hunter2hunter2')).toBe(true);
+  });
+
+  it('revokes every session of the target user, leaving others intact', async () => {
+    const u = createUser({ email: 'b@x.y', role: 'viewer', provider: 'local' });
+    const other = createUser({ email: 'c@x.y', role: 'viewer', provider: 'local' });
+    insertSession('sess-1', u.id);
+    insertSession('sess-2', u.id);
+    insertSession('sess-other', other.id);
+    const res = await POST(
+      new Request(`http://x/api/users/${u.id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: 'hunter2hunter2' }),
+      }),
+      { params: Promise.resolve({ id: u.id }) },
+    );
+    expect(res.status).toBe(200);
+    expect(sessionIds(u.id)).toEqual([]);
+    expect(sessionIds(other.id)).toEqual(['sess-other']);
   });
 
   it('rejects short password', async () => {

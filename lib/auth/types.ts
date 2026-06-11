@@ -7,4 +7,5 @@ export type SessionUser = {
   email: string;
   name?: string | null;
   role: UserRole;
+  sessionId?: string;
 };
