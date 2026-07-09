@@ -38,6 +38,8 @@ ENV NODE_ENV=production \
     PORT=3000 \
     SPEEDTEST_DB_PATH=/data/speedtest.db \
     SPEEDTEST_INTERVAL_MINUTES=15 \
+    SPEEDTEST_LOCALE=en-US \
+    SPEEDTEST_TIMEZONE=UTC \
     AUTH_TRUST_HOST=true
 
 RUN apk add --no-cache ca-certificates dumb-init \
