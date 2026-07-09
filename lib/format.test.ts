@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test';
+import { afterEach, describe, expect, it } from 'bun:test';
 
-import { formatMbps, formatMs, formatTime, latencyLevel } from './format';
+import { formatMbps, formatMs, formatRelativeTime, formatTime, latencyLevel, resetFormatCache } from './format';
 
 describe('formatMbps', () => {
   it('renders em-dash for null/undefined', () => {
@@ -63,5 +63,58 @@ describe('formatTime', () => {
     const ts = new Date('2024-06-15T14:30:00Z').getTime();
     const out = formatTime(ts);
     expect(out).toMatch(/\d{2}:\d{2}/);
+  });
+});
+
+describe('locale and timezone configuration', () => {
+  const ORIGINAL_LOCALE = process.env.SPEEDTEST_LOCALE;
+  const ORIGINAL_TIMEZONE = process.env.SPEEDTEST_TIMEZONE;
+
+  afterEach(() => {
+    if (ORIGINAL_LOCALE === undefined) {
+      delete process.env.SPEEDTEST_LOCALE;
+    } else {
+      process.env.SPEEDTEST_LOCALE = ORIGINAL_LOCALE;
+    }
+    if (ORIGINAL_TIMEZONE === undefined) {
+      delete process.env.SPEEDTEST_TIMEZONE;
+    } else {
+      process.env.SPEEDTEST_TIMEZONE = ORIGINAL_TIMEZONE;
+    }
+    resetFormatCache();
+  });
+
+  const NOW = new Date('2024-06-15T14:30:00Z').getTime();
+
+  it('formats relative time in English by default', () => {
+    delete process.env.SPEEDTEST_LOCALE;
+    resetFormatCache();
+    expect(formatRelativeTime(NOW - 5 * 60_000, NOW)).toBe('5 minutes ago');
+  });
+
+  it('formats relative time in French when SPEEDTEST_LOCALE=fr-FR', () => {
+    process.env.SPEEDTEST_LOCALE = 'fr-FR';
+    resetFormatCache();
+    expect(formatRelativeTime(NOW - 5 * 60_000, NOW)).toBe('il y a 5 minutes');
+  });
+
+  it('falls back to en-US on invalid locale', () => {
+    process.env.SPEEDTEST_LOCALE = 'not a locale!';
+    resetFormatCache();
+    expect(formatRelativeTime(NOW - 5 * 60_000, NOW)).toBe('5 minutes ago');
+  });
+
+  it('renders times in the configured timezone', () => {
+    delete process.env.SPEEDTEST_LOCALE;
+    process.env.SPEEDTEST_TIMEZONE = 'America/New_York';
+    resetFormatCache();
+    expect(formatTime(NOW)).toBe('10:30 AM');
+  });
+
+  it('falls back to UTC on invalid timezone', () => {
+    delete process.env.SPEEDTEST_LOCALE;
+    process.env.SPEEDTEST_TIMEZONE = 'Mars/Olympus';
+    resetFormatCache();
+    expect(formatTime(NOW)).toBe('02:30 PM');
   });
 });
