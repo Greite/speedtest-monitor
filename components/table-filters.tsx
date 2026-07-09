@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { formatDateTime } from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -121,10 +122,10 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
   if (timeVal.from != null || timeVal.to != null) {
     const parts: string[] = [];
     if (timeVal.from != null) {
-      parts.push(`from ${new Date(timeVal.from).toLocaleString()}`);
+      parts.push(`from ${formatDateTime(timeVal.from)}`);
     }
     if (timeVal.to != null) {
-      parts.push(`to ${new Date(timeVal.to).toLocaleString()}`);
+      parts.push(`to ${formatDateTime(timeVal.to)}`);
     }
     activePills.push({
       key: 'time',

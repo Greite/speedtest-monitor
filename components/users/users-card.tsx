@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
+import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 type UserRow = {
@@ -41,13 +42,6 @@ type UserRow = {
 
 type RoleFilter = 'all' | 'admin' | 'viewer';
 type ProviderFilter = 'all' | 'local' | 'oidc';
-
-function formatLastLogin(ts: number | null): string {
-  if (!ts) {
-    return '-';
-  }
-  return new Date(ts).toLocaleString('sv-SE').replace('T', ' ').slice(0, 16);
-}
 
 export function UsersCard() {
   const { data: session } = authClient.useSession();
@@ -147,7 +141,9 @@ export function UsersCard() {
         sortingFn: 'basic',
         sortUndefined: 'last',
         cell: ({ row }) => (
-          <span className="text-xs text-muted-foreground">{formatLastLogin(row.original.lastLoginAt)}</span>
+          <span className="text-xs text-muted-foreground">
+            {row.original.lastLoginAt ? formatDateTime(row.original.lastLoginAt) : '-'}
+          </span>
         ),
         enableColumnFilter: false,
       },
