@@ -1,3 +1,4 @@
+import { resolveDisplayConfig } from '../../runtime-config';
 import type { AlertEvent, AlertKind, AlertPayload } from '../types';
 import { ALERT_EMAIL_HTML } from './alert-email.html';
 
@@ -64,7 +65,7 @@ function severityLabel(event: AlertEvent, kind: AlertKind): string {
 }
 
 function formatTimestamp(ms: number): string {
-  return new Date(ms).toLocaleString('sv-SE').replace('T', ' ');
+  return new Date(ms).toLocaleString('sv-SE', { timeZone: resolveDisplayConfig().timeZone }).replace('T', ' ');
 }
 
 export type RenderedEmail = {

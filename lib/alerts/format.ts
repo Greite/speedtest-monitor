@@ -1,10 +1,11 @@
+import { resolveDisplayConfig } from '../runtime-config';
 import type { AlertTransition } from './types';
 
 type Input = { transition: AlertTransition; timestamp: number };
 
 function formatTime(ms: number): string {
   const d = new Date(ms);
-  return d.toLocaleString('sv-SE').replace('T', ' ');
+  return d.toLocaleString('sv-SE', { timeZone: resolveDisplayConfig().timeZone }).replace('T', ' ');
 }
 
 export function formatMessage({ transition, timestamp }: Input): {
