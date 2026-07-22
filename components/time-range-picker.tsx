@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-
-import { cn } from '@/lib/utils';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
+import { useId } from 'react';
 
 export type Range = '6h' | '12h' | '24h' | '7d' | '30d';
 
@@ -14,8 +13,6 @@ const RANGES: { value: Range; label: string }[] = [
   { value: '30d', label: '30d' },
 ];
 
-const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
-
 export function TimeRangePicker({
   value,
   onChange,
@@ -25,69 +22,39 @@ export function TimeRangePicker({
   onChange: (next: Range) => void;
   className?: string;
 }) {
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const buttonsRef = useRef<Record<Range, HTMLButtonElement | null>>({
-    '6h': null,
-    '12h': null,
-    '24h': null,
-    '7d': null,
-    '30d': null,
-  });
-  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
-
-  useIsoLayoutEffect(() => {
-    const track = trackRef.current;
-    const btn = buttonsRef.current[value];
-    if (!track || !btn) {
-      return;
-    }
-    const trackRect = track.getBoundingClientRect();
-    const btnRect = btn.getBoundingClientRect();
-    setPill({
-      left: btnRect.left - trackRect.left,
-      width: btnRect.width,
-    });
-  }, [value]);
+  const idBase = useId();
 
   return (
-    <div
-      ref={trackRef}
-      className={cn(
-        'segmented-track inline-flex items-center rounded-md border border-border/70 bg-card/40 p-0.5 backdrop-blur-sm',
-        className,
-      )}
-    >
-      {pill ? (
-        <span
-          aria-hidden
-          className="segmented-pill"
-          style={{
-            transform: `translateX(${pill.left}px)`,
-            width: pill.width,
-          }}
-        />
-      ) : null}
-      {RANGES.map((r) => {
-        const active = r.value === value;
-        return (
-          <button
+    <>
+      <SegmentedControl
+        value={value}
+        onChange={(next) => onChange(next as Range)}
+        label="Time range"
+        size="sm"
+        className={className}
+      >
+        {/* SegmentedControlItem.js always sets its own "aria-label": isLabelHidden
+            ? label : undefined after spreading the consumer's rest props, so a
+            consumer-passed aria-label is silently overwritten (verified in
+            node_modules/@astryxdesign/core/dist/SegmentedControl/SegmentedControlItem.js)
+            - the established Astryx prop-forwarding trap. aria-labelledby is not
+            touched by the component and reaches the DOM as-is, so it points at a
+            visually-hidden span carrying the fuller "Last 6h" announcement while
+            the visible label stays the short "6h". */}
+        {RANGES.map((r) => (
+          <SegmentedControlItem
             key={r.value}
-            ref={(el) => {
-              buttonsRef.current[r.value] = el;
-            }}
-            type="button"
-            aria-pressed={active}
-            aria-label={`Last ${r.label}`}
-            onClick={() => onChange(r.value)}
-            className={cn(
-              'relative inline-flex h-8 min-w-[44px] items-center justify-center rounded-sm px-3 font-mono text-xs font-medium outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 md:h-7 md:min-w-0',
-              active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {r.label}
-          </button>
-        );
-      })}
-    </div>
+            value={r.value}
+            label={r.label}
+            aria-labelledby={`${idBase}-${r.value}`}
+          />
+        ))}
+      </SegmentedControl>
+      <span className="sr-only">
+        {RANGES.map((r) => (
+          <span key={r.value} id={`${idBase}-${r.value}`}>{`Last ${r.label}`}</span>
+        ))}
+      </span>
+    </>
   );
 }

@@ -1,15 +1,17 @@
 'use client';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { Heading } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { useToast } from '@astryxdesign/core/Toast';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { PasswordInput } from '@/components/ui/password-input';
 import { parseApiError } from '@/lib/api-client';
+import type { NativeInputAttrs } from '@/lib/native-input-attrs';
 
 export function PasswordChangeCard() {
+  const toast = useToast();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -34,14 +36,14 @@ export function PasswordChangeCard() {
         body: JSON.stringify({ currentPassword: current, newPassword: next }),
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Network error.');
+      toast({ body: err instanceof Error ? err.message : 'Network error.', type: 'error' });
       setSaving(false);
       return;
     }
     if (!res.ok) {
       const apiErr = await parseApiError(res);
       if (res.status >= 500) {
-        toast.error(apiErr.message);
+        toast({ body: apiErr.message, type: 'error' });
       } else if (apiErr.code === 'validation_failed' && apiErr.fields) {
         setFieldErrors(apiErr.fields);
         setError(apiErr.message);
@@ -55,69 +57,55 @@ export function PasswordChangeCard() {
     setNext('');
     setConfirm('');
     setSaving(false);
-    toast.success('Password updated');
+    toast({ body: 'Password updated' });
   }
 
   return (
-    <Card id="account" className="border-border/60 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle as="h2" className="flex items-center gap-2 label-eyebrow">
+    <Card id="account" padding={0} className="flex flex-col gap-6 py-6">
+      <div className="px-6">
+        <Heading level={2} className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Account
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </Heading>
+      </div>
+      <div className="px-6">
         <form onSubmit={submit} className="flex max-w-sm flex-col gap-3">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pwd-current">Current password</Label>
-            <PasswordInput
-              id="pwd-current"
-              autoComplete="current-password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-              required
-              aria-invalid={fieldErrors.currentPassword ? true : undefined}
-            />
-            {fieldErrors.currentPassword ? (
-              <p className="text-xs text-destructive">{fieldErrors.currentPassword.join(' ')}</p>
-            ) : null}
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pwd-new">New password</Label>
-            <PasswordInput
-              id="pwd-new"
-              autoComplete="new-password"
-              value={next}
-              onChange={(e) => setNext(e.target.value)}
-              required
-              aria-invalid={fieldErrors.newPassword ? true : undefined}
-            />
-            {fieldErrors.newPassword ? (
-              <p className="text-xs text-destructive">{fieldErrors.newPassword.join(' ')}</p>
-            ) : null}
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pwd-confirm">Confirm new password</Label>
-            <PasswordInput
-              id="pwd-confirm"
-              autoComplete="new-password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-            />
-          </div>
-          {error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
+          <TextInput
+            label="Current password"
+            type="password"
+            value={current}
+            onChange={setCurrent}
+            isRequired
+            status={
+              fieldErrors.currentPassword
+                ? { type: 'error', message: fieldErrors.currentPassword.join(' ') }
+                : undefined
+            }
+            {...({ autoComplete: 'current-password', required: true } satisfies NativeInputAttrs)}
+          />
+          <TextInput
+            label="New password"
+            type="password"
+            value={next}
+            onChange={setNext}
+            isRequired
+            status={fieldErrors.newPassword ? { type: 'error', message: fieldErrors.newPassword.join(' ') } : undefined}
+            {...({ autoComplete: 'new-password', required: true } satisfies NativeInputAttrs)}
+          />
+          <TextInput
+            label="Confirm new password"
+            type="password"
+            value={confirm}
+            onChange={setConfirm}
+            isRequired
+            {...({ autoComplete: 'new-password', required: true } satisfies NativeInputAttrs)}
+          />
+          {error ? <Banner status="error" title={error} /> : null}
           <div>
-            <Button type="submit" disabled={saving} className="bg-brand text-brand-foreground hover:bg-brand/90">
-              {saving ? 'Saving…' : 'Change password'}
-            </Button>
+            <Button type="submit" label="Change password" isLoading={saving} variant="primary" />
           </div>
         </form>
-      </CardContent>
+      </div>
     </Card>
   );
 }

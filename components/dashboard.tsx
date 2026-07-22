@@ -1,5 +1,7 @@
 'use client';
 
+import { Card } from '@astryxdesign/core/Card';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
 import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -8,17 +10,13 @@ import { KpiCards } from './kpi-cards';
 import { useLiveMeasurements } from './use-live-measurements';
 
 import { type Range, TimeRangePicker } from '@/components/time-range-picker';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import type { MeasurementDto } from '@/lib/types';
 
 const HistoryChart = dynamic(() => import('./history-chart').then((m) => m.HistoryChart), {
   ssr: false,
   loading: () => (
     <Card>
-      <CardContent className="p-5">
-        <Skeleton className="h-64 w-full" />
-      </CardContent>
+      <Skeleton height={256} />
     </Card>
   ),
 });

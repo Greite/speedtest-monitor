@@ -3,8 +3,8 @@ import { Instrument_Sans, JetBrains_Mono } from 'next/font/google';
 import { connection } from 'next/server';
 import { ThemeProvider } from 'next-themes';
 import type { ReactNode } from 'react';
-import { Toaster } from 'sonner';
 
+import { AstryxProviders } from '@/components/astryx-providers';
 import { SessionShell } from '@/components/auth/session-shell';
 import { FocusMainOnNavigate } from '@/components/focus-main-on-navigate';
 import { resolveDisplayConfig } from '@/lib/runtime-config';
@@ -54,9 +54,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </a>
         <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 app-backdrop" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <FocusMainOnNavigate />
-          <SessionShell>{children}</SessionShell>
-          <Toaster position="top-right" richColors closeButton />
+          <AstryxProviders>
+            <FocusMainOnNavigate />
+            <SessionShell>{children}</SessionShell>
+          </AstryxProviders>
         </ThemeProvider>
       </body>
     </html>

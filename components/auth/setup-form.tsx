@@ -1,16 +1,16 @@
 'use client';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { Heading } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
 import { LogoMark } from '@/components/logo-mark';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { PasswordInput } from '@/components/ui/password-input';
-import { RequiredMark } from '@/components/ui/required-mark';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
+import type { NativeInputAttrs } from '@/lib/native-input-attrs';
 
 export function SetupForm() {
   const router = useRouter();
@@ -68,6 +68,8 @@ export function SetupForm() {
     router.refresh();
   }
 
+  const hasErrors = error != null || Object.keys(fieldErrors).length > 0;
+
   return (
     <main
       id="main"
@@ -75,126 +77,103 @@ export function SetupForm() {
       className="relative mx-auto flex min-h-[100dvh] w-full max-w-sm scroll-mt-16 flex-col justify-center px-4 py-8 outline-none"
     >
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 app-backdrop" />
-      <div className="rounded-2xl border border-border/60 bg-card/80 p-8 shadow-sm backdrop-blur-sm">
+      <Card variant="transparent" padding={0} className="rounded-2xl border border-border/60 bg-card/80 p-8 shadow-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <LogoMark size={48} />
           <div className="flex flex-col items-center gap-1">
             <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
               Speedtest·Monitor
             </span>
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <Heading level={1} className="text-2xl font-semibold tracking-tight">
               Create the first admin<span className="text-brand">.</span>
-            </h1>
+            </Heading>
             <p className="text-center text-sm text-muted-foreground">
               This page is only accessible until the first user is created.
             </p>
           </div>
         </div>
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          <p className="text-xs text-muted-foreground">
-            Fields marked with <span className="text-destructive">*</span> are required.
-          </p>
-          {error || Object.keys(fieldErrors).length > 0 ? (
-            <Alert ref={summaryRef} tabIndex={-1} variant="destructive" role="alert" className="outline-none">
-              <AlertDescription>
-                <p className="font-medium">Please fix the following:</p>
-                <ul className="mt-1 list-disc pl-5 text-sm">
-                  {error && Object.keys(fieldErrors).length === 0 ? <li>{error}</li> : null}
-                  {fieldErrors.email ? (
-                    <li>
-                      <a href="#email" className="underline">
-                        Email: {fieldErrors.email.join(' ')}
-                      </a>
-                    </li>
-                  ) : null}
-                  {fieldErrors.password ? (
-                    <li>
-                      <a href="#password" className="underline">
-                        Password: {fieldErrors.password.join(' ')}
-                      </a>
-                    </li>
-                  ) : null}
-                  {fieldErrors.confirm ? (
-                    <li>
-                      <a href="#confirm" className="underline">
-                        Confirm password: {fieldErrors.confirm.join(' ')}
-                      </a>
-                    </li>
-                  ) : null}
-                </ul>
-              </AlertDescription>
-            </Alert>
+          {hasErrors ? (
+            <Banner
+              ref={summaryRef}
+              tabIndex={-1}
+              status="error"
+              title="Please fix the following:"
+              className="outline-none"
+              description={
+                Object.keys(fieldErrors).length > 0 ? (
+                  <ul className="mt-1 list-disc pl-5 text-sm">
+                    {fieldErrors.email ? (
+                      <li>
+                        <a href="#email-field" className="underline">
+                          Email: {fieldErrors.email.join(' ')}
+                        </a>
+                      </li>
+                    ) : null}
+                    {fieldErrors.password ? (
+                      <li>
+                        <a href="#password-field" className="underline">
+                          Password: {fieldErrors.password.join(' ')}
+                        </a>
+                      </li>
+                    ) : null}
+                    {fieldErrors.confirm ? (
+                      <li>
+                        <a href="#confirm-field" className="underline">
+                          Confirm password: {fieldErrors.confirm.join(' ')}
+                        </a>
+                      </li>
+                    ) : null}
+                  </ul>
+                ) : (
+                  error
+                )
+              }
+            />
           ) : null}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">
-              Email
-              <RequiredMark />
-            </Label>
-            <Input
-              id="email"
+          <div id="email-field">
+            <TextInput
+              label="Email"
               type="email"
-              required
-              autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={fieldErrors.email ? true : undefined}
-              aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+              onChange={setEmail}
+              isRequired
+              status={fieldErrors.email ? { type: 'error', message: fieldErrors.email.join(' ') } : undefined}
+              {...({ autoComplete: 'email' } satisfies NativeInputAttrs)}
             />
-            {fieldErrors.email ? (
-              <p id="email-error" className="text-xs text-destructive">
-                {fieldErrors.email.join(' ')}
-              </p>
-            ) : null}
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="password">
-              Password (min 10 chars)
-              <RequiredMark />
-            </Label>
-            <PasswordInput
-              id="password"
-              required
-              autoComplete="new-password"
+          <div id="password-field">
+            <TextInput
+              label="Password (min 10 chars)"
+              type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              aria-invalid={fieldErrors.password ? true : undefined}
-              aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+              onChange={setPassword}
+              isRequired
+              status={fieldErrors.password ? { type: 'error', message: fieldErrors.password.join(' ') } : undefined}
+              {...({ autoComplete: 'new-password' } satisfies NativeInputAttrs)}
             />
-            {fieldErrors.password ? (
-              <p id="password-error" className="text-xs text-destructive">
-                {fieldErrors.password.join(' ')}
-              </p>
-            ) : null}
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="confirm">
-              Confirm password
-              <RequiredMark />
-            </Label>
-            <PasswordInput
-              id="confirm"
-              required
-              autoComplete="new-password"
+          <div id="confirm-field">
+            <TextInput
+              label="Confirm password"
+              type="password"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              aria-invalid={fieldErrors.confirm ? true : undefined}
-              aria-describedby={fieldErrors.confirm ? 'confirm-error' : undefined}
+              onChange={setConfirm}
+              isRequired
+              status={fieldErrors.confirm ? { type: 'error', message: fieldErrors.confirm.join(' ') } : undefined}
+              {...({ autoComplete: 'new-password' } satisfies NativeInputAttrs)}
             />
-            {fieldErrors.confirm ? (
-              <p id="confirm-error" className="text-xs text-destructive">
-                {fieldErrors.confirm.join(' ')}
-              </p>
-            ) : null}
           </div>
           <Button
             type="submit"
-            disabled={pending}
-            className="bg-brand text-brand-foreground hover:bg-brand/90 brand-glow"
-          >
-            {pending ? 'Creating...' : 'Create admin'}
-          </Button>
+            label="Create admin"
+            isLoading={pending}
+            variant="primary"
+            width="100%"
+            className="brand-glow"
+          />
         </form>
-      </div>
+      </Card>
     </main>
   );
 }

@@ -1,17 +1,36 @@
 'use client';
 
-import { AlertCircle } from 'lucide-react';
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { Heading } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Token } from '@astryxdesign/core/Token';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
+import type { NativeInputAttrs } from '@/lib/native-input-attrs';
+
+// Server-side error (from a failed PATCH) always wins and carries its own
+// message. Otherwise, a dirty field that's out of range client-side gets an
+// error status too - but with no message, since the range is already stated
+// in the field's `description` and duplicating it in the status box would
+// render the same text twice. `status.type === 'error'` alone still drives
+// TextInput's aria-invalid, so the field is correctly flagged either way.
+function fieldStatus(
+  error: string | null,
+  dirty: boolean,
+  valid: boolean,
+): { type: 'error'; message?: string } | undefined {
+  if (error) {
+    return { type: 'error', message: error };
+  }
+  if (dirty && !valid) {
+    return { type: 'error' };
+  }
+  return undefined;
+}
 
 type Props = {
   initialMinutes: number;
@@ -35,6 +54,7 @@ export function SettingsForm({
 }
 
 function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; envDefault: number }) {
+  const toast = useToast();
   const { data: session } = authClient.useSession();
   const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const [value, setValue] = useState(String(initialMinutes));
@@ -61,7 +81,7 @@ function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; 
       if (!res.ok) {
         const apiErr = await parseApiError(res);
         if (res.status >= 500) {
-          toast.error(apiErr.message);
+          toast({ body: apiErr.message, type: 'error' });
         } else {
           setError(apiErr.message);
         }
@@ -70,78 +90,70 @@ function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; 
       const body = (await res.json()) as { intervalMinutes: number };
       setSaved(body.intervalMinutes);
       setValue(String(body.intervalMinutes));
-      toast.success('Interval saved');
+      toast({ body: 'Interval saved' });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast({ body: err instanceof Error ? err.message : 'Save failed', type: 'error' });
     } finally {
       setSaving(false);
     }
   };
 
-  const describedBy = [`interval-hint`, error ? `interval-error` : null].filter(Boolean).join(' ');
-
   return (
-    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle as="h2" className="flex items-center gap-2 label-eyebrow">
+    <Card padding={0} className="flex flex-col gap-6 py-6">
+      <div className="px-6">
+        <Heading level={2} className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Measurement interval
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="interval">Interval (minutes)</Label>
-          <Input
-            id="interval"
-            type="number"
-            min={1}
-            max={1440}
-            disabled={readOnly}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            aria-invalid={!valid || !!error || undefined}
-            aria-describedby={describedBy || undefined}
-            className="font-mono tabular-nums"
-          />
-          <div id="interval-hint" className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="outline" className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide">
-              env default: {envDefault}
-            </Badge>
-            between 1 and 1440 - changes apply immediately
-          </div>
+        </Heading>
+      </div>
+      <div className="flex flex-col gap-4 px-6">
+        <TextInput
+          label="Interval (minutes)"
+          value={value}
+          onChange={setValue}
+          isDisabled={readOnly}
+          description={`env default: ${envDefault} - between 1 and 1440 - changes apply immediately`}
+          status={fieldStatus(error, dirty, valid)}
+          className="tabular-nums"
+          {...({ inputMode: 'numeric', pattern: '[0-9]*' } satisfies NativeInputAttrs)}
+        />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {/* Decorative: the env-default value is already in the field's
+              description above (wired to the input via TextInput's own
+              aria-describedby), so the pill is hidden from the a11y tree to
+              avoid a redundant, unlinked announcement - Token drops raw
+              aria-* props (no ...rest in Token.tsx), so aria-hidden is
+              applied on a wrapping span instead (same pattern as the
+              "Current" token in app/changelog/page.tsx). */}
+          <span aria-hidden>
+            <Token label={`env default: ${envDefault}`} size="sm" className="font-mono text-[10px] tracking-wide" />
+          </span>
         </div>
-        {error ? (
-          <Alert variant="destructive" id="interval-error">
-            <AlertCircle />
-            <AlertTitle>Save failed</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : null}
         <div className="flex items-center gap-2">
           <Button
+            label={saving ? 'Saving…' : 'Save'}
             onClick={onSave}
-            disabled={!valid || !dirty || saving || readOnly}
-            className="bg-brand text-brand-foreground hover:bg-brand/90"
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </Button>
+            isDisabled={!valid || !dirty || readOnly}
+            isLoading={saving}
+            variant="primary"
+          />
           <Button
-            variant="outline"
+            label="Cancel"
+            variant="secondary"
+            isDisabled={!dirty || saving || readOnly}
             onClick={() => {
               setValue(String(saved));
               setError(null);
             }}
-            disabled={!dirty || saving || readOnly}
-          >
-            Cancel
-          </Button>
+          />
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }
 
 function RetentionCard({ initialRetentionDays, envDefault }: { initialRetentionDays: number; envDefault: number }) {
+  const toast = useToast();
   const { data: session } = authClient.useSession();
   const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const [value, setValue] = useState(String(initialRetentionDays));
@@ -168,7 +180,7 @@ function RetentionCard({ initialRetentionDays, envDefault }: { initialRetentionD
       if (!res.ok) {
         const apiErr = await parseApiError(res);
         if (res.status >= 500) {
-          toast.error(apiErr.message);
+          toast({ body: apiErr.message, type: 'error' });
         } else {
           setError(apiErr.message);
         }
@@ -177,73 +189,58 @@ function RetentionCard({ initialRetentionDays, envDefault }: { initialRetentionD
       const body = (await res.json()) as { retentionDays: number };
       setSaved(body.retentionDays);
       setValue(String(body.retentionDays));
-      toast.success('Retention saved');
+      toast({ body: 'Retention saved' });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast({ body: err instanceof Error ? err.message : 'Save failed', type: 'error' });
     } finally {
       setSaving(false);
     }
   };
 
-  const describedBy = [`retention-hint`, error ? `retention-error` : null].filter(Boolean).join(' ');
-
   return (
-    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle as="h2" className="flex items-center gap-2 label-eyebrow">
+    <Card padding={0} className="flex flex-col gap-6 py-6">
+      <div className="px-6">
+        <Heading level={2} className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Data retention
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="retention">Keep measurements (days)</Label>
-          <Input
-            id="retention"
-            type="number"
-            min={1}
-            max={3650}
-            disabled={readOnly}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            aria-invalid={!valid || !!error || undefined}
-            aria-describedby={describedBy || undefined}
-            className="font-mono tabular-nums"
-          />
-          <div id="retention-hint" className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="outline" className="border-border/70 bg-muted/40 font-mono text-[10px] tracking-wide">
-              env default: {envDefault}
-            </Badge>
-            between 1 and 3650 - purge runs daily at 03:00
-          </div>
+        </Heading>
+      </div>
+      <div className="flex flex-col gap-4 px-6">
+        <TextInput
+          label="Keep measurements (days)"
+          value={value}
+          onChange={setValue}
+          isDisabled={readOnly}
+          description={`env default: ${envDefault} - between 1 and 3650 - purge runs daily at 03:00`}
+          status={fieldStatus(error, dirty, valid)}
+          className="tabular-nums"
+          {...({ inputMode: 'numeric', pattern: '[0-9]*' } satisfies NativeInputAttrs)}
+        />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {/* Decorative - see IntervalCard above for why this is aria-hidden. */}
+          <span aria-hidden>
+            <Token label={`env default: ${envDefault}`} size="sm" className="font-mono text-[10px] tracking-wide" />
+          </span>
         </div>
-        {error ? (
-          <Alert variant="destructive" id="retention-error">
-            <AlertCircle />
-            <AlertTitle>Save failed</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : null}
         <div className="flex items-center gap-2">
           <Button
+            label={saving ? 'Saving…' : 'Save'}
             onClick={onSave}
-            disabled={!valid || !dirty || saving || readOnly}
-            className="bg-brand text-brand-foreground hover:bg-brand/90"
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </Button>
+            isDisabled={!valid || !dirty || readOnly}
+            isLoading={saving}
+            variant="primary"
+          />
           <Button
-            variant="outline"
+            label="Cancel"
+            variant="secondary"
+            isDisabled={!dirty || saving || readOnly}
             onClick={() => {
               setValue(String(saved));
               setError(null);
             }}
-            disabled={!dirty || saving || readOnly}
-          >
-            Cancel
-          </Button>
+          />
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

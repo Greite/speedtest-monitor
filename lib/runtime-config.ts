@@ -17,6 +17,7 @@ function validLocale(value: string | undefined): string {
     void Intl.DateTimeFormat.supportedLocalesOf(value);
     return value;
   } catch {
+    // biome-ignore lint/suspicious/noConsole: operator-facing config warning for self-hosted deployments
     console.warn(`[config] invalid SPEEDTEST_LOCALE "${value}", falling back to ${DEFAULT_LOCALE}`);
     return DEFAULT_LOCALE;
   }
@@ -30,6 +31,7 @@ function validTimeZone(value: string | undefined): string {
     void new Intl.DateTimeFormat(DEFAULT_LOCALE, { timeZone: value });
     return value;
   } catch {
+    // biome-ignore lint/suspicious/noConsole: operator-facing config warning for self-hosted deployments
     console.warn(`[config] invalid SPEEDTEST_TIMEZONE "${value}", falling back to ${DEFAULT_TIMEZONE}`);
     return DEFAULT_TIMEZONE;
   }

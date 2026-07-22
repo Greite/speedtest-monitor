@@ -1,33 +1,22 @@
 'use client';
 
+import { Card } from '@astryxdesign/core/Card';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { Selector } from '@astryxdesign/core/Selector';
 import {
-  type ColumnDef,
-  type ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  type PaginationState,
-  type SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  CircleAlert,
-  CircleCheck,
-  OctagonAlert,
-} from 'lucide-react';
+  pixel,
+  proportional,
+  Table,
+  type TableColumn,
+  type TableSortState,
+  useTableSortable,
+} from '@astryxdesign/core/Table';
+import { Heading } from '@astryxdesign/core/Text';
+import { Token } from '@astryxdesign/core/Token';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import type { NumericRange, StatusValue, TimeRange } from '@/components/table-filters';
 import { TableFilters } from '@/components/table-filters';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTableMeasurements } from '@/components/use-table-measurements';
 import {
   formatDateTime,
@@ -53,29 +42,14 @@ const levelLabel: Record<LatencyLevel, string> = {
   bad: 'Poor',
 };
 
-function statusBadge(status: MeasurementDto['status']) {
+function statusToken(status: MeasurementDto['status']) {
   if (status === 'success') {
-    return (
-      <Badge className="border-latency-ok/30 bg-latency-ok/10 text-latency-ok hover:bg-latency-ok/15">
-        <CircleCheck className="size-3" aria-hidden strokeWidth={2.25} />
-        OK
-      </Badge>
-    );
+    return <Token label="OK" color="green" size="sm" />;
   }
   if (status === 'timeout') {
-    return (
-      <Badge className="border-latency-warn/30 bg-latency-warn/10 text-latency-warn hover:bg-latency-warn/15">
-        <CircleAlert className="size-3" aria-hidden strokeWidth={2.25} />
-        Timeout
-      </Badge>
-    );
+    return <Token label="Timeout" color="yellow" size="sm" />;
   }
-  return (
-    <Badge className="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15">
-      <OctagonAlert className="size-3" aria-hidden strokeWidth={2.25} />
-      Error
-    </Badge>
-  );
+  return <Token label="Error" color="red" size="sm" />;
 }
 
 function TimeCell({ ts }: { ts: number }) {
@@ -87,289 +61,184 @@ function TimeCell({ ts }: { ts: number }) {
   );
 }
 
-const columns: ColumnDef<MeasurementDto>[] = [
+function LatencyCell({ m }: { m: MeasurementDto }) {
+  const lvl = latencyLevel(m.latencyLoadedMs);
+  const lvlLabel = levelLabel[lvl];
+  return (
+    <span className="inline-flex items-center gap-2 font-mono">
+      <span
+        className={cn('inline-block size-2 rounded-full', levelColor[lvl])}
+        aria-hidden
+        title={`Latency: ${lvlLabel}`}
+      />
+      <span className="sr-only">{`Latency ${lvlLabel}, `}</span>
+      {formatMs(m.latencyUnloadedMs)} / {formatMs(m.latencyLoadedMs)}
+    </span>
+  );
+}
+
+const columns: TableColumn<MeasurementDto>[] = [
   {
-    id: 'timestamp',
-    accessorKey: 'timestamp',
+    key: 'timestamp',
     header: 'Time',
-    cell: ({ row }) => <TimeCell ts={row.original.timestamp} />,
-    enableSorting: true,
+    width: proportional(2),
+    sortable: { sortKey: 'timestamp' },
+    renderCell: (m) => <TimeCell ts={m.timestamp} />,
   },
   {
-    id: 'download',
-    accessorKey: 'downloadMbps',
+    key: 'download',
     header: 'Download',
-    cell: ({ row }) => <span className="font-mono text-speed-down">{formatMbps(row.original.downloadMbps)}</span>,
-    enableSorting: true,
+    width: proportional(1),
+    sortable: { sortKey: 'downloadMbps' },
+    renderCell: (m) => <span className="font-mono text-speed-down">{formatMbps(m.downloadMbps)}</span>,
   },
   {
-    id: 'upload',
-    accessorKey: 'uploadMbps',
+    key: 'upload',
     header: 'Upload',
-    cell: ({ row }) => <span className="font-mono text-speed-up">{formatMbps(row.original.uploadMbps)}</span>,
-    enableSorting: true,
+    width: proportional(1),
+    sortable: { sortKey: 'uploadMbps' },
+    renderCell: (m) => <span className="font-mono text-speed-up">{formatMbps(m.uploadMbps)}</span>,
   },
   {
-    id: 'latency',
-    accessorKey: 'latencyLoadedMs',
+    key: 'latency',
     header: 'Latency (u/l)',
-    cell: ({ row }) => {
-      const lvl = latencyLevel(row.original.latencyLoadedMs);
-      const lvlLabel = levelLabel[lvl];
-      return (
-        <span className="inline-flex items-center gap-2 font-mono">
-          <span
-            className={cn('inline-block size-2 rounded-full', levelColor[lvl])}
-            aria-hidden
-            title={`Latency: ${lvlLabel}`}
-          />
-          <span className="sr-only">{`Latency ${lvlLabel}, `}</span>
-          {formatMs(row.original.latencyUnloadedMs)} / {formatMs(row.original.latencyLoadedMs)}
-        </span>
-      );
-    },
-    enableSorting: true,
+    width: proportional(1.5),
+    sortable: { sortKey: 'latencyLoadedMs' },
+    renderCell: (m) => <LatencyCell m={m} />,
   },
   {
-    id: 'server',
-    accessorFn: (row) => row.serverLocations?.join(' | ') ?? '',
+    key: 'server',
     header: 'Server',
-    cell: ({ row }) => (
-      <span className="text-xs text-muted-foreground">{row.original.serverLocations?.join(' | ') ?? '-'}</span>
-    ),
-    enableSorting: false,
+    width: proportional(1),
+    renderCell: (m) => <span className="text-xs text-muted-foreground">{m.serverLocations?.join(' | ') ?? '-'}</span>,
   },
   {
-    id: 'status',
-    accessorKey: 'status',
+    key: 'status',
     header: 'Status',
-    cell: ({ row }) => statusBadge(row.original.status),
-    enableSorting: true,
+    width: pixel(96),
+    sortable: { sortKey: 'status' },
+    renderCell: (m) => statusToken(m.status),
   },
 ];
 
 const PAGE_SIZES = [10, 25, 50, 100] as const;
 
-const COLUMN_TO_SORT: Record<string, SortColumn> = {
-  timestamp: 'timestamp',
-  download: 'downloadMbps',
-  upload: 'uploadMbps',
-  latency: 'latencyLoadedMs',
-  status: 'status',
-};
-
-function buildFiltersFromState(columnFilters: ColumnFiltersState): TableFiltersType {
-  const out: TableFiltersType = {};
-  for (const f of columnFilters) {
-    if (f.id === 'timestamp') {
-      const v = f.value as TimeRange;
-      if (v.from != null || v.to != null) {
-        out.time = {
-          ...(v.from != null ? { from: v.from } : {}),
-          ...(v.to != null ? { to: v.to } : {}),
-        };
-      }
-    } else if (f.id === 'download') {
-      const v = f.value as NumericRange;
-      if (v.min != null || v.max != null) {
-        out.download = {
-          ...(v.min != null ? { min: v.min } : {}),
-          ...(v.max != null ? { max: v.max } : {}),
-        };
-      }
-    } else if (f.id === 'upload') {
-      const v = f.value as NumericRange;
-      if (v.min != null || v.max != null) {
-        out.upload = {
-          ...(v.min != null ? { min: v.min } : {}),
-          ...(v.max != null ? { max: v.max } : {}),
-        };
-      }
-    } else if (f.id === 'latency') {
-      const v = f.value as NumericRange;
-      if (v.min != null || v.max != null) {
-        out.latency = {
-          ...(v.min != null ? { min: v.min } : {}),
-          ...(v.max != null ? { max: v.max } : {}),
-        };
-      }
-    } else if (f.id === 'server') {
-      const v = f.value as string;
-      if (v) {
-        out.server = v;
-      }
-    } else if (f.id === 'status') {
-      const v = f.value as StatusValue[];
-      if (v.length > 0) {
-        out.status = v;
-      }
-    }
-  }
-  return out;
-}
-
 export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }) {
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'timestamp', desc: true }]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 });
+  const [sort, setSort] = useState<{ column: SortColumn; dir: 'asc' | 'desc' }>({ column: 'timestamp', dir: 'desc' });
+  const [filters, setFilters] = useState<TableFiltersType>({});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
-  const query = useMemo<TableQuery>(() => {
-    const s = sorting[0];
-    const sortId = s?.id ?? 'timestamp';
-    const sort: SortColumn = COLUMN_TO_SORT[sortId] ?? 'timestamp';
-    return {
-      page: pagination.pageIndex + 1,
-      pageSize: pagination.pageSize,
-      sort,
-      sortDir: s?.desc ? 'desc' : 'asc',
-      filters: buildFiltersFromState(columnFilters),
-    };
-  }, [sorting, columnFilters, pagination]);
+  const query = useMemo<TableQuery>(
+    () => ({ page, pageSize, sort: sort.column, sortDir: sort.dir, filters }),
+    [page, pageSize, sort, filters],
+  );
 
   const { measurements, totalCount, loading } = useTableMeasurements(query, refreshSignal);
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  const pageCount = Math.max(1, Math.ceil(totalCount / pagination.pageSize));
+  const firstRow = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const lastRow = Math.min(totalCount, page * pageSize);
 
-  const table = useReactTable({
-    data: measurements,
-    columns,
-    state: { sorting, columnFilters, pagination },
-    manualSorting: true,
-    manualFiltering: true,
-    manualPagination: true,
-    pageCount,
-    onSortingChange: (updater) => {
-      setSorting(updater);
-      setPagination((p) => ({ ...p, pageIndex: 0 }));
+  // Headless sort plugin: consumer (this component) owns the sort state and
+  // forwards it to the server via `query` - the plugin only renders the
+  // clickable header affordance and aria-sort, it never sorts data itself.
+  // allowUnsortedState is false so the sort array always has exactly one
+  // entry, matching TableQuery.sort/sortDir (both mandatory, non-optional).
+  const sortEntries = useMemo<TableSortState<SortColumn>>(
+    () => [{ sortKey: sort.column, direction: sort.dir === 'asc' ? 'ascending' : 'descending' }],
+    [sort],
+  );
+  const sortable = useTableSortable<MeasurementDto, SortColumn>({
+    sort: sortEntries,
+    onSortChange: (next) => {
+      const entry = next[0];
+      if (!entry) {
+        return;
+      }
+      setSort({ column: entry.sortKey, dir: entry.direction === 'ascending' ? 'asc' : 'desc' });
+      setPage(1);
     },
-    onColumnFiltersChange: (updater) => {
-      setColumnFilters(updater);
-      setPagination((p) => ({ ...p, pageIndex: 0 }));
-    },
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
+    allowUnsortedState: false,
   });
 
-  const rows = table.getRowModel().rows;
-  const pageIndex = pagination.pageIndex;
-  const pageSize = pagination.pageSize;
-  const firstRow = totalCount === 0 ? 0 : pageIndex * pageSize + 1;
-  const lastRow = Math.min(totalCount, (pageIndex + 1) * pageSize);
-
   return (
-    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle as="h2" className="label-eyebrow flex items-center gap-2">
+    <Card padding={0} className="flex flex-col gap-6 overflow-hidden py-6">
+      <div className="px-6">
+        <Heading level={2} className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Recent measurements
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <TableFilters table={table} />
-        <Table>
-          <TableCaption className="sr-only">Recent speedtest measurements, sortable and filterable.</TableCaption>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const sortDir = header.column.getIsSorted();
-                  const ariaSortMap = { asc: 'ascending', desc: 'descending' } as const;
-                  const ariaSort = sortDir ? ariaSortMap[sortDir] : 'none';
-                  const canSort = header.column.getCanSort();
-                  return (
-                    <TableHead key={header.id} aria-sort={ariaSort}>
-                      {canSort ? (
-                        <button
-                          type="button"
-                          onClick={header.column.getToggleSortingHandler()}
-                          className="inline-flex items-center gap-1 text-left font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {sortDir === 'asc' && <ArrowUp className="size-3" aria-hidden />}
-                          {sortDir === 'desc' && <ArrowDown className="size-3" aria-hidden />}
-                          {!sortDir && <ArrowUpDown className="size-3 opacity-40" aria-hidden />}
-                        </button>
-                      ) : (
-                        <span className="font-medium text-muted-foreground">
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </span>
-                      )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
-                  {loading && 'Loading...'}
-                  {!loading && totalCount === 0 && 'No measurements.'}
-                  {!loading && totalCount !== 0 && 'No rows match filters.'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => (
-                <TableRow key={row.id} className="tabular-nums">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                  ))}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        </Heading>
+      </div>
+      <div className="flex flex-col gap-4 px-6">
+        <TableFilters
+          value={filters}
+          onChange={(next) => {
+            setFilters(next);
+            setPage(1);
+          }}
+        />
+        {measurements.length === 0 ? (
+          <div className="py-6 text-center text-muted-foreground" role="status">
+            {loading && 'Loading...'}
+            {!loading && totalCount === 0 && 'No measurements.'}
+            {!loading && totalCount !== 0 && 'No rows match filters.'}
+          </div>
+        ) : (
+          <Table
+            data={measurements}
+            columns={columns}
+            idKey="id"
+            plugins={{ sort: sortable }}
+            density="compact"
+            className="tabular-nums"
+            aria-label="Recent speedtest measurements, sortable and filterable."
+          />
+        )}
         <div
-          className="mt-4 flex flex-col gap-2 text-xs tabular-nums text-muted-foreground sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-2 text-xs tabular-nums text-muted-foreground sm:flex-row sm:items-center sm:justify-between"
           aria-live="polite"
           aria-atomic="true"
         >
           <div>{totalCount === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalCount}`}</div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="normal-nums">Rows per page</span>
-              <Select value={String(pageSize)} onValueChange={(v) => table.setPageSize(Number(v))}>
-                <SelectTrigger size="sm" className="h-11 w-[72px] text-xs md:h-7" aria-label="Rows per page">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZES.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Selector
+              label="Rows per page"
+              isLabelHidden
+              size="sm"
+              options={PAGE_SIZES.map((n) => String(n))}
+              value={String(pageSize)}
+              onChange={(v) => {
+                setPageSize(Number(v));
+                setPage(1);
+              }}
+            />
             <div className="flex items-center gap-2">
               <span>
-                Page {totalCount === 0 ? 0 : pageIndex + 1} of {pageCount}
+                Page {totalCount === 0 ? 0 : page} of {pageCount}
               </span>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                aria-label="Previous page"
-                className="size-11 md:size-7"
-              >
-                <ChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                aria-label="Next page"
-                className="size-11 md:size-7"
-              >
-                <ChevronRight />
-              </Button>
+              <IconButton
+                icon={<ChevronLeft aria-hidden className="size-4" />}
+                label="Previous page"
+                variant="secondary"
+                size="sm"
+                className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+                isDisabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              />
+              <IconButton
+                icon={<ChevronRight aria-hidden className="size-4" />}
+                label="Next page"
+                variant="secondary"
+                size="sm"
+                className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+                isDisabled={page >= pageCount}
+                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+              />
             </div>
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

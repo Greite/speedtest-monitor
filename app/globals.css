@@ -1,5 +1,17 @@
+/* Explicit cascade-layer order - must precede every @import (later layers win).
+   reset < utilities un-breaks non-migrated prose; astryx-base > base keeps
+   Astryx component styling through Tailwind preflight; utilities > astryx-base
+   restores py-6 and className overrides; astryx-theme (scoped tokens) stays last. */
+@layer properties, theme, base, components, reset, astryx-base, utilities, astryx-theme;
+
 @import 'tailwindcss';
-@import 'tw-animate-css';
+@import '@astryxdesign/core/astryx.css';
+@import '@astryxdesign/theme-neutral/theme.css';
+/* Pre-built speedtest theme (astryx theme build lib/astryx-theme.ts). Ships the
+   scoped tokens/component CSS statically so nothing is injected at runtime; the
+   file declares its own @layer reset / @layer astryx-theme, slotting into the
+   explicit order above. Pair with the __built theme in components/astryx-providers.tsx. */
+@import '../lib/speedtest.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -29,6 +41,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-accent: var(--brand-accent);
   --color-chart-1: var(--chart-1);
@@ -78,8 +91,13 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   /* Brand identity (logo gradient #2563EB -> #06B6D4) */
-  --brand: oklch(0.58 0.19 250);
-  --brand-foreground: oklch(0.985 0 0);
+  --brand: oklch(0.56 0.19 250);
+  /* Pure white: 0.985 grey computed 4.38:1 on the darkened brand, under AA */
+  --brand-foreground: oklch(1 0 0);
+  /* Hover surface, darker than --brand for a perceptible state change.
+     White foreground on this token computes to 5.85:1 (>= 4.5:1 AA) - see
+     .superpowers/sdd/p4-task-1-report.md for the WCAG math. */
+  --brand-hover: oklch(0.5 0.19 250);
   --brand-accent: oklch(0.72 0.15 210);
   --ring: oklch(0.58 0.19 250);
   /* Chart palette: brand-first, stable light/dark */
@@ -120,6 +138,10 @@
   /* Same brand hue, lighter luminance for dark surfaces */
   --brand: oklch(0.7 0.17 240);
   --brand-foreground: oklch(0.145 0 0);
+  /* Hover surface, lighter than --brand so hover stays perceptible against the
+     dark surface. Dark foreground on this token computes to 8.61:1 - see
+     .superpowers/sdd/p4-task-1-report.md for the WCAG math. */
+  --brand-hover: oklch(0.74 0.17 240);
   --brand-accent: oklch(0.82 0.15 200);
   --ring: oklch(0.7 0.17 240);
   --chart-1: oklch(0.7 0.17 240);
@@ -157,16 +179,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Eyebrow / section labels — uniform style across cards, fieldsets, headers */
-  .label-eyebrow {
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-eyebrow);
-    color: var(--muted-foreground);
-  }
-
   /* Skip-link: hidden until focused */
   .skip-link {
     position: absolute;
@@ -188,6 +200,18 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
+}
+
+/* Eyebrow / section labels - uniform style across cards, fieldsets, headers.
+   Unlayered on purpose: it must beat Astryx Heading's own scale (astryx-base
+   layer) on migrated cards, and unlayered rules outrank every cascade layer. */
+.label-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--muted-foreground);
 }
 
 /* ---- Atmosphere: soft grid + brand glow ---------------------------------- */
@@ -291,23 +315,6 @@
   animation: drawer-section-in 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
-/* ---- Underline glide for segmented controls ----------------------------- */
-.segmented-track {
-  position: relative;
-  isolation: isolate;
-}
-.segmented-pill {
-  position: absolute;
-  top: 2px;
-  bottom: 2px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  z-index: -1;
-  transition:
-    transform 280ms cubic-bezier(0.32, 0.72, 0, 1),
-    width 280ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -316,9 +323,6 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-  .segmented-pill {
-    transition-duration: 0.01ms !important;
   }
 }
 

@@ -1,3 +1,4 @@
+import { Banner } from '@astryxdesign/core/Banner';
 import { ArrowLeft } from 'lucide-react';
 import { headers } from 'next/headers';
 import Link from 'next/link';
@@ -5,7 +6,6 @@ import Link from 'next/link';
 import { PasswordChangeCard } from '@/components/auth/password-change-card';
 import { AlertsCard } from '@/components/settings/alerts-card';
 import { SettingsForm } from '@/components/settings-form';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { UsersCard } from '@/components/users/users-card';
 import { auth } from '@/lib/auth/handler';
 import {
@@ -50,12 +50,11 @@ export default async function SettingsPage() {
         </Link>
       </div>
       {readOnly ? (
-        <Alert variant="default" className="border-border/60 bg-card/60 backdrop-blur-sm">
-          <AlertTitle>Limited permissions</AlertTitle>
-          <AlertDescription>
-            Some settings are restricted to admins. You can still change your own password below.
-          </AlertDescription>
-        </Alert>
+        <Banner
+          status="info"
+          title="Limited permissions"
+          description="Some settings are restricted to admins. You can still change your own password below."
+        />
       ) : null}
       <PasswordChangeCard />
       <SettingsForm

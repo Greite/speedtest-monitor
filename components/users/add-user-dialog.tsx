@@ -1,24 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Selector } from '@astryxdesign/core/Selector';
+import { Text } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { useToast } from '@astryxdesign/core/Toast';
+import { useId, useState } from 'react';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { PasswordInput } from '@/components/ui/password-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parseApiError } from '@/lib/api-client';
+import type { NativeInputAttrs } from '@/lib/native-input-attrs';
+
+const DIALOG_TITLE = 'Add user';
 
 type Props = {
   open: boolean;
@@ -28,7 +22,18 @@ type Props = {
 
 const MIN_PASSWORD_LEN = 10;
 
+const ROLE_OPTIONS = [
+  { value: 'viewer', label: 'Viewer (read-only)' },
+  { value: 'admin', label: 'Admin (full access)' },
+];
+
 export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
+  const toast = useToast();
+  // See reset-password-dialog.tsx: DialogHeader focuses its title on mount
+  // but does not set the Dialog's own accessible name or expose an id for
+  // it, so aria-label duplicates the title string here instead of
+  // aria-labelledby. The description keeps its own id for aria-describedby.
+  const descriptionId = useId();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'admin' | 'viewer'>('viewer');
@@ -69,96 +74,73 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
         body: JSON.stringify({ email: email.trim(), password, role }),
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Network error.');
+      // Toasts render beneath open dialogs (ToastViewport enters the top layer at
+      // mount; dialog.showModal() stacks above it later), so route errors raised
+      // while this dialog is open to the in-dialog Banner instead.
+      setError(err instanceof Error ? err.message : 'Network error.');
       setPending(false);
       return;
     }
     if (!res.ok) {
       const apiErr = await parseApiError(res);
-      if (res.status >= 500) {
-        toast.error(apiErr.message);
-      } else if (apiErr.code === 'validation_failed' && apiErr.fields) {
+      if (apiErr.code === 'validation_failed' && apiErr.fields) {
         setFieldErrors(apiErr.fields);
-        setError(apiErr.message);
-      } else {
-        setError(apiErr.message);
       }
+      setError(apiErr.message);
       setPending(false);
       return;
     }
-    toast.success('User created');
+    toast({ body: 'User created' });
     await onCreated();
     handleOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add user</DialogTitle>
-          <DialogDescription>
-            Create a local account. The user can change their password after logging in.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="add-user-email">Email</Label>
-            <Input
-              id="add-user-email"
-              type="email"
-              required
-              autoComplete="off"
-              autoFocus
-              placeholder="jane@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={fieldErrors.email ? true : undefined}
-            />
-            {fieldErrors.email ? <p className="text-xs text-destructive">{fieldErrors.email.join(' ')}</p> : null}
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="add-user-password">Temporary password</Label>
-            <PasswordInput
-              id="add-user-password"
-              required
-              autoComplete="new-password"
-              minLength={MIN_PASSWORD_LEN}
-              placeholder={`At least ${MIN_PASSWORD_LEN} characters`}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              aria-invalid={fieldErrors.password ? true : undefined}
-            />
-            {fieldErrors.password ? <p className="text-xs text-destructive">{fieldErrors.password.join(' ')}</p> : null}
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="add-user-role">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as 'admin' | 'viewer')}>
-              <SelectTrigger id="add-user-role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="viewer">Viewer (read-only)</SelectItem>
-                <SelectItem value="admin">Admin (full access)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="ghost" disabled={pending}>
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Creating…' : 'Create user'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+    <Dialog
+      isOpen={open}
+      onOpenChange={handleOpenChange}
+      purpose="form"
+      width={480}
+      aria-label={DIALOG_TITLE}
+      aria-describedby={descriptionId}
+    >
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <DialogHeader title={DIALOG_TITLE} onOpenChange={handleOpenChange} />
+        <Text type="body" color="secondary" id={descriptionId}>
+          Create a local account. The user can change their password after logging in.
+        </Text>
+        <TextInput
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          isRequired
+          hasAutoFocus
+          placeholder="jane@example.com"
+          status={fieldErrors.email ? { type: 'error', message: fieldErrors.email.join(' ') } : undefined}
+          {...({ autoComplete: 'off', required: true } satisfies NativeInputAttrs)}
+        />
+        <TextInput
+          label="Temporary password"
+          type="password"
+          value={password}
+          onChange={setPassword}
+          isRequired
+          placeholder={`At least ${MIN_PASSWORD_LEN} characters`}
+          status={fieldErrors.password ? { type: 'error', message: fieldErrors.password.join(' ') } : undefined}
+          {...({
+            autoComplete: 'new-password',
+            required: true,
+            minLength: MIN_PASSWORD_LEN,
+          } satisfies NativeInputAttrs)}
+        />
+        <Selector label="Role" options={ROLE_OPTIONS} value={role} onChange={(v) => setRole(v as 'admin' | 'viewer')} />
+        {error ? <Banner status="error" title={error} /> : null}
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" label="Cancel" isDisabled={pending} onClick={() => handleOpenChange(false)} />
+          <Button type="submit" variant="primary" label={pending ? 'Creating…' : 'Create user'} isLoading={pending} />
+        </div>
+      </form>
     </Dialog>
   );
 }

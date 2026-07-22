@@ -27,6 +27,9 @@
       "!speedtest.db-shm",
       "!speedtest.db-wal",
       "!lib/generated",
+      "!lib/speedtest.js",
+      "!lib/speedtest.d.ts",
+      "!lib/speedtest.variants.d.ts",
       "!lib/alerts/templates/alert-email.html.ts",
       "!CLAUDE.md"
     ]

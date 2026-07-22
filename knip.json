@@ -16,7 +16,7 @@
     "!**/*.d.ts",
     "!lib/generated/**"
   ],
-  "ignoreDependencies": ["tailwindcss", "tw-animate-css"],
+  "ignoreDependencies": ["tailwindcss"],
   "ignoreIssues": {
     "**": ["enumMembers"]
   }

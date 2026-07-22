@@ -1,34 +1,29 @@
 'use client';
 
-import type { Column, Table } from '@tanstack/react-table';
+import { Button } from '@astryxdesign/core/Button';
+import { DateTimeInput, type ISODateTimeString } from '@astryxdesign/core/DateTimeInput';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
+import { Token } from '@astryxdesign/core/Token';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { formatDateTime } from '@/lib/format';
+import type { TableFilters as TableFiltersType } from '@/lib/measurements-query';
 import type { MeasurementDto } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, statusPillClassesBad, statusPillClassesOk, statusPillClassesWarn, togglePillClasses } from '@/lib/utils';
 
-export type NumericRange = { min?: number; max?: number };
-export type TimeRange = { from?: number; to?: number };
-export type StatusValue = MeasurementDto['status'];
+type NumericRange = { min?: number; max?: number };
+type TimeRange = { from?: number; to?: number };
+type StatusValue = MeasurementDto['status'];
 
 const STATUSES: readonly { value: StatusValue; label: string }[] = [
   { value: 'success', label: 'OK' },
   { value: 'timeout', label: 'Timeout' },
   { value: 'error', label: 'Error' },
 ];
-
-function parseNumber(v: string): number | undefined {
-  if (v === '') {
-    return undefined;
-  }
-  const n = Number(v);
-  return Number.isFinite(n) ? n : undefined;
-}
 
 function parseTime(v: string): number | undefined {
   if (v === '') {
@@ -47,26 +42,40 @@ function toDateTimeLocal(ms?: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function setNumericRange(col: Column<MeasurementDto, unknown> | undefined, next: NumericRange) {
-  if (!col) {
-    return;
-  }
-  if (next.min == null && next.max == null) {
-    col.setFilterValue(undefined);
-  } else {
-    col.setFilterValue(next);
-  }
+// Adapts toDateTimeLocal's "" empty sentinel to DateTimeInput's optional-value model.
+function toISODateTimeValue(ms?: number): ISODateTimeString | undefined {
+  const s = toDateTimeLocal(ms);
+  return s === '' ? undefined : (s as ISODateTimeString);
 }
 
-function setTimeRange(col: Column<MeasurementDto, unknown> | undefined, next: TimeRange) {
-  if (!col) {
-    return;
+function withNumericRange(
+  current: TableFiltersType,
+  key: 'download' | 'upload' | 'latency',
+  next: NumericRange,
+): TableFiltersType {
+  const { [key]: _removed, ...rest } = current;
+  if (next.min == null && next.max == null) {
+    return rest;
   }
+  return { ...rest, [key]: next };
+}
+
+function withTimeRange(current: TableFiltersType, next: TimeRange): TableFiltersType {
+  const { time: _removed, ...rest } = current;
   if (next.from == null && next.to == null) {
-    col.setFilterValue(undefined);
-  } else {
-    col.setFilterValue(next);
+    return rest;
   }
+  return { ...rest, time: next };
+}
+
+function withServer(current: TableFiltersType, next: string): TableFiltersType {
+  const { server: _removed, ...rest } = current;
+  return next === '' ? rest : { ...rest, server: next };
+}
+
+function withStatus(current: TableFiltersType, next: StatusValue[]): TableFiltersType {
+  const { status: _removed, ...rest } = current;
+  return next.length === 0 ? rest : { ...rest, status: next };
 }
 
 function formatNumericSummary(label: string, val: NumericRange): string {
@@ -82,41 +91,26 @@ function formatNumericSummary(label: string, val: NumericRange): string {
   return label;
 }
 
-export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
-  const [open, setOpen] = useState(false);
+export function TableFilters({
+  value,
+  onChange,
+  defaultOpen = false,
+}: {
+  value: TableFiltersType;
+  onChange: (next: TableFiltersType) => void;
+  /** Seeds the panel's initial expanded state. Defaults to collapsed. */
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
 
-  const timeCol = table.getColumn('timestamp');
-  const downCol = table.getColumn('download');
-  const upCol = table.getColumn('upload');
-  const latCol = table.getColumn('latency');
-  const serverCol = table.getColumn('server');
-  const statusCol = table.getColumn('status');
+  const activeCount = Object.keys(value).length;
 
-  const activeCount = table.getState().columnFilters.length;
-
-  const timeVal = (timeCol?.getFilterValue() as TimeRange | undefined) ?? {};
-  const downVal = (downCol?.getFilterValue() as NumericRange | undefined) ?? {};
-  const upVal = (upCol?.getFilterValue() as NumericRange | undefined) ?? {};
-  const latVal = (latCol?.getFilterValue() as NumericRange | undefined) ?? {};
-  const serverVal = (serverCol?.getFilterValue() as string | undefined) ?? '';
-  const statusVal = (statusCol?.getFilterValue() as StatusValue[] | undefined) ?? [];
-
-  const toggleStatus = (s: StatusValue) => {
-    if (!statusCol) {
-      return;
-    }
-    const set = new Set(statusVal);
-    if (set.has(s)) {
-      set.delete(s);
-    } else {
-      set.add(s);
-    }
-    if (set.size === 0) {
-      statusCol.setFilterValue(undefined);
-    } else {
-      statusCol.setFilterValue([...set]);
-    }
-  };
+  const timeVal = value.time ?? {};
+  const downVal = value.download ?? {};
+  const upVal = value.upload ?? {};
+  const latVal = value.latency ?? {};
+  const serverVal = value.server ?? '';
+  const statusVal = value.status ?? [];
 
   const activePills: { key: string; label: string; onRemove: () => void }[] = [];
   if (timeVal.from != null || timeVal.to != null) {
@@ -130,154 +124,154 @@ export function TableFilters({ table }: { table: Table<MeasurementDto> }) {
     activePills.push({
       key: 'time',
       label: parts.join(' '),
-      onRemove: () => timeCol?.setFilterValue(undefined),
+      onRemove: () => onChange(withTimeRange(value, {})),
     });
   }
   if (downVal.min != null || downVal.max != null) {
     activePills.push({
       key: 'download',
       label: formatNumericSummary('Download (Mbps)', downVal),
-      onRemove: () => downCol?.setFilterValue(undefined),
+      onRemove: () => onChange(withNumericRange(value, 'download', {})),
     });
   }
   if (upVal.min != null || upVal.max != null) {
     activePills.push({
       key: 'upload',
       label: formatNumericSummary('Upload (Mbps)', upVal),
-      onRemove: () => upCol?.setFilterValue(undefined),
+      onRemove: () => onChange(withNumericRange(value, 'upload', {})),
     });
   }
   if (latVal.min != null || latVal.max != null) {
     activePills.push({
       key: 'latency',
       label: formatNumericSummary('Latency (ms)', latVal),
-      onRemove: () => latCol?.setFilterValue(undefined),
+      onRemove: () => onChange(withNumericRange(value, 'latency', {})),
     });
   }
   if (serverVal) {
     activePills.push({
       key: 'server',
       label: `Server: ${serverVal}`,
-      onRemove: () => serverCol?.setFilterValue(undefined),
+      onRemove: () => onChange(withServer(value, '')),
     });
   }
   if (statusVal.length > 0) {
     activePills.push({
       key: 'status',
       label: `Status: ${statusVal.map((s) => STATUSES.find((st) => st.value === s)?.label ?? s).join(', ')}`,
-      onRemove: () => statusCol?.setFilterValue(undefined),
+      onRemove: () => onChange(withStatus(value, [])),
     });
   }
 
   return (
     <div className="mb-4 rounded-lg border bg-card">
       <div className="flex flex-wrap items-center gap-2 px-4 py-2">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center gap-2 rounded-sm text-sm font-medium text-foreground outline-none hover:text-foreground/80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          aria-expanded={open}
-          aria-controls="table-filters-panel"
-        >
-          {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-          Filters
-          {activeCount > 0 ? (
-            <Badge variant="secondary" className="ml-1">
-              {activeCount} active
-            </Badge>
-          ) : null}
-        </button>
+        <div className="flex items-center gap-2">
+          <IconButton
+            icon={open ? <ChevronUp aria-hidden className="size-4" /> : <ChevronDown aria-hidden className="size-4" />}
+            label={open ? 'Collapse filters' : 'Expand filters'}
+            variant="ghost"
+            size="sm"
+            // min-h/min-w set a 44px touch-target floor on mobile (WCAG 2.5.5) without
+            // fighting IconButton's aspect-ratio sizing. Utilities win over astryx-base
+            // under the explicit layer order in globals.css.
+            className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+            aria-expanded={open}
+            aria-controls="table-filters-panel"
+            onClick={() => setOpen((v) => !v)}
+          />
+          <span className="text-sm font-medium text-foreground">Filters</span>
+          {activeCount > 0 ? <Token label={`${activeCount} active`} size="sm" /> : null}
+        </div>
         {!open && activePills.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1.5">
             {activePills.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={p.onRemove}
-                aria-label={`Remove filter: ${p.label}`}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              >
-                <span className="max-w-[24ch] truncate">{p.label}</span>
-                <X className="size-3" aria-hidden />
-              </button>
+              <Token key={p.key} label={p.label} size="sm" onRemove={p.onRemove} />
             ))}
           </div>
         ) : null}
         {activeCount > 0 ? (
-          <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()} className="ml-auto">
-            <X className="size-3" />
-            Reset
-          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<X aria-hidden className="size-3" />}
+            label="Reset"
+            className="ml-auto"
+            onClick={() => onChange({})}
+          />
         ) : null}
       </div>
       {open ? (
-        <div id="table-filters-panel" className="grid grid-cols-1 gap-4 border-t p-4 md:grid-cols-3">
+        <div id="table-filters-panel" className="flex flex-wrap items-start gap-x-8 gap-y-4 border-t p-4">
           <fieldset className="flex flex-col gap-2">
             <legend className="label-eyebrow mb-2">Time</legend>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="filter-time-from" className="sr-only">
-                From date and time
-              </Label>
-              <Input
-                id="filter-time-from"
-                type="datetime-local"
-                value={toDateTimeLocal(timeVal.from)}
-                onChange={(e) => setTimeRange(timeCol, { from: parseTime(e.target.value), to: timeVal.to })}
-                className="h-11 text-xs md:h-8"
+              <DateTimeInput
+                label="From date and time"
+                isLabelHidden
+                size="sm"
+                className="flex-wrap"
+                value={toISODateTimeValue(timeVal.from)}
+                onChange={(v) => onChange(withTimeRange(value, { from: parseTime(v ?? ''), to: timeVal.to }))}
               />
-              <Label htmlFor="filter-time-to" className="sr-only">
-                To date and time
-              </Label>
-              <Input
-                id="filter-time-to"
-                type="datetime-local"
-                value={toDateTimeLocal(timeVal.to)}
-                onChange={(e) => setTimeRange(timeCol, { from: timeVal.from, to: parseTime(e.target.value) })}
-                className="h-11 text-xs md:h-8"
+              <DateTimeInput
+                label="To date and time"
+                isLabelHidden
+                size="sm"
+                className="flex-wrap"
+                value={toISODateTimeValue(timeVal.to)}
+                onChange={(v) => onChange(withTimeRange(value, { from: timeVal.from, to: parseTime(v ?? '') }))}
               />
             </div>
           </fieldset>
 
-          <NumericBlock label="Download (Mbps)" value={downVal} onChange={(n) => setNumericRange(downCol, n)} />
-          <NumericBlock label="Upload (Mbps)" value={upVal} onChange={(n) => setNumericRange(upCol, n)} />
-          <NumericBlock label="Latency loaded (ms)" value={latVal} onChange={(n) => setNumericRange(latCol, n)} />
+          <NumericBlock
+            label="Download (Mbps)"
+            value={downVal}
+            onChange={(n) => onChange(withNumericRange(value, 'download', n))}
+          />
+          <NumericBlock
+            label="Upload (Mbps)"
+            value={upVal}
+            onChange={(n) => onChange(withNumericRange(value, 'upload', n))}
+          />
+          <NumericBlock
+            label="Latency loaded (ms)"
+            value={latVal}
+            onChange={(n) => onChange(withNumericRange(value, 'latency', n))}
+          />
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="filter-server" className="label-eyebrow">
-              Server contains
-            </Label>
-            <Input
-              id="filter-server"
-              type="text"
+          <fieldset className="flex flex-col gap-2">
+            <legend className="label-eyebrow mb-2">Server</legend>
+            <TextInput
+              label="Server contains"
+              isLabelHidden
               value={serverVal}
-              onChange={(e) => serverCol?.setFilterValue(e.target.value || undefined)}
+              onChange={(v) => onChange(withServer(value, v))}
               placeholder="e.g. Paris"
-              className="h-11 text-xs md:h-8"
+              size="sm"
+              width={224}
             />
-          </div>
+          </fieldset>
 
           <fieldset className="flex flex-col gap-2">
             <legend className="label-eyebrow mb-2">Status</legend>
-            <div className="flex flex-wrap gap-2">
-              {STATUSES.map((s) => {
-                const active = statusVal.includes(s.value);
-                return (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() => toggleStatus(s.value)}
-                    aria-pressed={active}
-                    className={cn(
-                      'inline-flex min-h-[44px] items-center rounded-full border px-4 text-xs font-medium outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:min-h-[28px] md:px-3',
-                      active
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-input bg-background text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {s.label}
-                  </button>
-                );
-              })}
+            {/* Shared pill affordance + 44px touch floor (togglePillClasses) plus
+                per-status color cues on the pressed button (statusPillClasses*) -
+                see lib/utils.ts. Position is bound to STATUSES below: OK=1,
+                Timeout=2, Error=3. */}
+            <div className={cn(togglePillClasses, statusPillClassesOk, statusPillClassesWarn, statusPillClassesBad)}>
+              <ToggleButtonGroup
+                label="Status"
+                type="multiple"
+                size="sm"
+                value={statusVal}
+                onChange={(v) => onChange(withStatus(value, v as StatusValue[]))}
+              >
+                {STATUSES.map((s) => (
+                  <ToggleButton key={s.value} value={s.value} label={s.label} />
+                ))}
+              </ToggleButtonGroup>
             </div>
           </fieldset>
         </div>
@@ -295,33 +289,32 @@ function NumericBlock({
   value: NumericRange;
   onChange: (next: NumericRange) => void;
 }) {
-  const minId = `${label}-min`.replace(/\s+/g, '-').toLowerCase();
-  const maxId = `${label}-max`.replace(/\s+/g, '-').toLowerCase();
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="label-eyebrow mb-2">{label}</legend>
+      {/* NumberInput commits an emptied field on blur/Enter/clear-click, not per
+          keystroke like the old TextInput - deliberate trade for the numeric
+          keyboard and native parsing (controller-approved). */}
       <div className="flex items-center gap-2">
-        <Label htmlFor={minId} className="sr-only">
-          {`${label} minimum`}
-        </Label>
-        <Input
-          id={minId}
-          type="number"
-          value={value.min ?? ''}
-          onChange={(e) => onChange({ min: parseNumber(e.target.value), max: value.max })}
+        <NumberInput
+          label={`${label} minimum`}
+          isLabelHidden
+          hasClear
+          value={value.min ?? null}
+          onChange={(v) => onChange({ min: v ?? undefined, max: value.max })}
           placeholder="min"
-          className="h-11 text-xs md:h-8"
+          size="sm"
+          width={112}
         />
-        <Label htmlFor={maxId} className="sr-only">
-          {`${label} maximum`}
-        </Label>
-        <Input
-          id={maxId}
-          type="number"
-          value={value.max ?? ''}
-          onChange={(e) => onChange({ min: value.min, max: parseNumber(e.target.value) })}
+        <NumberInput
+          label={`${label} maximum`}
+          isLabelHidden
+          hasClear
+          value={value.max ?? null}
+          onChange={(v) => onChange({ min: value.min, max: v ?? undefined })}
           placeholder="max"
-          className="h-11 text-xs md:h-8"
+          size="sm"
+          width={112}
         />
       </div>
     </fieldset>

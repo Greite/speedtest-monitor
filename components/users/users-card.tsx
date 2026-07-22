@@ -1,34 +1,33 @@
 'use client';
 
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { Selector } from '@astryxdesign/core/Selector';
 import {
-  type ColumnDef,
-  type ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  type SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown, KeyRound, Search, Trash2 } from 'lucide-react';
+  pixel,
+  proportional,
+  Table,
+  type TableColumn,
+  type TableSortState,
+  useTableSortable,
+} from '@astryxdesign/core/Table';
+import { Heading } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { useToast } from '@astryxdesign/core/Toast';
+import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
+import { Token } from '@astryxdesign/core/Token';
+import { KeyRound, Search, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
 import { AddUserDialog } from './add-user-dialog';
 import { DeleteUserDialog } from './delete-user-dialog';
 import { ResetPasswordDialog } from './reset-password-dialog';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
 import { formatDateTime } from '@/lib/format';
-import { cn } from '@/lib/utils';
+import { togglePillClasses } from '@/lib/utils';
 
 type UserRow = {
   id: string;
@@ -42,15 +41,56 @@ type UserRow = {
 
 type RoleFilter = 'all' | 'admin' | 'viewer';
 type ProviderFilter = 'all' | 'local' | 'oidc';
+type SortKey = 'email' | 'role' | 'provider' | 'lastLoginAt';
+
+const ROLE_SELECT_OPTIONS = [
+  { value: 'admin', label: 'admin' },
+  { value: 'viewer', label: 'viewer' },
+];
+
+// Client-side sort replacing the removed TanStack getSortedRowModel: the Astryx
+// sort plugin is headless (it only owns header affordances/aria-sort), so this
+// component sorts the already-fetched `users` array itself. Only a single active
+// sort entry is supported (matches isMultiSortEnabled's default of false - the
+// original file never exposed a shift-click multi-sort UI). `lastLoginAt` keeps
+// nulls last regardless of direction, mirroring the old column's
+// `sortUndefined: 'last'`.
+function sortUsers(users: UserRow[], sort: TableSortState<SortKey>): UserRow[] {
+  const entry = sort[0];
+  if (!entry) {
+    return users;
+  }
+  const dir = entry.direction === 'ascending' ? 1 : -1;
+  const { sortKey } = entry;
+  return [...users].sort((a, b) => {
+    if (sortKey === 'lastLoginAt') {
+      // Nulls sort last in both ascending and descending directions - deliberate
+      // change from the old TanStack config, which coalesced null lastLoginAt to
+      // epoch 0 and therefore listed never-logged-in users first when ascending.
+      if (a.lastLoginAt == null && b.lastLoginAt == null) {
+        return 0;
+      }
+      if (a.lastLoginAt == null) {
+        return 1;
+      }
+      if (b.lastLoginAt == null) {
+        return -1;
+      }
+      return dir * (a.lastLoginAt - b.lastLoginAt);
+    }
+    return dir * a[sortKey].localeCompare(b[sortKey]);
+  });
+}
 
 export function UsersCard() {
+  const toast = useToast();
   const { data: session } = authClient.useSession();
   const [users, setUsers] = useState<UserRow[] | null>(null);
 
   const [emailQuery, setEmailQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'email', desc: false }]);
+  const [sort, setSort] = useState<TableSortState<SortKey>>([{ sortKey: 'email', direction: 'ascending' }]);
 
   const [addOpen, setAddOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<{ id: string; email: string } | null>(null);
@@ -60,12 +100,12 @@ export function UsersCard() {
     const res = await fetch('/api/users');
     if (!res.ok) {
       const err = await parseApiError(res);
-      toast.error(`Load failed: ${err.message}`);
+      toast({ body: `Load failed: ${err.message}`, type: 'error' });
       return;
     }
     const body = await res.json();
     setUsers(body.users);
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     refresh();
@@ -80,13 +120,13 @@ export function UsersCard() {
       });
       if (!res.ok) {
         const err = await parseApiError(res);
-        toast.error(err.message);
+        toast({ body: err.message, type: 'error' });
         return;
       }
       await refresh();
-      toast.success('Role updated');
+      toast({ body: 'Role updated' });
     },
-    [refresh],
+    [refresh, toast],
   );
 
   const onAdded = useCallback(async () => {
@@ -97,82 +137,70 @@ export function UsersCard() {
     await refresh();
   }, [refresh]);
 
-  const columns = useMemo<ColumnDef<UserRow>[]>(
+  const columns = useMemo<TableColumn<UserRow>[]>(
     () => [
       {
-        id: 'email',
-        accessorKey: 'email',
+        key: 'email',
         header: 'Email',
-        cell: ({ row }) => <span className="font-medium">{row.original.email}</span>,
-        filterFn: (row, _id, value: string) => row.original.email.toLowerCase().includes(value.toLowerCase()),
+        width: proportional(2),
+        sortable: { sortKey: 'email' },
+        renderCell: (u) => <span className="font-medium">{u.email}</span>,
       },
       {
-        id: 'role',
-        accessorKey: 'role',
+        key: 'role',
         header: 'Role',
-        cell: ({ row }) => (
-          <Select value={row.original.role} onValueChange={(v) => setRole(row.original.id, v as 'admin' | 'viewer')}>
-            <SelectTrigger size="sm" className="w-[110px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="admin">admin</SelectItem>
-              <SelectItem value="viewer">viewer</SelectItem>
-            </SelectContent>
-          </Select>
+        width: pixel(110),
+        sortable: { sortKey: 'role' },
+        renderCell: (u) => (
+          <Selector
+            label={`Role for ${u.email}`}
+            isLabelHidden
+            size="sm"
+            options={ROLE_SELECT_OPTIONS}
+            value={u.role}
+            onChange={(v) => setRole(u.id, v as 'admin' | 'viewer')}
+          />
         ),
-        filterFn: (row, _id, value: RoleFilter) => (value === 'all' ? true : row.original.role === value),
       },
       {
-        id: 'provider',
-        accessorKey: 'provider',
+        key: 'provider',
         header: 'Provider',
-        cell: ({ row }) => (
-          <Badge variant="secondary" className="uppercase">
-            {row.original.provider}
-          </Badge>
-        ),
-        filterFn: (row, _id, value: ProviderFilter) => (value === 'all' ? true : row.original.provider === value),
+        width: pixel(96),
+        sortable: { sortKey: 'provider' },
+        renderCell: (u) => <Token label={u.provider.toUpperCase()} size="sm" />,
       },
       {
-        id: 'lastLoginAt',
-        accessorFn: (row) => row.lastLoginAt ?? 0,
+        key: 'lastLoginAt',
         header: 'Last login',
-        sortingFn: 'basic',
-        sortUndefined: 'last',
-        cell: ({ row }) => (
-          <span className="text-xs text-muted-foreground">
-            {row.original.lastLoginAt ? formatDateTime(row.original.lastLoginAt) : '-'}
-          </span>
+        width: proportional(1),
+        sortable: { sortKey: 'lastLoginAt' },
+        renderCell: (u) => (
+          <span className="text-xs text-muted-foreground">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : '-'}</span>
         ),
-        enableColumnFilter: false,
       },
       {
-        id: 'actions',
+        key: 'actions',
         header: '',
-        enableSorting: false,
-        enableColumnFilter: false,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-2 py-1">
-            <Button
-              variant="outline"
+        width: pixel(112),
+        resizable: false,
+        renderCell: (u) => (
+          <div className="flex items-center justify-end gap-2">
+            <IconButton
+              icon={<KeyRound aria-hidden className="size-4" />}
+              label={`Reset password for ${u.email}`}
+              variant="secondary"
               size="sm"
-              onClick={() => setResetTarget({ id: row.original.id, email: row.original.email })}
-            >
-              <KeyRound aria-hidden />
-              Reset password
-            </Button>
-            <span aria-hidden className="h-6 w-px bg-border" />
-            <Button
-              variant="ghost"
+              className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+              onClick={() => setResetTarget({ id: u.id, email: u.email })}
+            />
+            <IconButton
+              icon={<Trash2 aria-hidden className="size-4" />}
+              label={`Delete ${u.email}`}
+              variant="destructive"
               size="sm"
-              onClick={() => setDeleteTarget({ id: row.original.id, email: row.original.email })}
-              aria-label={`Delete ${row.original.email}`}
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            >
-              <Trash2 aria-hidden />
-              Delete
-            </Button>
+              className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+              onClick={() => setDeleteTarget({ id: u.id, email: u.email })}
+            />
           </div>
         ),
       },
@@ -180,163 +208,129 @@ export function UsersCard() {
     [setRole],
   );
 
-  const columnFilters = useMemo<ColumnFiltersState>(() => {
-    const out: ColumnFiltersState = [];
-    if (emailQuery.trim()) {
-      out.push({ id: 'email', value: emailQuery.trim() });
-    }
-    if (roleFilter !== 'all') {
-      out.push({ id: 'role', value: roleFilter });
-    }
-    if (providerFilter !== 'all') {
-      out.push({ id: 'provider', value: providerFilter });
-    }
-    return out;
-  }, [emailQuery, roleFilter, providerFilter]);
-
-  const table = useReactTable({
-    data: users ?? [],
-    columns,
-    state: { sorting, columnFilters },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+  const sortable = useTableSortable<UserRow, SortKey>({
+    sort,
+    onSortChange: setSort,
+    allowUnsortedState: true,
   });
+
+  const filteredUsers = useMemo(() => {
+    if (!users) {
+      return [];
+    }
+    const email = emailQuery.trim().toLowerCase();
+    return users.filter((u) => {
+      if (email && !u.email.toLowerCase().includes(email)) {
+        return false;
+      }
+      if (roleFilter !== 'all' && u.role !== roleFilter) {
+        return false;
+      }
+      if (providerFilter !== 'all' && u.provider !== providerFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [users, emailQuery, roleFilter, providerFilter]);
+
+  const sortedUsers = useMemo(() => sortUsers(filteredUsers, sort), [filteredUsers, sort]);
 
   if ((session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin') {
     return null;
   }
 
-  const totalFiltered = table.getFilteredRowModel().rows.length;
   const hasActiveFilter = emailQuery.trim() !== '' || roleFilter !== 'all' || providerFilter !== 'all';
 
   return (
-    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle as="h2" className="flex items-center gap-2 label-eyebrow">
+    <Card padding={0} className="flex flex-col gap-6 overflow-hidden py-6">
+      <div className="px-6">
+        <Heading level={2} className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Users
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+        </Heading>
+      </div>
+      <div className="flex flex-col gap-4 px-6">
         <div className="flex flex-wrap items-end gap-3">
+          <TextInput
+            label="Search email"
+            value={emailQuery}
+            onChange={setEmailQuery}
+            placeholder="jane@example.com"
+            size="sm"
+            width={224}
+            startIcon={Search}
+            hasClear
+          />
           <div className="flex flex-col gap-1">
-            <Label htmlFor="users-email-filter" className="text-xs">
-              Search email
-            </Label>
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                id="users-email-filter"
-                value={emailQuery}
-                onChange={(e) => setEmailQuery(e.target.value)}
-                placeholder="jane@example.com"
-                className="h-8 w-56 pl-7 text-sm"
-              />
+            <span className="text-xs font-medium text-muted-foreground" aria-hidden>
+              Role
+            </span>
+            <div className={togglePillClasses}>
+              <ToggleButtonGroup
+                label="Filter by role"
+                type="single"
+                size="sm"
+                value={roleFilter}
+                onChange={(v) => setRoleFilter((v ?? 'all') as RoleFilter)}
+              >
+                <ToggleButton value="all" label="All" />
+                <ToggleButton value="admin" label="Admin" />
+                <ToggleButton value="viewer" label="Viewer" />
+              </ToggleButtonGroup>
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <Label className="text-xs">Role</Label>
-            <Segmented<RoleFilter>
-              value={roleFilter}
-              onChange={setRoleFilter}
-              options={[
-                { value: 'all', label: 'All' },
-                { value: 'admin', label: 'Admin' },
-                { value: 'viewer', label: 'Viewer' },
-              ]}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">Provider</Label>
-            <Segmented<ProviderFilter>
-              value={providerFilter}
-              onChange={setProviderFilter}
-              options={[
-                { value: 'all', label: 'All' },
-                { value: 'local', label: 'Local' },
-                { value: 'oidc', label: 'OIDC' },
-              ]}
-            />
+            <span className="text-xs font-medium text-muted-foreground" aria-hidden>
+              Provider
+            </span>
+            <div className={togglePillClasses}>
+              <ToggleButtonGroup
+                label="Filter by provider"
+                type="single"
+                size="sm"
+                value={providerFilter}
+                onChange={(v) => setProviderFilter((v ?? 'all') as ProviderFilter)}
+              >
+                <ToggleButton value="all" label="All" />
+                <ToggleButton value="local" label="Local" />
+                <ToggleButton value="oidc" label="OIDC" />
+              </ToggleButtonGroup>
+            </div>
           </div>
           {hasActiveFilter ? (
             <Button
               variant="ghost"
               size="sm"
+              label="Clear"
               onClick={() => {
                 setEmailQuery('');
                 setRoleFilter('all');
                 setProviderFilter('all');
               }}
-            >
-              Clear
-            </Button>
+            />
           ) : null}
           <div className="ml-auto flex items-center gap-3">
-            <Button onClick={() => setAddOpen(true)}>Add user</Button>
+            <Button variant="primary" size="sm" label="Add user" onClick={() => setAddOpen(true)} />
           </div>
         </div>
 
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const canSort = header.column.getCanSort();
-                  const sortDir = header.column.getIsSorted();
-                  return (
-                    <TableHead key={header.id}>
-                      {canSort ? (
-                        <button
-                          type="button"
-                          onClick={header.column.getToggleSortingHandler()}
-                          className="inline-flex items-center gap-1 text-left font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {sortDir === 'asc' && <ArrowUp className="size-3" />}
-                          {sortDir === 'desc' && <ArrowDown className="size-3" />}
-                          {!sortDir && <ArrowUpDown className="size-3 opacity-40" />}
-                        </button>
-                      ) : (
-                        flexRender(header.column.columnDef.header, header.getContext())
-                      )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {users === null && (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
-                  Loading users…
-                </TableCell>
-              </TableRow>
-            )}
-            {users !== null && totalFiltered === 0 && (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
-                  {users.length === 0 ? 'No users yet.' : 'No users match the current filters.'}
-                </TableCell>
-              </TableRow>
-            )}
-            {users !== null &&
-              totalFiltered > 0 &&
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                  ))}
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+        {sortedUsers.length === 0 ? (
+          <div className="py-6 text-center text-muted-foreground" role="status">
+            {users === null && 'Loading users…'}
+            {users !== null && users.length === 0 && 'No users yet.'}
+            {users !== null && users.length !== 0 && 'No users match the current filters.'}
+          </div>
+        ) : (
+          <Table
+            data={sortedUsers}
+            columns={columns}
+            idKey="id"
+            plugins={{ sort: sortable }}
+            density="compact"
+            aria-label="Users, sortable and filterable."
+          />
+        )}
+      </div>
 
       <AddUserDialog open={addOpen} onOpenChange={setAddOpen} onCreated={onAdded} />
       <ResetPasswordDialog
@@ -351,37 +345,5 @@ export function UsersCard() {
         onDeleted={onDeleted}
       />
     </Card>
-  );
-}
-
-function Segmented<T extends string>({
-  value,
-  onChange,
-  options,
-}: {
-  value: T;
-  onChange: (v: T) => void;
-  options: { value: T; label: string }[];
-}) {
-  return (
-    <div className="inline-flex items-center rounded-md border border-border bg-background p-0.5">
-      {options.map((opt) => {
-        const active = opt.value === value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            aria-pressed={active}
-            className={cn(
-              'h-7 rounded-sm px-2 text-xs font-medium transition-colors',
-              active ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
   );
 }

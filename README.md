@@ -11,6 +11,7 @@ Self-hosted internet speed monitor. Runs [`@cloudflare/speedtest`](https://www.n
 - **Runtime**: Bun 1.x
 - **Package manager**: Bun 1.3
 - **Framework**: Next.js 16 (App Router) + TypeScript 6 + Biome 2 + Tailwind v4
+- **UI**: [Astryx](https://astryx.atmeta.com/) design system (`@astryxdesign/core`, exact-pinned) with a custom pre-built theme (`lib/astryx-theme.ts` -> `bun run theme:build`)
 - **Custom server** (`server.ts`): hosts Next.js **and** a `ws` WebSocket endpoint on the same port
 - **Scheduler**: `node-cron` 4.x, reprogrammable at runtime from the UI
 - **DB**: Drizzle ORM 0.45 + `bun:sqlite` (built-in)
@@ -188,6 +189,8 @@ bun test                   # bun native unit tests
 bun run lint               # biome check .
 bun run tsc                # tsc --noEmit
 bun run build              # drizzle generate + fetch releases + build email templates + next build
+bun run theme:build        # rebuild lib/speedtest.* after editing lib/astryx-theme.ts (CI fails if out of sync)
+bun run test:a11y:page     # axe audit of /login with forced color scheme (--scheme light|dark, --cookie for authed pages)
 ```
 
 ### End-to-end check

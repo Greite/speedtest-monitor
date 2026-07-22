@@ -1,17 +1,17 @@
 'use client';
 
-import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
+import { Switch } from '@astryxdesign/core/Switch';
+import { Heading } from '@astryxdesign/core/Text';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Token } from '@astryxdesign/core/Token';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
@@ -45,17 +45,18 @@ const DESTS: { key: keyof Configured; label: string }[] = [
   { key: 'smtp', label: 'SMTP' },
 ];
 
-function numOrNull(v: string): number | null {
-  if (v.trim() === '') {
-    return null;
-  }
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? n : null;
+// NumberInput's onChange only fires with finite numbers (or null on clear),
+// so this only has to keep the original "must be positive" business rule -
+// zero or negative values disable the rule instead of committing. Emptied
+// fields commit on blur/Enter/clear, not per keystroke (see table-filters).
+function positiveOrNull(v: number | null): number | null {
+  return v != null && v > 0 ? v : null;
 }
 
 type TestState = { ok: boolean; message: string } | 'pending';
 
 export function AlertsCard() {
+  const toast = useToast();
   const { data: session } = authClient.useSession();
   const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const [rules, setRules] = useState<Rules | null>(null);
@@ -99,28 +100,24 @@ export function AlertsCard() {
 
   if (!rules) {
     return (
-      <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle as="h2" className="flex items-center gap-2 label-eyebrow">
+      <Card padding={0} className="flex flex-col gap-6 py-6">
+        <div className="px-6">
+          <Heading level={2} className="label-eyebrow flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-brand" aria-hidden />
             Alerts
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
+          </Heading>
+        </div>
+        <div className="flex flex-col gap-4 px-6">
           {error ? (
-            <Alert variant="destructive">
-              <AlertCircle />
-              <AlertTitle>Load failed</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <Banner status="error" title="Load failed" description={error} />
           ) : (
             <>
-              <Skeleton className="h-8 w-40" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-40 w-full" />
+              <Skeleton height={32} width={160} />
+              <Skeleton height={96} width="100%" />
+              <Skeleton height={160} width="100%" />
             </>
           )}
-        </CardContent>
+        </div>
       </Card>
     );
   }
@@ -149,7 +146,7 @@ export function AlertsCard() {
         const apiErr = await parseApiError(res);
         setStatus(null);
         if (res.status >= 500) {
-          toast.error(apiErr.message);
+          toast({ body: apiErr.message, type: 'error' });
         } else {
           setError(apiErr.message);
         }
@@ -159,10 +156,10 @@ export function AlertsCard() {
       setRules(updated);
       setSavedRules(updated);
       setStatus('Saved');
-      toast.success('Alerts saved');
+      toast({ body: 'Alerts saved' });
     } catch (err) {
       setStatus(null);
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast({ body: err instanceof Error ? err.message : 'Save failed', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -204,88 +201,74 @@ export function AlertsCard() {
   };
 
   return (
-    <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle as="h2" className="flex items-center gap-2 label-eyebrow">
+    <Card padding={0} className="flex flex-col gap-6 py-6">
+      <div className="px-6">
+        <Heading level={2} className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           Alerts
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        <div className="flex items-center gap-3">
+        </Heading>
+      </div>
+      <div className="flex flex-col gap-6 px-6">
+        {/* Switch's track is a fixed 40x24 box and the actual hit target - its
+            invisible <input> - matches that size exactly (see Switch.tsx). Both
+            dimensions sit under the 44px mobile touch floor (WCAG 2.5.5), so the
+            wrapper enlarges the rendered input on mobile only, same idiom as the
+            ToggleButton wrapper in table-filters.tsx. min-w-10/min-h-6 restore
+            the native 40x24 size at md and up. */}
+        <div className="[&_input]:min-h-11 [&_input]:min-w-11 md:[&_input]:min-h-6 md:[&_input]:min-w-10">
           <Switch
-            id="alerts-enabled"
-            checked={rules.enabled}
-            disabled={readOnly}
-            onCheckedChange={(v) => setRules({ ...rules, enabled: v })}
+            label="Enable alerts"
+            value={rules.enabled}
+            isDisabled={readOnly}
+            onChange={(v) => setRules({ ...rules, enabled: v })}
           />
-          <Label htmlFor="alerts-enabled">Enable alerts</Label>
         </div>
 
         <div className="flex flex-col gap-3">
           <h3 className="text-sm font-semibold">Thresholds</h3>
           <p className="text-xs text-muted-foreground">Leave empty to disable a rule. Values must be positive.</p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="th-download">Download below (Mbps)</Label>
-              <Input
-                id="th-download"
-                type="number"
-                min={0}
-                step="any"
-                disabled={readOnly}
-                value={rules.thresholds.downloadMbps ?? ''}
-                onChange={(e) => setThreshold('downloadMbps', numOrNull(e.target.value))}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="th-upload">Upload below (Mbps)</Label>
-              <Input
-                id="th-upload"
-                type="number"
-                min={0}
-                step="any"
-                disabled={readOnly}
-                value={rules.thresholds.uploadMbps ?? ''}
-                onChange={(e) => setThreshold('uploadMbps', numOrNull(e.target.value))}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="th-latency">Latency above (ms)</Label>
-              <Input
-                id="th-latency"
-                type="number"
-                min={0}
-                step="any"
-                disabled={readOnly}
-                value={rules.thresholds.latencyMs ?? ''}
-                onChange={(e) => setThreshold('latencyMs', numOrNull(e.target.value))}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="th-bufferbloat">Bufferbloat above (ms)</Label>
-              <Input
-                id="th-bufferbloat"
-                type="number"
-                min={0}
-                step="any"
-                disabled={readOnly}
-                value={rules.thresholds.bufferBloatMs ?? ''}
-                onChange={(e) => setThreshold('bufferBloatMs', numOrNull(e.target.value))}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="th-failure">Failure streak</Label>
-              <Input
-                id="th-failure"
-                type="number"
-                min={1}
-                step={1}
-                disabled={readOnly}
-                value={rules.failureStreak ?? ''}
-                onChange={(e) => setRules({ ...rules, failureStreak: numOrNull(e.target.value) })}
-              />
-            </div>
+            <NumberInput
+              label="Download below (Mbps)"
+              hasClear
+              value={rules.thresholds.downloadMbps}
+              onChange={(v) => setThreshold('downloadMbps', positiveOrNull(v))}
+              isDisabled={readOnly}
+              className="tabular-nums"
+            />
+            <NumberInput
+              label="Upload below (Mbps)"
+              hasClear
+              value={rules.thresholds.uploadMbps}
+              onChange={(v) => setThreshold('uploadMbps', positiveOrNull(v))}
+              isDisabled={readOnly}
+              className="tabular-nums"
+            />
+            <NumberInput
+              label="Latency above (ms)"
+              hasClear
+              value={rules.thresholds.latencyMs}
+              onChange={(v) => setThreshold('latencyMs', positiveOrNull(v))}
+              isDisabled={readOnly}
+              className="tabular-nums"
+            />
+            <NumberInput
+              label="Bufferbloat above (ms)"
+              hasClear
+              value={rules.thresholds.bufferBloatMs}
+              onChange={(v) => setThreshold('bufferBloatMs', positiveOrNull(v))}
+              isDisabled={readOnly}
+              className="tabular-nums"
+            />
+            <NumberInput
+              label="Failure streak"
+              hasClear
+              isIntegerOnly
+              value={rules.failureStreak}
+              onChange={(v) => setRules({ ...rules, failureStreak: positiveOrNull(v) })}
+              isDisabled={readOnly}
+              className="tabular-nums"
+            />
           </div>
         </div>
 
@@ -297,21 +280,26 @@ export function AlertsCard() {
               const result = testResult[key];
               return (
                 <div key={key} className="flex flex-wrap items-center gap-3 rounded-md border bg-card/50 px-3 py-2">
-                  <Switch
-                    id={`dest-${key}`}
-                    checked={rules.destinations[key]}
-                    disabled={!configured || readOnly}
-                    onCheckedChange={(v) => setDest(key, v)}
+                  <div className="[&_input]:min-h-11 [&_input]:min-w-11 md:[&_input]:min-h-6 md:[&_input]:min-w-10">
+                    <Switch
+                      label={label}
+                      value={rules.destinations[key]}
+                      isDisabled={!configured || readOnly}
+                      onChange={(v) => setDest(key, v)}
+                      width={140}
+                    />
+                  </div>
+                  <Token
+                    label={configured ? 'configured in env' : 'missing env var'}
+                    color={configured ? 'green' : 'gray'}
                   />
-                  <Label htmlFor={`dest-${key}`} className="w-24">
-                    {label}
-                  </Label>
-                  <Badge variant={configured ? 'secondary' : 'outline'}>
-                    {configured ? 'configured in env' : 'missing env var'}
-                  </Badge>
-                  <Button variant="outline" size="sm" disabled={!configured || readOnly} onClick={() => test(key)}>
-                    Send test
-                  </Button>
+                  <Button
+                    label="Send test"
+                    variant="secondary"
+                    size="sm"
+                    isDisabled={!configured || readOnly}
+                    onClick={() => test(key)}
+                  />
                   {result ? <TestResultPill state={result} /> : null}
                 </div>
               );
@@ -319,20 +307,19 @@ export function AlertsCard() {
           </div>
         </div>
 
-        {error ? (
-          <Alert variant="destructive">
-            <AlertCircle />
-            <AlertTitle>Save failed</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : null}
+        {error ? <Banner status="error" title="Save failed" description={error} /> : null}
 
         <div className="flex items-center gap-2">
-          <Button onClick={save} disabled={saving || readOnly || !dirty}>
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
           <Button
-            variant="outline"
+            label={saving ? 'Saving…' : 'Save'}
+            onClick={save}
+            isDisabled={saving || readOnly || !dirty}
+            isLoading={saving}
+            variant="primary"
+          />
+          <Button
+            label="Cancel"
+            variant="secondary"
             onClick={() => {
               if (savedRules) {
                 setRules(savedRules);
@@ -340,13 +327,11 @@ export function AlertsCard() {
               setError(null);
               setStatus(null);
             }}
-            disabled={saving || readOnly || !dirty}
-          >
-            Cancel
-          </Button>
+            isDisabled={saving || readOnly || !dirty}
+          />
           {status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

@@ -1,6 +1,12 @@
 'use client';
 
-import { Check, ChevronRight, LogOut, Menu, Monitor, Moon, Play, Settings, Sun } from 'lucide-react';
+import { Button } from '@astryxdesign/core/Button';
+import { Dialog } from '@astryxdesign/core/Dialog';
+import { DropdownMenu, DropdownMenuItem } from '@astryxdesign/core/DropdownMenu';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { Heading, Text } from '@astryxdesign/core/Text';
+import { Token } from '@astryxdesign/core/Token';
+import { Check, ChevronRight, LogOut, Menu, Monitor, Moon, Play, Settings, Sun, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -9,24 +15,7 @@ import { useEffect, useState } from 'react';
 import { useLiveMeasurements } from './use-live-measurements';
 
 import { LogoMark } from '@/components/logo-mark';
-import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useDialogA11yIds } from '@/components/use-dialog-a11y-ids';
 import { authClient } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
 
@@ -107,6 +96,17 @@ function ThemeSegmented({
   );
 }
 
+// ThemeMenu uses DropdownMenu's compound-children mode rather than the
+// data-driven `items` mode, because DropdownMenuItemProps (the compound
+// child) is the only item shape that forwards endContent (verified in
+// DropdownMenuItem.d.ts vs. DropdownMenuItemData in DropdownMenu.d.ts) - so
+// the active theme can be marked with a trailing Check next to its own
+// Sun/Moon/Monitor icon instead of swapping the icon away. There is no
+// compound equivalent of the data-driven mode's built-in section title
+// (checked DropdownMenu.d.ts/index.d.ts - Section is an unrelated page-layout
+// component, not a menu part), so the "Theme" label is reconstructed as a
+// plain aria-hidden div, wrapped in the same role="group" the data-driven
+// section used internally (see renderDropdownItems.js).
 function ThemeMenu({
   mounted,
   theme,
@@ -119,33 +119,103 @@ function ThemeMenu({
   const current = THEMES.find((t) => mounted && t.value === theme) ?? THEMES[2];
   const CurrentIcon = current.icon;
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={`Theme: ${current.label}`}>
-          <CurrentIcon aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[10rem]">
-        <DropdownMenuLabel className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+    <DropdownMenu
+      button={{
+        label: `Theme: ${current.label}`,
+        icon: <CurrentIcon aria-hidden className="size-4" />,
+        isIconOnly: true,
+        variant: 'ghost',
+        size: 'sm',
+        className: 'min-h-11 min-w-11 md:min-h-7 md:min-w-7',
+      }}
+      placement="below"
+    >
+      {/* biome-ignore lint/a11y/useSemanticElements: this groups menuitems inside
+          role="menu" (mirrors Astryx's own renderDropdownItems.js section
+          wrapper) - fieldset is form-control semantics and isn't appropriate
+          here. */}
+      <div role="group" aria-label="Theme">
+        <div
+          aria-hidden
+          className="px-2.5 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+        >
           Theme
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        </div>
         {THEMES.map(({ value, label, icon: Icon }) => {
           const active = mounted && theme === value;
           return (
             <DropdownMenuItem
               key={value}
-              onSelect={() => setTheme(value)}
-              className={cn('gap-2', active && 'bg-accent text-accent-foreground')}
-            >
-              <Icon className="size-4" aria-hidden />
-              <span>{label}</span>
-              {active ? <Check className="ml-auto size-3.5" aria-hidden /> : null}
-            </DropdownMenuItem>
+              icon={<Icon aria-hidden className="size-4" />}
+              label={label}
+              endContent={active ? <Check aria-hidden className="size-4" /> : undefined}
+              onClick={() => setTheme(value)}
+            />
           );
         })}
-      </DropdownMenuContent>
+      </div>
     </DropdownMenu>
+  );
+}
+
+// Replaces the old shadcn ConfirmDialog (which only wrapped the shadcn Dialog
+// + Button). Topbar is its sole consumer, so it's kept local rather than
+// promoted to a shared component - mirrors the pattern already established by
+// components/users/delete-user-dialog.tsx (Astryx Dialog does not
+// auto-generate aria-labelledby/aria-describedby, so title/description are
+// linked explicitly via useDialogA11yIds).
+function LogoutConfirmDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void | Promise<void>;
+}) {
+  const { labelId: titleId, descriptionId } = useDialogA11yIds();
+  const [busy, setBusy] = useState(false);
+
+  async function handleConfirm() {
+    setBusy(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      isOpen={open}
+      onOpenChange={onOpenChange}
+      purpose="form"
+      role="alertdialog"
+      width={400}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <Heading level={2} id={titleId}>
+            Log out?
+          </Heading>
+          <Text type="body" color="secondary" id={descriptionId}>
+            You will be signed out and returned to the login page.
+          </Text>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" label="Cancel" isDisabled={busy} onClick={() => onOpenChange(false)} />
+          <Button
+            variant="destructive"
+            label={busy ? 'Working…' : 'Log out'}
+            isLoading={busy}
+            onClick={handleConfirm}
+          />
+        </div>
+      </div>
+    </Dialog>
   );
 }
 
@@ -159,6 +229,7 @@ export function Topbar() {
 
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const [running2, setRunning2] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -197,6 +268,11 @@ export function Topbar() {
     router.refresh();
   }
 
+  async function onLogoutConfirmed() {
+    setMenuOpen(false);
+    await handleLogout();
+  }
+
   const isBusy = running || running2;
   const label = liveLabel({ running: isBusy, connected });
 
@@ -220,95 +296,110 @@ export function Topbar() {
 
         {/* Desktop/tablet cluster */}
         <nav aria-label="Main" className="hidden items-center gap-2 md:flex md:gap-3">
-          <div
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-2.5 py-1 text-xs text-muted-foreground"
-            aria-live="polite"
-          >
-            <LiveDot running={isBusy} connected={connected} />
-            <span className="font-medium tracking-wide">{label}</span>
+          <div aria-live="polite">
+            <Token
+              label={label}
+              icon={<LiveDot running={isBusy} connected={connected} />}
+              size="sm"
+              className="border border-border/60 bg-card/40 text-muted-foreground"
+            />
           </div>
 
           <Button
-            size="sm"
+            label={isBusy ? 'Running…' : 'Run now'}
+            icon={<Play aria-hidden className={cn('size-3.5', isBusy && 'animate-pulse')} />}
+            isLoading={isBusy}
+            isDisabled={isBusy || !connected}
             onClick={handleRun}
-            disabled={isBusy || !connected}
-            className={cn('bg-brand text-brand-foreground hover:bg-brand/90', !isBusy && connected && 'brand-glow')}
-            title={connected ? undefined : 'Waiting for live connection…'}
-          >
-            <Play aria-hidden className={cn('size-3.5', isBusy && 'animate-pulse')} />
-            <span>{isBusy ? 'Running…' : 'Run now'}</span>
-          </Button>
+            tooltip={connected ? undefined : 'Waiting for live connection…'}
+            variant="primary"
+            size="sm"
+            className={cn('bg-brand text-brand-foreground hover:bg-brand-hover', !isBusy && connected && 'brand-glow')}
+          />
 
           <span aria-hidden className="mx-1 h-6 w-px bg-border/70" />
 
-          <Button variant="ghost" size="icon-sm" asChild aria-label="Settings">
-            <Link href="/settings">
-              <Settings aria-hidden />
-            </Link>
-          </Button>
+          <IconButton
+            icon={<Settings aria-hidden className="size-4" />}
+            label="Settings"
+            href="/settings"
+            variant="ghost"
+            size="sm"
+            className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+          />
 
           <ThemeMenu mounted={mounted} theme={theme} setTheme={setTheme} />
 
           {role ? (
-            <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              <span className="size-1 rounded-full bg-brand" aria-hidden />
-              {role}
-            </span>
+            <Token
+              label={role}
+              icon={<span className="size-1 rounded-full bg-brand" aria-hidden />}
+              size="sm"
+              className="ml-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em]"
+            />
           ) : null}
 
-          <ConfirmDialog
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Log out"
-                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              >
-                <LogOut aria-hidden />
-              </Button>
-            }
-            title="Log out?"
-            description="You will be signed out and returned to the login page."
-            confirmLabel="Log out"
-            destructive
-            onConfirm={handleLogout}
+          <IconButton
+            icon={<LogOut aria-hidden className="size-4" />}
+            label="Log out"
+            variant="ghost"
+            size="sm"
+            className="min-h-11 min-w-11 md:min-h-7 md:min-w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setLogoutOpen(true)}
           />
         </nav>
 
         {/* Mobile cluster */}
         <div className="flex items-center gap-2 md:hidden">
           <LiveDot running={isBusy} connected={connected} />
-          <Button
-            size="icon-sm"
+          <IconButton
+            icon={<Play aria-hidden className={cn('size-4', isBusy && 'animate-pulse')} />}
+            label={isBusy ? 'Running…' : 'Run now'}
+            isLoading={isBusy}
+            isDisabled={isBusy || !connected}
             onClick={handleRun}
-            disabled={isBusy || !connected}
-            aria-label="Run now"
-            className={cn('bg-brand text-brand-foreground hover:bg-brand/90', !isBusy && connected && 'brand-glow')}
+            variant="primary"
+            size="sm"
+            className={cn(
+              'min-h-11 min-w-11 bg-brand text-brand-foreground hover:bg-brand-hover',
+              !isBusy && connected && 'brand-glow',
+            )}
+          />
+          <IconButton
+            icon={<Menu aria-hidden className="size-4" />}
+            label="Open menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(true)}
+            variant="ghost"
+            size="sm"
+            className="min-h-11 min-w-11"
+          />
+          <Dialog
+            isOpen={menuOpen}
+            onOpenChange={setMenuOpen}
+            variant="fullscreen"
+            purpose="info"
+            padding={0}
+            aria-label="Main menu"
           >
-            <Play aria-hidden className={cn(isBusy && 'animate-pulse')} />
-          </Button>
-          <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Open menu" aria-expanded={menuOpen}>
-                <Menu aria-hidden />
-              </Button>
-            </DialogTrigger>
-            <DialogContent
-              className={cn(
-                'left-auto right-0 top-0 h-full w-full max-w-sm translate-x-0 translate-y-0 rounded-none border-0 border-l border-border/60 bg-background/95 p-0 backdrop-blur-xl',
-                'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right',
-              )}
-            >
+            <div className="relative flex h-full flex-col bg-background/95 backdrop-blur-xl">
               <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 app-backdrop" />
-              <DialogHeader className="border-b border-border/50 px-5 py-4 text-left">
-                <DialogTitle className="flex items-center gap-2.5" aria-label="Speedtest Monitor">
+              <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+                <div className="flex items-center gap-2.5">
                   <LogoMark size={28} />
                   <span aria-hidden className="text-lg font-semibold leading-none tracking-tight">
                     Speedtest<span className="text-muted-foreground">·</span>Monitor
                   </span>
-                </DialogTitle>
-                <DialogDescription className="sr-only">Main navigation menu</DialogDescription>
-              </DialogHeader>
+                </div>
+                <IconButton
+                  icon={<X aria-hidden className="size-4" />}
+                  label="Close menu"
+                  variant="ghost"
+                  size="sm"
+                  className="min-h-11 min-w-11"
+                  onClick={() => setMenuOpen(false)}
+                />
+              </div>
 
               <nav aria-label="Main" className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
                 {role ? (
@@ -320,10 +411,12 @@ export function Topbar() {
                       Account
                     </h3>
                     <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/70 px-3 py-2">
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                        <span className="size-1 rounded-full bg-brand" aria-hidden />
-                        {role}
-                      </span>
+                      <Token
+                        label={role}
+                        icon={<span className="size-1 rounded-full bg-brand" aria-hidden />}
+                        size="sm"
+                        className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.14em]"
+                      />
                       {session?.user?.email ? (
                         <span className="min-w-0 truncate text-sm text-muted-foreground" title={session.user.email}>
                           {session.user.email}
@@ -356,19 +449,18 @@ export function Topbar() {
                       {connected && !isBusy && 'Live connection active.'}
                     </p>
                     <Button
-                      size="sm"
-                      onClick={async () => {
-                        await handleRun();
-                      }}
-                      disabled={isBusy || !connected}
+                      label={isBusy ? 'Running…' : 'Run now'}
+                      icon={<Play aria-hidden className={cn('size-4', isBusy && 'animate-pulse')} />}
+                      isLoading={isBusy}
+                      isDisabled={isBusy || !connected}
+                      onClick={handleRun}
+                      variant="primary"
+                      width="100%"
                       className={cn(
-                        'mt-3 min-h-[44px] w-full bg-brand text-brand-foreground hover:bg-brand/90',
+                        'mt-3 min-h-11 bg-brand text-brand-foreground hover:bg-brand-hover',
                         !isBusy && connected && 'brand-glow',
                       )}
-                    >
-                      <Play aria-hidden className={cn(isBusy && 'animate-pulse')} />
-                      {isBusy ? 'Running…' : 'Run now'}
-                    </Button>
+                    />
                   </div>
                 </section>
 
@@ -436,34 +528,22 @@ export function Topbar() {
                 </section>
 
                 <div className="drawer-section mt-auto pt-2" style={{ animationDelay: '160ms' }}>
-                  <ConfirmDialog
-                    trigger={
-                      <button
-                        type="button"
-                        className={cn(
-                          'flex min-h-[44px] w-full items-center justify-start gap-2.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10',
-                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                        )}
-                      >
-                        <LogOut className="size-4" aria-hidden />
-                        Log out
-                      </button>
-                    }
-                    title="Log out?"
-                    description="You will be signed out and returned to the login page."
-                    confirmLabel="Log out"
-                    destructive
-                    onConfirm={async () => {
-                      setMenuOpen(false);
-                      await handleLogout();
-                    }}
+                  <Button
+                    label="Log out"
+                    icon={<LogOut aria-hidden className="size-4" />}
+                    variant="ghost"
+                    width="100%"
+                    onClick={() => setLogoutOpen(true)}
+                    className="min-h-11 justify-start border border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10"
                   />
                 </div>
               </nav>
-            </DialogContent>
+            </div>
           </Dialog>
         </div>
       </div>
+
+      <LogoutConfirmDialog open={logoutOpen} onOpenChange={setLogoutOpen} onConfirm={onLogoutConfirmed} />
     </header>
   );
 }

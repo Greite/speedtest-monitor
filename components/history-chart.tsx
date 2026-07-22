@@ -1,5 +1,8 @@
 'use client';
 
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { Heading } from '@astryxdesign/core/Text';
 import { LineChartIcon, TableIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
@@ -14,8 +17,6 @@ import {
   YAxis,
 } from 'recharts';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDateTime, formatShortDate, formatTime, type LatencyLevel, latencyLevel } from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -70,14 +71,14 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
 
   if (data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle as="h2" className="label-eyebrow flex items-center gap-2">
+      <Card padding={0} className="flex flex-col gap-6 py-6">
+        <div className="px-6">
+          <Heading level={2} className="label-eyebrow flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-brand" aria-hidden />
             History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </Heading>
+        </div>
+        <div className="px-6">
           <div className="flex h-64 flex-col items-center justify-center gap-2 px-6 text-center" role="status">
             <span
               className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
@@ -90,7 +91,7 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
               Try a wider time range, or trigger a measurement from the toolbar. New points appear here automatically.
             </p>
           </div>
-        </CardContent>
+        </div>
       </Card>
     );
   }
@@ -99,34 +100,30 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
 
   return (
     <Card
-      className={cn(
-        'relative overflow-hidden border-border/60 bg-card/80 backdrop-blur-sm transition-shadow',
-        running && 'live-glow',
-      )}
+      padding={0}
+      className={cn('relative flex flex-col gap-6 overflow-hidden py-6 transition-shadow', running && 'live-glow')}
     >
-      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle as="h2" className="label-eyebrow flex items-center gap-2">
+      <div className="flex flex-col gap-2 px-6 sm:flex-row sm:items-center sm:justify-between">
+        <Heading level={2} className="label-eyebrow flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-brand" aria-hidden />
           History
-        </CardTitle>
+        </Heading>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <Legend color="var(--color-speed-down)" label="Download" />
           <Legend color="var(--color-speed-up)" label="Upload" />
           <Legend color="var(--color-latency-ok)" label="Latency" dashed />
           <Button
-            type="button"
             variant="ghost"
-            size="xs"
+            size="sm"
+            icon={<TableIcon aria-hidden className="size-4" />}
+            label={showTable ? 'Hide table' : 'View as table'}
             aria-pressed={showTable}
             aria-controls="chart-data-table"
             onClick={() => setShowTable((v) => !v)}
-          >
-            <TableIcon aria-hidden />
-            {showTable ? 'Hide table' : 'View as table'}
-          </Button>
+          />
         </div>
-      </CardHeader>
-      <CardContent className="px-0 pb-0">
+      </div>
+      <div>
         <div
           className="relative h-64 w-full overflow-hidden"
           style={{ minWidth: 0, minHeight: 0 }}
@@ -267,7 +264,7 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
             </tbody>
           </table>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

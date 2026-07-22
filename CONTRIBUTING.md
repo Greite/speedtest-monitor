@@ -35,6 +35,8 @@ bun run build              # drizzle generate + fetch releases + build email tem
 
 `bun run lint` bundles the type check and Biome; run `bun run tsc` on its own if you only want the type check.
 
+CI additionally verifies that the built theme is fresh: `bun run theme:build` must produce no diff in `lib/` (see `.github/workflows/a11y.yml`).
+
 A husky `pre-commit` hook runs `lint`, `test`, and `build` automatically. Do not bypass it with `--no-verify` unless you have a very good reason.
 
 Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's native test runner. Pure helpers go under `lib/` - keep tests there deterministic (no DB, no network).
@@ -43,8 +45,17 @@ Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's na
 
 - Formatting and linting are enforced by [Biome 2](https://biomejs.dev). Run `bun run biome:write` to auto-apply lint + format fixes.
 - TypeScript is strict; prefer `type` imports (`import type {...}`) to keep the bundle clean.
-- Prefer small, focused components in `components/`; shared primitives live under `components/ui/` (shadcn).
+- Prefer small, focused components in `components/`; UI primitives come from the [Astryx](https://astryx.atmeta.com/) design system (`@astryxdesign/core`), imported per subpath (`@astryxdesign/core/Button`).
 - Dark mode styling uses semantic tokens (`bg-card`, `text-muted-foreground`, `text-speed-down`, `bg-latency-ok`, ...). Avoid raw Tailwind colors.
+
+### Astryx conventions
+
+- The cascade-layer order declared at the top of `app/globals.css` is load-bearing (Tailwind utilities must beat `astryx-base`); never reorder it.
+- Theme tokens live in `lib/astryx-theme.ts` only. After editing it, run `bun run theme:build` in the same commit - CI fails if `lib/speedtest.*` drifts.
+- Some Astryx components silently drop props not in their fixed prop list (`Token` drops `aria-*`, `ToggleButton` drops `className`). Verify forwarding in `node_modules` before relying on a prop; see the workaround patterns in `lib/utils.ts` (`togglePillClasses`) and `lib/native-input-attrs.ts`.
+- Icon slots: pass lucide components (not elements) where the slot accepts them (`startIcon={Search}`), or size elements explicitly (`className="size-4"`) - raw elements render at lucide's 24px default.
+- Interactive controls keep the 44px mobile touch floor (`min-h-11 md:min-h-7` and variants).
+- Audit accessibility with `bun run test:a11y:page` (forces the color scheme via CDP; the plain axe CLI silently inherits the OS appearance).
 
 ## Architecture quick map
 

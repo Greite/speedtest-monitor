@@ -1,5 +1,7 @@
 'use client';
 
+import { Card } from '@astryxdesign/core/Card';
+import { Heading } from '@astryxdesign/core/Text';
 import {
   ArrowDown,
   ArrowUp,
@@ -14,7 +16,6 @@ import {
 import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   computeDelta,
   type Delta,
@@ -213,13 +214,10 @@ function Kpi({
   }, [flashKey]);
 
   return (
-    <Card
-      aria-label={summary}
-      className="relative gap-0 overflow-hidden border-border/60 bg-card/80 py-0 backdrop-blur-sm transition-shadow hover:shadow-md"
-    >
+    <Card aria-label={summary} padding={0} className="relative gap-0 overflow-hidden transition-shadow hover:shadow-md">
       <div ref={ref} className="flex flex-col gap-3 px-6 pt-6 pb-4">
-        <CardHeader className="px-0 pb-0">
-          <CardTitle as="h2" className="label-eyebrow flex items-center justify-between gap-2">
+        <div>
+          <Heading level={2} className="label-eyebrow flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
               {icon}
               {label}
@@ -239,9 +237,9 @@ function Kpi({
                   );
                 })()
               : null}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
+          </Heading>
+        </div>
+        <div>
           <div
             className={cn(
               'kpi-value-gradient font-mono font-semibold tracking-tight tabular-nums',
@@ -257,7 +255,7 @@ function Kpi({
             <span className={cn('inline-block size-1 rounded-full', accentDot, !delta && 'hidden')} />
             <span className="truncate">{sub}</span>
           </div>
-        </CardContent>
+        </div>
       </div>
       {hasSpark ? (
         <div className="border-t border-border/40 bg-background/30">

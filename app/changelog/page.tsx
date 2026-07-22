@@ -1,10 +1,12 @@
+import { Card } from '@astryxdesign/core/Card';
+import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { Heading } from '@astryxdesign/core/Text';
+import { Token } from '@astryxdesign/core/Token';
 import { ArrowLeft, ExternalLink, GitCommit } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { Markdown } from '@/components/markdown';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loadReleases } from '@/lib/releases';
 import { APP_VERSION, GITHUB_REPO_URL } from '@/lib/version';
 
@@ -62,8 +64,8 @@ export default function ChangelogPage() {
       </header>
 
       {releases.length === 0 ? (
-        <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+        <Card padding={0} className="border-border/60 bg-card/80">
+          <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
             <GitCommit className="size-8 text-muted-foreground" aria-hidden />
             <p className="text-sm font-medium">No releases available</p>
             <p className="max-w-sm text-xs text-muted-foreground">
@@ -71,7 +73,7 @@ export default function ChangelogPage() {
               <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.85em]">bun run releases:fetch</code> to
               populate them locally.
             </p>
-          </CardContent>
+          </div>
         </Card>
       ) : (
         <ol className="relative flex flex-col gap-6 border-l border-border/50 pl-6 ml-2">
@@ -81,13 +83,18 @@ export default function ChangelogPage() {
             const current = r.tag === APP_VERSION;
             return (
               <li key={r.tag} className="relative">
-                {/* Timeline node */}
+                {/* Timeline node - centered on the rail and the title line.
+                    Horizontal: the ol border-left center sits 24.5px left of the
+                    li edge (pl-6 + 1px border), each left offsets by the dot's
+                    half-size. Vertical: 24px card padding (py-6) + half the
+                    level-2 Heading line box (20px x 1.4 = 28px) = title center
+                    at 38px. */}
                 <span
                   aria-hidden
                   className={
                     current
-                      ? 'absolute -left-[33px] top-7 grid size-3.5 place-items-center rounded-full bg-background'
-                      : 'absolute -left-[31px] top-7 size-2 rounded-full bg-border'
+                      ? 'absolute -left-[31.5px] top-[31px] grid size-3.5 place-items-center rounded-full bg-background'
+                      : 'absolute -left-[28.5px] top-[34px] size-2 rounded-full bg-border'
                   }
                 >
                   {current ? (
@@ -97,30 +104,36 @@ export default function ChangelogPage() {
                     </>
                   ) : null}
                 </span>
-                <Card
+                {/* Whole-card navigation: ClickableCard renders a hidden link
+                    carrying the accessible name, while nested interactives
+                    (Full Changelog, links inside release notes) keep working
+                    independently. The former title-only anchor is gone - one
+                    link per release, not two. */}
+                <ClickableCard
                   id={r.tag}
-                  className="scroll-mt-20 border-border/60 bg-card/80 backdrop-blur-sm transition-shadow hover:shadow-md"
+                  label={`${r.name} release on GitHub`}
+                  href={r.url}
+                  target="_blank"
+                  padding={0}
+                  className="flex flex-col gap-6 py-6 scroll-mt-20 border-border/60 bg-card/80 transition-shadow hover:shadow-md"
                 >
-                  <CardHeader>
+                  <div className="flex flex-col gap-2 px-6">
                     <div className="flex flex-wrap items-center gap-2">
-                      <CardTitle as="h2" className="text-xl font-semibold tracking-tight">
-                        <a
-                          href={r.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-sm hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        >
-                          {r.name}
-                        </a>
-                      </CardTitle>
+                      <Heading level={2} className="tracking-tight">
+                        {r.name}
+                      </Heading>
                       {current ? (
-                        <Badge
-                          aria-label="Current version"
-                          className="border-brand/30 bg-brand/10 text-brand hover:bg-brand/15"
-                        >
-                          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-                          Current
-                        </Badge>
+                        <span>
+                          <span aria-hidden>
+                            <Token
+                              label="Current"
+                              size="sm"
+                              icon={<span className="size-1.5 rounded-full bg-brand" aria-hidden />}
+                              className="border-brand/30 bg-brand/10 text-brand hover:bg-brand/15"
+                            />
+                          </span>
+                          <span className="sr-only">Current version</span>
+                        </span>
                       ) : null}
                     </div>
                     <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
@@ -130,15 +143,15 @@ export default function ChangelogPage() {
                       </span>
                       <span className="tabular-nums">{r.tag}</span>
                     </div>
-                  </CardHeader>
-                  <CardContent>
+                  </div>
+                  <div className="px-6">
                     {r.body.trim().length === 0 ? (
                       <p className="text-sm italic text-muted-foreground">No release notes.</p>
                     ) : (
                       <Markdown source={r.body} />
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </ClickableCard>
               </li>
             );
           })}
