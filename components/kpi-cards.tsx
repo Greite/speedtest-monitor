@@ -2,18 +2,9 @@
 
 import { Card } from '@astryxdesign/core/Card';
 import { Heading } from '@astryxdesign/core/Text';
-import {
-  ArrowDown,
-  ArrowUp,
-  CircleAlert,
-  CircleCheck,
-  Gauge,
-  Minus,
-  OctagonAlert,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react';
-import type { ComponentType, ReactNode, SVGProps } from 'react';
+import { Token } from '@astryxdesign/core/Token';
+import { ArrowDown, ArrowUp, Gauge, Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -34,22 +25,17 @@ const levelColor: Record<LatencyLevel, string> = {
   bad: 'bg-latency-bad',
 };
 
-const levelText: Record<LatencyLevel, string> = {
-  ok: 'text-latency-ok',
-  warn: 'text-latency-warn',
-  bad: 'text-latency-bad',
-};
-
 const levelLabel: Record<LatencyLevel, string> = {
   ok: 'Good',
   warn: 'Fair',
   bad: 'Poor',
 };
 
-const levelIcon: Record<LatencyLevel, ComponentType<SVGProps<SVGSVGElement>>> = {
-  ok: CircleCheck,
-  warn: CircleAlert,
-  bad: OctagonAlert,
+// Same Token colors as the Status column in the history table.
+const levelTokenColor: Record<LatencyLevel, 'green' | 'yellow' | 'red'> = {
+  ok: 'green',
+  warn: 'yellow',
+  bad: 'red',
 };
 
 type Averages = {
@@ -222,21 +208,20 @@ function Kpi({
               {icon}
               {label}
             </span>
-            {level
-              ? (() => {
-                  const Icon = levelIcon[level];
-                  const tone = levelText[level];
-                  return (
-                    <span className="inline-flex items-center gap-1.5 normal-case tracking-normal" aria-hidden>
-                      <span className="relative inline-flex size-3.5 items-center justify-center">
-                        <Icon className={cn('size-3.5', tone)} strokeWidth={2.25} />
-                        {busy ? <span className={cn('pulse-ring absolute inset-0 rounded-full', tone)} /> : null}
-                      </span>
-                      <span className={cn('text-[11px] font-medium', tone)}>{levelLabel[level]}</span>
-                    </span>
-                  );
-                })()
-              : null}
+            {level ? (
+              <span className="inline-flex items-center font-normal normal-case tracking-normal" aria-hidden>
+                <Token
+                  label={levelLabel[level]}
+                  color={levelTokenColor[level]}
+                  size="sm"
+                  icon={
+                    busy ? (
+                      <span className="pulse-ring relative inline-flex size-2 rounded-full bg-current" />
+                    ) : undefined
+                  }
+                />
+              </span>
+            ) : null}
           </Heading>
         </div>
         <div>
@@ -315,25 +300,16 @@ function Sparkline({ data, color, className }: { data: (number | null)[]; color:
 function DeltaBadge({ delta, suffix }: { delta: NonNullable<Delta>; suffix?: string }) {
   if (delta.sign === 'flat') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
-        <Minus className="size-3" />
-        <span>~{suffix ?? ''}</span>
-      </span>
+      <Token label={`~${suffix ? ` ${suffix}` : ''}`} color="gray" size="sm" icon={<Minus className="size-3" />} />
     );
   }
   const Icon = delta.sign === 'up' ? TrendingUp : TrendingDown;
-  const tone = delta.sign === 'up' ? 'bg-latency-ok/12 text-latency-ok' : 'bg-latency-bad/12 text-latency-bad';
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[10px] font-medium tabular-nums',
-        tone,
-      )}
-    >
-      <Icon className="size-3" aria-hidden />
-      <span>
-        {delta.percent.toFixed(0)}%{suffix ? ` ${suffix}` : ''}
-      </span>
-    </span>
+    <Token
+      label={`${delta.percent.toFixed(0)}%${suffix ? ` ${suffix}` : ''}`}
+      color={delta.sign === 'up' ? 'green' : 'red'}
+      size="sm"
+      icon={<Icon className="size-3" aria-hidden />}
+    />
   );
 }
