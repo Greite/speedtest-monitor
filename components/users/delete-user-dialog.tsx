@@ -5,9 +5,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { Dialog } from '@astryxdesign/core/Dialog';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { useToast } from '@astryxdesign/core/Toast';
-import { useId, useState } from 'react';
+import { useId } from 'react';
 
-import { parseApiError } from '@/lib/api-client';
+import { useDialogRequest } from './use-dialog-request';
 
 type Props = {
   open: boolean;
@@ -20,14 +20,12 @@ export function DeleteUserDialog({ open, onOpenChange, user, onDeleted }: Props)
   const toast = useToast();
   const titleId = useId();
   const descriptionId = useId();
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const { pending, error, reset, run } = useDialogRequest();
 
   function handleOpenChange(next: boolean) {
     onOpenChange(next);
     if (!next) {
-      setError(null);
-      setPending(false);
+      reset();
     }
   }
 
@@ -35,23 +33,8 @@ export function DeleteUserDialog({ open, onOpenChange, user, onDeleted }: Props)
     if (!user) {
       return;
     }
-    setError(null);
-    setPending(true);
-    let res: Response;
-    try {
-      res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
-    } catch (err) {
-      // Toasts render beneath open dialogs (ToastViewport enters the top layer at
-      // mount; dialog.showModal() stacks above it later), so route errors raised
-      // while this dialog is open to the in-dialog Banner instead.
-      setError(err instanceof Error ? err.message : 'Network error.');
-      setPending(false);
-      return;
-    }
-    if (!res.ok && res.status !== 204) {
-      const apiErr = await parseApiError(res);
-      setError(apiErr.message);
-      setPending(false);
+    const ok = await run(`/api/users/${user.id}`, { method: 'DELETE' });
+    if (!ok) {
       return;
     }
     toast({ body: 'User deleted' });

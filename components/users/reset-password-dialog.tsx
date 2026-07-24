@@ -8,7 +8,8 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { useToast } from '@astryxdesign/core/Toast';
 import { useId, useState } from 'react';
 
-import { parseApiError } from '@/lib/api-client';
+import { useDialogRequest } from './use-dialog-request';
+
 import type { NativeInputAttrs } from '@/lib/native-input-attrs';
 
 const DIALOG_TITLE = 'Reset password';
@@ -35,21 +36,13 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
   const descriptionId = useId();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [pending, setPending] = useState(false);
-
-  function reset() {
-    setPassword('');
-    setConfirm('');
-    setError(null);
-    setFieldErrors({});
-    setPending(false);
-  }
+  const { pending, error, fieldErrors, setError, reset, run } = useDialogRequest();
 
   function handleOpenChange(next: boolean) {
     onOpenChange(next);
     if (!next) {
+      setPassword('');
+      setConfirm('');
       reset();
     }
   }
@@ -59,8 +52,6 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
     if (!user) {
       return;
     }
-    setError(null);
-    setFieldErrors({});
     if (password.length < MIN_PASSWORD_LEN) {
       setError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
       return;
@@ -69,29 +60,12 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
       setError('Passwords do not match.');
       return;
     }
-    setPending(true);
-    let res: Response;
-    try {
-      res = await fetch(`/api/users/${user.id}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: password }),
-      });
-    } catch (err) {
-      // Toasts render beneath open dialogs (ToastViewport enters the top layer at
-      // mount; dialog.showModal() stacks above it later), so route errors raised
-      // while this dialog is open to the in-dialog Banner instead.
-      setError(err instanceof Error ? err.message : 'Network error.');
-      setPending(false);
-      return;
-    }
-    if (!res.ok) {
-      const apiErr = await parseApiError(res);
-      if (apiErr.code === 'validation_failed' && apiErr.fields) {
-        setFieldErrors(apiErr.fields);
-      }
-      setError(apiErr.message);
-      setPending(false);
+    const ok = await run(`/api/users/${user.id}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newPassword: password }),
+    });
+    if (!ok) {
       return;
     }
     toast({ body: `Password reset for ${user.email}` });

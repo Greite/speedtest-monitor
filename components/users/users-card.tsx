@@ -129,14 +129,6 @@ export function UsersCard() {
     [refresh, toast],
   );
 
-  const onAdded = useCallback(async () => {
-    await refresh();
-  }, [refresh]);
-
-  const onDeleted = useCallback(async () => {
-    await refresh();
-  }, [refresh]);
-
   const columns = useMemo<TableColumn<UserRow>[]>(
     () => [
       {
@@ -332,7 +324,7 @@ export function UsersCard() {
         )}
       </div>
 
-      <AddUserDialog open={addOpen} onOpenChange={setAddOpen} onCreated={onAdded} />
+      <AddUserDialog open={addOpen} onOpenChange={setAddOpen} onCreated={refresh} />
       <ResetPasswordDialog
         open={resetTarget !== null}
         onOpenChange={(v) => !v && setResetTarget(null)}
@@ -342,7 +334,7 @@ export function UsersCard() {
         open={deleteTarget !== null}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
         user={deleteTarget}
-        onDeleted={onDeleted}
+        onDeleted={refresh}
       />
     </Card>
   );
