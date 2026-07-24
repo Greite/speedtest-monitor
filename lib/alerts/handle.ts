@@ -2,7 +2,6 @@ import { eq } from 'drizzle-orm';
 
 import { getDb } from '../db/client';
 import { type Alert, alerts, type Measurement } from '../db/schema';
-import { broadcastAlert } from '../ws/broadcast';
 import { loadAlertConfig } from './config';
 import { buildDestinations } from './destinations';
 import { dispatchAlert } from './dispatch';
@@ -82,6 +81,5 @@ async function dispatchAndUpdate(
     rules,
   });
   const db = getDb();
-  const updated = db.update(alerts).set({ deliveryStatus }).where(eq(alerts.id, row.id)).returning().get();
-  broadcastAlert(updated);
+  db.update(alerts).set({ deliveryStatus }).where(eq(alerts.id, row.id)).run();
 }

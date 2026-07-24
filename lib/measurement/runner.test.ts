@@ -5,7 +5,7 @@ import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
 
 import * as schema from '../db/schema';
-import type { EngineResult } from './types';
+import type { EngineResult } from './cloudflare';
 
 const engineMock = mock<() => Promise<EngineResult>>();
 

@@ -18,8 +18,6 @@ mock.module('./destinations', () => ({
     smtp: false,
   }),
 }));
-mock.module('../ws/broadcast', () => ({ broadcastAlert: mock() }));
-
 let sqlite: Database;
 beforeEach(() => {
   sqlite = new Database(':memory:');

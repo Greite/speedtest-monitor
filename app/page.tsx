@@ -1,6 +1,5 @@
 import { Dashboard } from '@/components/dashboard';
-import type { Range } from '@/components/time-range-picker';
-import { isRange, listMeasurements } from '@/lib/measurements';
+import { isRange, listMeasurements, type Range } from '@/lib/measurements';
 import { toMeasurementDto } from '@/lib/types';
 
 export const runtime = 'nodejs';

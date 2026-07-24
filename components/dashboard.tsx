@@ -9,7 +9,8 @@ import { HistoryTable } from './history-table';
 import { KpiCards } from './kpi-cards';
 import { useLiveMeasurements } from './use-live-measurements';
 
-import { type Range, TimeRangePicker } from '@/components/time-range-picker';
+import { TimeRangePicker } from '@/components/time-range-picker';
+import type { Range } from '@/lib/measurements';
 import type { MeasurementDto } from '@/lib/types';
 
 const HistoryChart = dynamic(() => import('./history-chart').then((m) => m.HistoryChart), {

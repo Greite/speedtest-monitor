@@ -14,7 +14,6 @@
 //     (only returns data when Referer: https://speed.cloudflare.com/ is set)
 
 import { envInt } from '../env';
-import type { EngineResult } from './types';
 
 const ORIGIN = 'https://speed.cloudflare.com';
 const META_URL = `${ORIGIN}/meta`;
@@ -262,6 +261,20 @@ export async function probeUpload(opts: ProbeOpts = {}): Promise<{ mbps: number 
   const mbps = (totalBytes * 8) / (wallDurationMs / 1000) / 1_000_000;
   return { mbps };
 }
+
+export type EngineResult = {
+  downloadMbps: number | null;
+  uploadMbps: number | null;
+  latencyUnloadedMs: number | null;
+  latencyLoadedMs: number | null;
+  bufferBloatMs: number | null;
+  jitterMs: number | null;
+  packetLossPct: number | null;
+  userLocation: string | null;
+  userIp: string | null;
+  userIsp: string | null;
+  serverLocations: string[] | null;
+};
 
 export async function runCloudflareSpeedTest(): Promise<EngineResult> {
   const meta = await fetchCloudflareMeta();

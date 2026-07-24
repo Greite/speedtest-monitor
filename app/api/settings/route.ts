@@ -10,7 +10,6 @@ import {
   setIntervalMinutes,
   setRetentionDays,
 } from '@/lib/settings';
-import { broadcastSettingsUpdated } from '@/lib/ws/broadcast';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -57,7 +56,6 @@ export async function PATCH(req: Request) {
   const intervalMinutes = getIntervalMinutes();
   if (intervalChanged) {
     globalThis.__speedtestReschedule?.();
-    broadcastSettingsUpdated(intervalMinutes);
   }
 
   return NextResponse.json({

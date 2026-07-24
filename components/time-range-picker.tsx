@@ -3,7 +3,7 @@
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { useId } from 'react';
 
-export type Range = '6h' | '12h' | '24h' | '7d' | '30d';
+import type { Range } from '@/lib/measurements';
 
 const RANGES: { value: Range; label: string }[] = [
   { value: '6h', label: '6h' },
