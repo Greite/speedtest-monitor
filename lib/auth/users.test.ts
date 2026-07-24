@@ -11,7 +11,6 @@ import {
   deleteUser,
   findUserByEmail,
   findUserById,
-  findUserByOidcSubject,
   getCredentialPasswordHash,
   listUsers,
   setCredentialPassword,
@@ -77,11 +76,6 @@ describe('auth/users', () => {
     const after = findUserById(u.id);
     expect(after?.role).toBe('admin');
     expect(after?.name).toBe('Alice');
-  });
-
-  it('findUserByOidcSubject', () => {
-    createUser({ email: 'a@x', provider: 'oidc', oidcSubject: 'sub-1', role: 'viewer' });
-    expect(findUserByOidcSubject('sub-1')?.email).toBe('a@x');
   });
 
   it('deleteUser removes row', () => {

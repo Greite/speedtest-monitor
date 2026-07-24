@@ -57,26 +57,6 @@ export type NewAlert = typeof alerts.$inferInsert;
 export type AlertKind = 'download_below' | 'upload_below' | 'latency_above' | 'bufferbloat_above' | 'failure_streak';
 export type AlertEvent = 'fired' | 'resolved';
 
-// Legacy table from the next-auth era. Kept around so the
-// migrate-auth-data script can backfill the Better Auth tables on the first
-// boot after upgrading. Drop in a follow-up release once migration has run.
-export const legacyUsers = sqliteTable('users', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  email: text('email').notNull().unique(),
-  passwordHash: text('password_hash'),
-  role: text('role', { enum: ['admin', 'viewer'] })
-    .notNull()
-    .default('viewer'),
-  provider: text('provider', { enum: ['local', 'oidc'] })
-    .notNull()
-    .default('local'),
-  oidcSubject: text('oidc_subject').unique(),
-  name: text('name'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  lastLoginAt: integer('last_login_at', { mode: 'timestamp_ms' }),
-});
-
-export type LegacyUser = typeof legacyUsers.$inferSelect;
 export type UserRole = 'admin' | 'viewer';
 export type UserProvider = 'local' | 'oidc';
 

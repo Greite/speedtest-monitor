@@ -50,11 +50,6 @@ export function findUserByEmail(email: string): User | undefined {
     .get();
 }
 
-export function findUserByOidcSubject(sub: string): User | undefined {
-  const db = getDb();
-  return db.select().from(user).where(eq(user.oidcSubject, sub)).get();
-}
-
 export function findUserById(id: string): User | undefined {
   const db = getDb();
   return db.select().from(user).where(eq(user.id, id)).get();

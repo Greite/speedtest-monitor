@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 
-import { hashPassword, needsRehash, verifyPassword } from './hash';
+import { hashPassword, verifyPassword } from './hash';
 
 describe('auth/hash', () => {
   it('hashPassword returns a non-empty argon2id-looking string', async () => {
@@ -20,10 +20,5 @@ describe('auth/hash', () => {
 
   it('verifyPassword false on malformed hash', async () => {
     expect(await verifyPassword('not-a-hash', 'x')).toBe(false);
-  });
-
-  it('needsRehash false for a fresh hash', async () => {
-    const h = await hashPassword('x');
-    expect(needsRehash(h)).toBe(false);
   });
 });

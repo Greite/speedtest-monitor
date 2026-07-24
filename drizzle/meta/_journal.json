@@ -43,6 +43,13 @@
       "when": 1779203299114,
       "tag": "0005_grey_whizzer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784880381291,
+      "tag": "0006_old_silhouette",
+      "breakpoints": true
     }
   ]
 }

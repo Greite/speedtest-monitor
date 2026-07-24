@@ -1,26 +1,25 @@
 import { headers } from 'next/headers';
 
+import type { UserRole } from '../db/schema';
 import { auth } from './handler';
-import type { SessionUser, UserRole } from './types';
 
-class AuthError extends Error {
-  constructor(
-    public readonly status: 401 | 403,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+export type SessionUser = {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: UserRole;
+  sessionId?: string;
+};
 
 export async function requireSession(): Promise<SessionUser> {
   const session = await auth.api.getSession({ headers: await headers() });
   const u = session?.user;
   if (!u?.id || !u.email) {
-    throw new AuthError(401, 'unauthorized');
+    throw new Error('unauthorized');
   }
   const role = (u as { role?: UserRole }).role;
   if (!role) {
-    throw new AuthError(401, 'unauthorized');
+    throw new Error('unauthorized');
   }
   return {
     id: u.id,
@@ -34,7 +33,7 @@ export async function requireSession(): Promise<SessionUser> {
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireSession();
   if (user.role !== 'admin') {
-    throw new AuthError(403, 'forbidden');
+    throw new Error('forbidden');
   }
   return user;
 }

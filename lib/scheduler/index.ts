@@ -1,5 +1,4 @@
 import { ensureSeededAdmin } from '../auth/bootstrap';
-import { migrateLegacyAuth } from '../auth/migrate-legacy';
 import { runMigrations } from '../db/migrate';
 import { runMeasurementSafe } from '../measurement/runner';
 import { purgeByRetention } from '../measurements';
@@ -15,7 +14,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function bootScheduler() {
   runMigrations();
-  migrateLegacyAuth();
   await ensureSeededAdmin();
   rescheduleFromSettings();
   startPurgeTimer();
