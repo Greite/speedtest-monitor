@@ -27,7 +27,7 @@ const config: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: resolveAppVersion(),
   },
   // NFT only traces what Next's own routes statically import. Our custom
-  // server.ts (run by Bun, outside Next's build) pulls in `ws` + `node-cron`,
+  // server.ts (run by Bun, outside Next's build) pulls in `ws`,
   // and lib/db/client.ts hides `drizzle-orm/bun-sqlite` behind `new Function`
   // to dodge Turbopack's static analyzer. Force these into the standalone
   // trace so the runtime image needs no separate prod-deps install.
@@ -57,7 +57,6 @@ const config: NextConfig = {
       './node_modules/rou3/**',
       './node_modules/set-cookie-parser/**',
       './node_modules/drizzle-orm/**',
-      './node_modules/node-cron/**',
       './node_modules/nodemailer/**',
       './node_modules/ws/**',
       './node_modules/zod/**',

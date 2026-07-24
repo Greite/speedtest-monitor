@@ -13,7 +13,7 @@ Self-hosted internet speed monitor. Runs [`@cloudflare/speedtest`](https://www.n
 - **Framework**: Next.js 16 (App Router) + TypeScript 6 + Biome 2 + Tailwind v4
 - **UI**: [Astryx](https://astryx.atmeta.com/) design system (`@astryxdesign/core`, exact-pinned) with a custom pre-built theme (`lib/astryx-theme.ts` -> `bun run theme:build`)
 - **Custom server** (`server.ts`): hosts Next.js **and** a `ws` WebSocket endpoint on the same port
-- **Scheduler**: `node-cron` 4.x, reprogrammable at runtime from the UI
+- **Scheduler**: plain `setInterval`, reprogrammable at runtime from the UI
 - **DB**: Drizzle ORM 0.45 + `bun:sqlite` (built-in)
 - **Measurement engine**: `@cloudflare/speedtest` (HTTP-only, no browser)
 - **Tests**: Bun native (`bun test`)

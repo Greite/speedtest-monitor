@@ -60,7 +60,7 @@ Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's na
 ## Architecture quick map
 
 - `server.ts` - custom Bun server. Hosts Next.js and a `ws` WebSocket on the same port (default `3003`). Routes `/ws` upgrades to the app broadcaster and delegates every other upgrade to Next's HMR.
-- `lib/scheduler/` - `node-cron` scheduler. Reprogrammable at runtime via a global callback when the settings interval changes.
+- `lib/scheduler/` - `setInterval` scheduler. Reprogrammable at runtime via a global callback when the settings interval changes.
 - `lib/measurement/` - `cloudflare.ts` measures throughput against `speed.cloudflare.com` with raw `fetch` (HTTP-only, no browser, no `@cloudflare/speedtest`). `runner.ts` wraps it in a `globalThis.__speedtestRunning` mutex so only one run happens at a time.
 - `lib/db/` - Drizzle schema + singleton `bun:sqlite` client (lazy-required) with WAL, foreign keys, and `synchronous=NORMAL` enabled.
 - `lib/ws/` - WebSocket server + typed broadcasters consumed by the React hook in `components/use-live-measurements.ts`.
