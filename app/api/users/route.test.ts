@@ -88,4 +88,24 @@ describe('/api/users', () => {
     const res = await POST(req);
     expect(res.status).toBe(409);
   });
+
+  it('POST returns 400 on invalid email (domain-less)', async () => {
+    const req = new Request('http://x/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'test@test', password: 'hunter2hunter2' }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+  });
+
+  it('POST accepts short-TLD emails like a@b.c', async () => {
+    const req = new Request('http://x/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'a@b.c', password: 'hunter2hunter2' }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
 });
