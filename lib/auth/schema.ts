@@ -5,4 +5,4 @@ import { z } from 'zod';
 // Refine to still require a dot in the domain part, rejecting domain-less addresses like 'test@test' or 'user@localhost'.
 export const emailSchema = z
   .email({ pattern: z.regexes.html5Email })
-  .refine((v) => /@[^@\s]+\.[^@\s]+$/.test(v), 'Invalid email');
+  .refine((v) => /@[^@\s]+\.[^@\s]+$/.test(v), 'Invalid email address');
