@@ -41,7 +41,6 @@
     "better-auth": "^1.6.25",
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.11",
-    "node-cron": "^4.6.0",
     "nodemailer": "^9.0.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

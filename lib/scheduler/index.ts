@@ -1,5 +1,3 @@
-import cron, { type ScheduledTask } from 'node-cron';
-
 import { ensureSeededAdmin } from '../auth/bootstrap';
 import { migrateLegacyAuth } from '../auth/migrate-legacy';
 import { runMigrations } from '../db/migrate';
@@ -8,64 +6,61 @@ import { purgeByRetention } from '../measurements';
 import { getIntervalMinutes, getRetentionDays } from '../settings';
 
 declare global {
-  var __speedtestScheduler: { task: ScheduledTask; expr: string } | undefined;
-  var __speedtestPurge: ScheduledTask | undefined;
+  var __speedtestScheduler: { timer: ReturnType<typeof setInterval>; minutes: number } | undefined;
+  var __speedtestPurge: ReturnType<typeof setInterval> | undefined;
+  var __speedtestReschedule: (() => void) | undefined;
 }
 
-const PURGE_CRON = '0 3 * * *';
-
-export function cronExprForMinutes(minutes: number): string {
-  if (minutes >= 60 && minutes % 60 === 0) {
-    const hours = minutes / 60;
-    if (hours >= 24 && hours % 24 === 0) {
-      return `0 0 */${hours / 24} * *`;
-    }
-    return `0 */${hours} * * *`;
-  }
-  return `*/${minutes} * * * *`;
-}
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function bootScheduler() {
   runMigrations();
   migrateLegacyAuth();
   await ensureSeededAdmin();
   rescheduleFromSettings();
-  startPurgeCron();
+  startPurgeTimer();
   globalThis.__speedtestReschedule = rescheduleFromSettings;
 }
 
+// ponytail: setInterval, no wall-clock alignment (old cron ticked at :00/:15) —
+// bring back a cron lib only if aligned ticks become a real need.
 export function rescheduleFromSettings() {
   const minutes = getIntervalMinutes();
-  const expr = cronExprForMinutes(minutes);
-  if (globalThis.__speedtestScheduler?.expr === expr) {
+  if (globalThis.__speedtestScheduler?.minutes === minutes) {
     return;
   }
-  globalThis.__speedtestScheduler?.task.stop();
-  const task = cron.schedule(expr, () => {
-    runMeasurementSafe().catch((_err) => {});
-  });
-  globalThis.__speedtestScheduler = { task, expr };
+  if (globalThis.__speedtestScheduler) {
+    clearInterval(globalThis.__speedtestScheduler.timer);
+  }
+  const timer = setInterval(() => {
+    runMeasurementSafe().catch(() => {});
+  }, minutes * 60_000);
+  globalThis.__speedtestScheduler = { timer, minutes };
 }
 
-function startPurgeCron() {
+function startPurgeTimer() {
   if (globalThis.__speedtestPurge) {
     return;
   }
-  const task = cron.schedule(PURGE_CRON, () => {
+  const purge = () => {
     try {
-      const days = getRetentionDays();
-      const deleted = purgeByRetention(days);
-      if (deleted > 0) {
-      }
-    } catch (_err) {}
-  });
-  globalThis.__speedtestPurge = task;
+      purgeByRetention(getRetentionDays());
+    } catch {}
+  };
+  // Run once at boot (covers deployments that restart more often than daily),
+  // then every 24h. Old behavior was daily at 03:00; exact hour never mattered.
+  purge();
+  globalThis.__speedtestPurge = setInterval(purge, DAY_MS);
 }
 
 export function stopScheduler() {
-  globalThis.__speedtestScheduler?.task.stop();
+  if (globalThis.__speedtestScheduler) {
+    clearInterval(globalThis.__speedtestScheduler.timer);
+  }
   globalThis.__speedtestScheduler = undefined;
-  globalThis.__speedtestPurge?.stop();
+  if (globalThis.__speedtestPurge) {
+    clearInterval(globalThis.__speedtestPurge);
+  }
   globalThis.__speedtestPurge = undefined;
   globalThis.__speedtestReschedule = undefined;
 }

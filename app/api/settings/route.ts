@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { apiError, apiValidationError } from '@/lib/api-errors';
-import { requestReschedule } from '@/lib/scheduler/external';
 import {
   getEnvDefaultIntervalMinutes,
   getEnvDefaultRetentionDays,
@@ -57,7 +56,7 @@ export async function PATCH(req: Request) {
 
   const intervalMinutes = getIntervalMinutes();
   if (intervalChanged) {
-    requestReschedule();
+    globalThis.__speedtestReschedule?.();
     broadcastSettingsUpdated(intervalMinutes);
   }
 
