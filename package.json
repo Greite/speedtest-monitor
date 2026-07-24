@@ -8,8 +8,6 @@
     "node": ">=24.0.0"
   },
   "trustedDependencies": [
-    "better-sqlite3",
-    "puppeteer",
     "esbuild",
     "sharp",
     "@biomejs/biome"
