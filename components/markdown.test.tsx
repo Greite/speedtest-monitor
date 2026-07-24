@@ -18,7 +18,6 @@ describe('safeHref', () => {
 
   it('rejects script-capable schemes', () => {
     expect(safeHref('javascript:alert(1)')).toBeNull();
-    // biome may flag the literal; keep it - this is the attack string under test
     expect(safeHref('data:text/html,x')).toBeNull();
     expect(safeHref('vbscript:msgbox')).toBeNull();
   });
@@ -48,6 +47,7 @@ describe('Markdown (rendered via Astryx)', () => {
     expect(html).toContain('<a');
     expect(html).toContain('href="https://x"');
     expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
   });
 
   it('renders an unsafe link as plain text, not an anchor', () => {
@@ -55,5 +55,12 @@ describe('Markdown (rendered via Astryx)', () => {
     expect(html).not.toContain('<a');
     expect(html).not.toContain('javascript:');
     expect(html).toContain('x');
+  });
+
+  it('rejects tel: scheme via safeHref allowlist even though Astryx blocklist allows it', () => {
+    const html = renderToStaticMarkup(<Markdown source="[call us](tel:123456)" />);
+    expect(html).not.toContain('<a');
+    expect(html).not.toContain('tel:');
+    expect(html).toContain('call us');
   });
 });
