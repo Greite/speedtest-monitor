@@ -39,9 +39,9 @@ function ReleaseLink({ href, children }: { href: string; children: ReactNode }) 
 // instead of relying on it, strip the `!` that turns a link into an image
 // before parsing: every image (block or inline, direct or reference-style)
 // then renders through the already safeHref-gated `link` override above.
-// ponytail: plain string replace, not AST-aware - would also strip a literal
-// "![" inside a fenced code sample in a release note. Upgrade to stripping
-// only outside code spans if that ever shows up in practice.
+// ponytail: plain string replace also rewrites image syntax inside fenced
+// code blocks AND inline code spans (display-only artifact). Upgrade path:
+// parse-aware stripping.
 function stripImageSyntax(source: string): string {
   return source.replace(/!(\[)/g, '$1');
 }

@@ -41,6 +41,9 @@ describe('rescheduleFromSettings', () => {
     expect(timer2).not.toBe(timer1);
     expect(globalThis.__speedtestScheduler?.minutes).toBe(30);
 
+    // Set up a purge timer to ensure stopScheduler clears it.
+    globalThis.__speedtestPurge = setInterval(() => {}, 60_000);
+
     stopScheduler();
     expect(globalThis.__speedtestScheduler).toBeUndefined();
     expect(globalThis.__speedtestPurge).toBeUndefined();

@@ -74,4 +74,9 @@ describe('Markdown (rendered via Astryx)', () => {
     expect(unsafe).not.toContain('<img');
     expect(unsafe).not.toContain('<a');
   });
+
+  it('degrades empty-alt images to empty links (no <img tag)', () => {
+    const html = renderToStaticMarkup(<Markdown source="![](https://example.com/x.png)" />);
+    expect(html).not.toContain('<img');
+  });
 });

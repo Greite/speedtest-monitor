@@ -163,15 +163,7 @@ The auth stack moved from next-auth v5 beta to Better Auth. Same env vars, but:
 
 ### Upgrading from a pre-better-auth version
 
-Deployments upgrading from a pre-better-auth version (older than v1.13, before
-2026-05) must upgrade through an intermediate release first - any v1.14
-through the latest v1.x - before moving further. Migration `0006` drops the
-legacy `users` table, and the automatic account backfill that those older
-releases ran at boot to populate the new `user`/`account` tables no longer
-exists in later versions, so skipping the intermediate release and jumping
-straight across both steps loses local accounts. Measurements are unaffected,
-and the admin account can be re-seeded afterwards via `/setup` or the
-`SPEEDTEST_ADMIN_EMAIL`/`SPEEDTEST_ADMIN_PASSWORD` env vars.
+Deployments on a version older than v1.10.0 must first upgrade to an intermediate release (v1.10.0 up to the release before this one) so the boot-time account backfill runs, before upgrading further. The legacy `users` table is now dropped by migration 0006 and the backfill no longer exists. Measurements are unaffected, and the admin account can be re-seeded afterwards via `/setup` or the `SPEEDTEST_ADMIN_EMAIL`/`SPEEDTEST_ADMIN_PASSWORD` env vars.
 
 ### Upgrading the measurement engine
 
