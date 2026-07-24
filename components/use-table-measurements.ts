@@ -13,41 +13,28 @@ export type TableResponse = {
 };
 
 function toSearchParams(q: TableQuery): URLSearchParams {
-  const p = new URLSearchParams();
-  p.set('page', String(q.page));
-  p.set('pageSize', String(q.pageSize));
-  p.set('sort', q.sort);
-  p.set('sortDir', q.sortDir);
   const f = q.filters;
-  if (f.time?.from != null) {
-    p.set('timeFrom', String(f.time.from));
-  }
-  if (f.time?.to != null) {
-    p.set('timeTo', String(f.time.to));
-  }
-  if (f.download?.min != null) {
-    p.set('downloadMin', String(f.download.min));
-  }
-  if (f.download?.max != null) {
-    p.set('downloadMax', String(f.download.max));
-  }
-  if (f.upload?.min != null) {
-    p.set('uploadMin', String(f.upload.min));
-  }
-  if (f.upload?.max != null) {
-    p.set('uploadMax', String(f.upload.max));
-  }
-  if (f.latency?.min != null) {
-    p.set('latencyMin', String(f.latency.min));
-  }
-  if (f.latency?.max != null) {
-    p.set('latencyMax', String(f.latency.max));
-  }
-  if (f.server) {
-    p.set('server', f.server);
-  }
-  if (f.status && f.status.length > 0) {
-    p.set('status', f.status.join(','));
+  const entries: [string, string | number | undefined][] = [
+    ['page', q.page],
+    ['pageSize', q.pageSize],
+    ['sort', q.sort],
+    ['sortDir', q.sortDir],
+    ['timeFrom', f.time?.from],
+    ['timeTo', f.time?.to],
+    ['downloadMin', f.download?.min],
+    ['downloadMax', f.download?.max],
+    ['uploadMin', f.upload?.min],
+    ['uploadMax', f.upload?.max],
+    ['latencyMin', f.latency?.min],
+    ['latencyMax', f.latency?.max],
+    ['server', f.server || undefined],
+    ['status', f.status?.length ? f.status.join(',') : undefined],
+  ];
+  const p = new URLSearchParams();
+  for (const [k, v] of entries) {
+    if (v !== undefined) {
+      p.set(k, String(v));
+    }
   }
   return p;
 }

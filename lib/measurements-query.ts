@@ -41,47 +41,18 @@ function readNumber(params: URLSearchParams, key: string): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-function readNumericRange(params: URLSearchParams, base: string): NumericRange | undefined {
-  const min = readNumber(params, `${base}Min`);
-  const max = readNumber(params, `${base}Max`);
-  if (min === undefined && max === undefined) {
+function range<K extends 'min' | 'max' | 'from' | 'to'>(
+  loKey: K,
+  lo: number | undefined,
+  hiKey: K,
+  hi: number | undefined,
+): Partial<Record<K, number>> | undefined {
+  if (lo === undefined && hi === undefined) {
     return undefined;
   }
-  return { ...(min !== undefined ? { min } : {}), ...(max !== undefined ? { max } : {}) };
-}
-
-function readTimeRange(params: URLSearchParams): TimeRange | undefined {
-  const from = readNumber(params, 'timeFrom');
-  const to = readNumber(params, 'timeTo');
-  if (from === undefined && to === undefined) {
-    return undefined;
-  }
-  return { ...(from !== undefined ? { from } : {}), ...(to !== undefined ? { to } : {}) };
-}
-
-function readStatuses(params: URLSearchParams): StatusValue[] | undefined {
-  const raw = params.get('status');
-  if (raw == null || raw === '') {
-    return undefined;
-  }
-  const parts = raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (parts.length === 0) {
-    return undefined;
-  }
-  const validated = z.array(z.enum(STATUSES)).parse(parts);
-  return [...new Set(validated)];
-}
-
-function readServer(params: URLSearchParams): string | undefined {
-  const raw = params.get('server');
-  if (raw == null) {
-    return undefined;
-  }
-  const trimmed = raw.trim();
-  return trimmed === '' ? undefined : trimmed;
+  return { ...(lo !== undefined ? { [loKey]: lo } : {}), ...(hi !== undefined ? { [hiKey]: hi } : {}) } as Partial<
+    Record<K, number>
+  >;
 }
 
 export function parseTableQuery(params: URLSearchParams): TableQuery {
@@ -99,30 +70,28 @@ export function parseTableQuery(params: URLSearchParams): TableQuery {
     sortDirRaw == null || sortDirRaw === '' ? 'desc' : z.enum(['asc', 'desc']).parse(sortDirRaw);
 
   const filters: TableFilters = {};
-  const time = readTimeRange(params);
-  if (time) {
-    filters.time = time;
-  }
-  const download = readNumericRange(params, 'download');
-  if (download) {
-    filters.download = download;
-  }
-  const upload = readNumericRange(params, 'upload');
-  if (upload) {
-    filters.upload = upload;
-  }
-  const latency = readNumericRange(params, 'latency');
-  if (latency) {
-    filters.latency = latency;
-  }
-  const server = readServer(params);
+  filters.time = range('from', readNumber(params, 'timeFrom'), 'to', readNumber(params, 'timeTo'));
+  filters.download = range('min', readNumber(params, 'downloadMin'), 'max', readNumber(params, 'downloadMax'));
+  filters.upload = range('min', readNumber(params, 'uploadMin'), 'max', readNumber(params, 'uploadMax'));
+  filters.latency = range('min', readNumber(params, 'latencyMin'), 'max', readNumber(params, 'latencyMax'));
+  const server = params.get('server')?.trim();
   if (server) {
     filters.server = server;
   }
-  const status = readStatuses(params);
-  if (status) {
-    filters.status = status;
+  const statusRaw = params.get('status');
+  const parts = statusRaw
+    ? statusRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+  if (parts.length > 0) {
+    filters.status = [...new Set(z.array(z.enum(STATUSES)).parse(parts))];
   }
-
+  for (const k of ['time', 'download', 'upload', 'latency'] as const) {
+    if (filters[k] === undefined) {
+      delete filters[k];
+    }
+  }
   return { page, pageSize, sort, sortDir, filters };
 }

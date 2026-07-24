@@ -174,8 +174,7 @@
   /* Tabular figures for numeric-heavy UI */
   table,
   th,
-  td,
-  .nums-tab {
+  td {
     font-variant-numeric: tabular-nums;
   }
 
