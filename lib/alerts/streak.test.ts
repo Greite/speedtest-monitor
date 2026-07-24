@@ -5,7 +5,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 
 import * as schema from '../db/schema';
 import { measurements } from '../db/schema';
-import { computeFailureStreak } from './streak';
+import { computeFailureStreak } from './handle';
 
 let sqlite: Database;
 beforeEach(() => {

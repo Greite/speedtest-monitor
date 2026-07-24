@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 
-import { formatMessage } from './format';
+import { formatMessage } from './handle';
 
 describe('formatMessage', () => {
   it('fired download_below title + body', () => {

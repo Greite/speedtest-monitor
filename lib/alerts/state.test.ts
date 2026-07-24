@@ -5,7 +5,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 
 import * as schema from '../db/schema';
 import { alerts } from '../db/schema';
-import { readAlertState } from './state';
+import { readAlertState } from './handle';
 import { ALL_KINDS } from './types';
 
 let sqlite: Database;

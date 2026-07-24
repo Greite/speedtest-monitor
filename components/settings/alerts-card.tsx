@@ -61,7 +61,6 @@ export function AlertsCard() {
   const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const [rules, setRules] = useState<Rules | null>(null);
   const [savedRules, setSavedRules] = useState<Rules | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<Record<string, TestState>>({});
@@ -130,7 +129,6 @@ export function AlertsCard() {
   const save = async () => {
     setSaving(true);
     setError(null);
-    setStatus('Saving...');
     try {
       const res = await fetch('/api/alerts/rules', {
         method: 'PATCH',
@@ -144,7 +142,6 @@ export function AlertsCard() {
       });
       if (!res.ok) {
         const apiErr = await parseApiError(res);
-        setStatus(null);
         if (res.status >= 500) {
           toast({ body: apiErr.message, type: 'error' });
         } else {
@@ -155,10 +152,8 @@ export function AlertsCard() {
       const updated = (await res.json()) as Rules;
       setRules(updated);
       setSavedRules(updated);
-      setStatus('Saved');
       toast({ body: 'Alerts saved' });
     } catch (err) {
-      setStatus(null);
       toast({ body: err instanceof Error ? err.message : 'Save failed', type: 'error' });
     } finally {
       setSaving(false);
@@ -325,11 +320,9 @@ export function AlertsCard() {
                 setRules(savedRules);
               }
               setError(null);
-              setStatus(null);
             }}
             isDisabled={saving || readOnly || !dirty}
           />
-          {status ? <span className="text-xs text-muted-foreground">{status}</span> : null}
         </div>
       </div>
     </Card>

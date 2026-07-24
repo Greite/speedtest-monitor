@@ -12,7 +12,6 @@ mock.module('@/lib/alerts/destinations', () => ({
     { name: 'webhook', send: async () => ({ ok: true }) },
     { name: 'ntfy', send: async () => ({ ok: false, error: 'boom' }) },
   ],
-  configuredNames: () => ({ webhook: true, ntfy: true, discord: false, slack: false, smtp: false }),
 }));
 
 const { POST } = await import('./route');

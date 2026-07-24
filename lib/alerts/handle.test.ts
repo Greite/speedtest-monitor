@@ -10,13 +10,6 @@ import { setAlertRules } from './rules';
 
 mock.module('./destinations', () => ({
   buildDestinations: () => [{ name: 'webhook', send: async () => ({ ok: true }) }],
-  configuredNames: () => ({
-    webhook: true,
-    ntfy: false,
-    discord: false,
-    slack: false,
-    smtp: false,
-  }),
 }));
 let sqlite: Database;
 beforeEach(() => {

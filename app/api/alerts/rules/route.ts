@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { loadAlertConfig } from '@/lib/alerts/config';
-import { configuredNames } from '@/lib/alerts/destinations';
 import { getAlertRules, setAlertRules } from '@/lib/alerts/rules';
 import { apiError, apiValidationError } from '@/lib/api-errors';
 
@@ -36,7 +35,16 @@ const patchSchema = z
 function withConfigured() {
   const rules = getAlertRules();
   const cfg = loadAlertConfig();
-  return { ...rules, destinationsConfigured: configuredNames(cfg) };
+  return {
+    ...rules,
+    destinationsConfigured: {
+      webhook: cfg.webhook !== null,
+      ntfy: cfg.ntfy !== null,
+      discord: cfg.discord !== null,
+      slack: cfg.slack !== null,
+      smtp: cfg.smtp !== null,
+    },
+  };
 }
 
 export function GET() {

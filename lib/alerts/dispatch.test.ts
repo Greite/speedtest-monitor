@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 
 import type { Destination } from './destinations';
-import { dispatchAlert } from './dispatch';
+import { dispatchAlert } from './handle';
 import type { AlertPayload, AlertRules, DestinationName } from './types';
 
 const payload: AlertPayload = {

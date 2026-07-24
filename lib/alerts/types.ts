@@ -1,7 +1,5 @@
 import type { AlertEvent, AlertKind } from '../db/schema';
 
-export type { AlertEvent, AlertKind };
-
 export type AlertRules = {
   enabled: boolean;
   thresholds: {

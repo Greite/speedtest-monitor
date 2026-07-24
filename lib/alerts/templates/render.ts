@@ -1,5 +1,6 @@
+import type { AlertEvent, AlertKind } from '../../db/schema';
 import { resolveDisplayConfig } from '../../runtime-config';
-import type { AlertEvent, AlertKind, AlertPayload } from '../types';
+import type { AlertPayload } from '../types';
 
 type Severity = 'fired' | 'recovered';
 

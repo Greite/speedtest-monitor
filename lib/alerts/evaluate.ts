@@ -1,4 +1,4 @@
-import type { Measurement } from '../db/schema';
+import type { AlertKind, Measurement } from '../db/schema';
 import type { AlertRules, AlertState, AlertTransition } from './types';
 
 type Input = {
@@ -16,19 +16,7 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
   const out: AlertTransition[] = [];
   const isSuccess = measurement.status === 'success';
 
-  const check = (
-    kind: AlertTransition['kind'],
-    threshold: number | null,
-    observed: number | null,
-    isBreach: boolean,
-    evaluable: boolean,
-  ) => {
-    if (threshold === null) {
-      return;
-    }
-    if (!evaluable) {
-      return;
-    }
+  const transition = (kind: AlertKind, isBreach: boolean, observed: number | null, threshold: number | null) => {
     const current = currentState[kind];
     if (isBreach && current === 'OK') {
       out.push({ kind, event: 'fired', observed, threshold });
@@ -37,65 +25,46 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
     }
   };
 
-  check(
-    'download_below',
-    rules.thresholds.downloadMbps,
-    measurement.downloadMbps,
-    isSuccess &&
-      measurement.downloadMbps !== null &&
-      rules.thresholds.downloadMbps !== null &&
-      measurement.downloadMbps < rules.thresholds.downloadMbps,
-    isSuccess && measurement.downloadMbps !== null,
-  );
-  check(
-    'upload_below',
-    rules.thresholds.uploadMbps,
-    measurement.uploadMbps,
-    isSuccess &&
-      measurement.uploadMbps !== null &&
-      rules.thresholds.uploadMbps !== null &&
-      measurement.uploadMbps < rules.thresholds.uploadMbps,
-    isSuccess && measurement.uploadMbps !== null,
-  );
-  check(
-    'latency_above',
-    rules.thresholds.latencyMs,
-    measurement.latencyUnloadedMs,
-    isSuccess &&
-      measurement.latencyUnloadedMs !== null &&
-      rules.thresholds.latencyMs !== null &&
-      measurement.latencyUnloadedMs > rules.thresholds.latencyMs,
-    isSuccess && measurement.latencyUnloadedMs !== null,
-  );
-  check(
-    'bufferbloat_above',
-    rules.thresholds.bufferBloatMs,
-    measurement.bufferBloatMs,
-    isSuccess &&
-      measurement.bufferBloatMs !== null &&
-      rules.thresholds.bufferBloatMs !== null &&
-      measurement.bufferBloatMs > rules.thresholds.bufferBloatMs,
-    isSuccess && measurement.bufferBloatMs !== null,
-  );
+  const metrics: {
+    kind: AlertKind;
+    threshold: number | null;
+    observed: number | null;
+    breach: (o: number, t: number) => boolean;
+  }[] = [
+    {
+      kind: 'download_below',
+      threshold: rules.thresholds.downloadMbps,
+      observed: measurement.downloadMbps,
+      breach: (o, t) => o < t,
+    },
+    {
+      kind: 'upload_below',
+      threshold: rules.thresholds.uploadMbps,
+      observed: measurement.uploadMbps,
+      breach: (o, t) => o < t,
+    },
+    {
+      kind: 'latency_above',
+      threshold: rules.thresholds.latencyMs,
+      observed: measurement.latencyUnloadedMs,
+      breach: (o, t) => o > t,
+    },
+    {
+      kind: 'bufferbloat_above',
+      threshold: rules.thresholds.bufferBloatMs,
+      observed: measurement.bufferBloatMs,
+      breach: (o, t) => o > t,
+    },
+  ];
+  for (const { kind, threshold, observed, breach } of metrics) {
+    if (threshold === null || !isSuccess || observed === null) {
+      continue;
+    }
+    transition(kind, breach(observed, threshold), observed, threshold);
+  }
 
   if (rules.failureStreak !== null) {
-    const isBreach = streakCount >= rules.failureStreak;
-    const current = currentState.failure_streak;
-    if (isBreach && current === 'OK') {
-      out.push({
-        kind: 'failure_streak',
-        event: 'fired',
-        observed: streakCount,
-        threshold: rules.failureStreak,
-      });
-    } else if (!isBreach && current === 'ALERTING') {
-      out.push({
-        kind: 'failure_streak',
-        event: 'resolved',
-        observed: streakCount,
-        threshold: rules.failureStreak,
-      });
-    }
+    transition('failure_streak', streakCount >= rules.failureStreak, streakCount, rules.failureStreak);
   }
 
   return out;
