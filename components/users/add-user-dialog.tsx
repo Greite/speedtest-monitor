@@ -52,6 +52,7 @@ export function AddUserDialog({ open, onOpenChange, onCreated }: Props) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    reset();
     if (password.length < MIN_PASSWORD_LEN) {
       setError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
       return;

@@ -52,6 +52,7 @@ export function ResetPasswordDialog({ open, onOpenChange, user }: Props) {
     if (!user) {
       return;
     }
+    reset();
     if (password.length < MIN_PASSWORD_LEN) {
       setError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
       return;
