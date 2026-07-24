@@ -1,3 +1,5 @@
+'use client';
+
 import { Markdown as AstryxMarkdown } from '@astryxdesign/core/Markdown';
 import type { ReactNode } from 'react';
 
