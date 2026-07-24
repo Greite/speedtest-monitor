@@ -2,20 +2,18 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog } from '@astryxdesign/core/Dialog';
-import { DropdownMenu, DropdownMenuItem } from '@astryxdesign/core/DropdownMenu';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Token } from '@astryxdesign/core/Token';
-import { Check, ChevronRight, LogOut, Menu, Monitor, Moon, Play, Settings, Sun, X } from 'lucide-react';
+import { ChevronRight, LogOut, Menu, Monitor, Moon, Play, Settings, Sun, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useId, useState } from 'react';
 
 import { useLiveMeasurements } from './use-live-measurements';
 
 import { LogoMark } from '@/components/logo-mark';
-import { useDialogA11yIds } from '@/components/use-dialog-a11y-ids';
 import { authClient } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
 
@@ -96,74 +94,12 @@ function ThemeSegmented({
   );
 }
 
-// ThemeMenu uses DropdownMenu's compound-children mode rather than the
-// data-driven `items` mode, because DropdownMenuItemProps (the compound
-// child) is the only item shape that forwards endContent (verified in
-// DropdownMenuItem.d.ts vs. DropdownMenuItemData in DropdownMenu.d.ts) - so
-// the active theme can be marked with a trailing Check next to its own
-// Sun/Moon/Monitor icon instead of swapping the icon away. There is no
-// compound equivalent of the data-driven mode's built-in section title
-// (checked DropdownMenu.d.ts/index.d.ts - Section is an unrelated page-layout
-// component, not a menu part), so the "Theme" label is reconstructed as a
-// plain aria-hidden div, wrapped in the same role="group" the data-driven
-// section used internally (see renderDropdownItems.js).
-function ThemeMenu({
-  mounted,
-  theme,
-  setTheme,
-}: {
-  mounted: boolean;
-  theme: string | undefined;
-  setTheme: (t: string) => void;
-}) {
-  const current = THEMES.find((t) => mounted && t.value === theme) ?? THEMES[2];
-  const CurrentIcon = current.icon;
-  return (
-    <DropdownMenu
-      button={{
-        label: `Theme: ${current.label}`,
-        icon: <CurrentIcon aria-hidden className="size-4" />,
-        isIconOnly: true,
-        variant: 'ghost',
-        size: 'sm',
-        className: 'min-h-11 min-w-11 md:min-h-7 md:min-w-7',
-      }}
-      placement="below"
-    >
-      {/* biome-ignore lint/a11y/useSemanticElements: this groups menuitems inside
-          role="menu" (mirrors Astryx's own renderDropdownItems.js section
-          wrapper) - fieldset is form-control semantics and isn't appropriate
-          here. */}
-      <div role="group" aria-label="Theme">
-        <div
-          aria-hidden
-          className="px-2.5 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-        >
-          Theme
-        </div>
-        {THEMES.map(({ value, label, icon: Icon }) => {
-          const active = mounted && theme === value;
-          return (
-            <DropdownMenuItem
-              key={value}
-              icon={<Icon aria-hidden className="size-4" />}
-              label={label}
-              endContent={active ? <Check aria-hidden className="size-4" /> : undefined}
-              onClick={() => setTheme(value)}
-            />
-          );
-        })}
-      </div>
-    </DropdownMenu>
-  );
-}
-
 // Replaces the old shadcn ConfirmDialog (which only wrapped the shadcn Dialog
 // + Button). Topbar is its sole consumer, so it's kept local rather than
 // promoted to a shared component - mirrors the pattern already established by
 // components/users/delete-user-dialog.tsx (Astryx Dialog does not
 // auto-generate aria-labelledby/aria-describedby, so title/description are
-// linked explicitly via useDialogA11yIds).
+// linked explicitly via useId()).
 function LogoutConfirmDialog({
   open,
   onOpenChange,
@@ -173,7 +109,8 @@ function LogoutConfirmDialog({
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void | Promise<void>;
 }) {
-  const { labelId: titleId, descriptionId } = useDialogA11yIds();
+  const titleId = useId();
+  const descriptionId = useId();
   const [busy, setBusy] = useState(false);
 
   async function handleConfirm() {
@@ -219,6 +156,27 @@ function LogoutConfirmDialog({
   );
 }
 
+function DrawerSection({
+  id,
+  title,
+  delay,
+  children,
+}: {
+  id: string;
+  title: string;
+  delay: number;
+  children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby={id} className="drawer-section" style={{ animationDelay: `${delay}ms` }}>
+      <h3 id={id} className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
 export function Topbar() {
   const { data: session } = authClient.useSession();
   const role = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role ?? null;
@@ -230,7 +188,6 @@ export function Topbar() {
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const [running2, setRunning2] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -248,17 +205,16 @@ export function Topbar() {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
+  const isBusy = running;
+
   async function handleRun() {
-    if (running || running2 || !connected) {
+    if (isBusy || !connected) {
       return;
     }
-    setRunning2(true);
     try {
       await triggerRun();
     } catch {
       /* swallow: surfaced elsewhere if needed */
-    } finally {
-      setRunning2(false);
     }
   }
 
@@ -273,8 +229,15 @@ export function Topbar() {
     await handleLogout();
   }
 
-  const isBusy = running || running2;
   const label = liveLabel({ running: isBusy, connected });
+  const runClassName = cn('bg-brand text-brand-foreground hover:bg-brand-hover', !isBusy && connected && 'brand-glow');
+  const runProps = {
+    label: isBusy ? 'Running…' : 'Run now',
+    isLoading: isBusy,
+    isDisabled: isBusy || !connected,
+    onClick: handleRun,
+    variant: 'primary',
+  } as const;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -306,15 +269,11 @@ export function Topbar() {
           </div>
 
           <Button
-            label={isBusy ? 'Running…' : 'Run now'}
+            {...runProps}
             icon={<Play aria-hidden className={cn('size-3.5', isBusy && 'animate-pulse')} />}
-            isLoading={isBusy}
-            isDisabled={isBusy || !connected}
-            onClick={handleRun}
             tooltip={connected ? undefined : 'Waiting for live connection…'}
-            variant="primary"
             size="sm"
-            className={cn('bg-brand text-brand-foreground hover:bg-brand-hover', !isBusy && connected && 'brand-glow')}
+            className={runClassName}
           />
 
           <span aria-hidden className="mx-1 h-6 w-px bg-border/70" />
@@ -328,7 +287,7 @@ export function Topbar() {
             className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
           />
 
-          <ThemeMenu mounted={mounted} theme={theme} setTheme={setTheme} />
+          <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} />
 
           {role ? (
             <Token
@@ -353,17 +312,10 @@ export function Topbar() {
         <div className="flex items-center gap-2 md:hidden">
           <LiveDot running={isBusy} connected={connected} />
           <IconButton
+            {...runProps}
             icon={<Play aria-hidden className={cn('size-4', isBusy && 'animate-pulse')} />}
-            label={isBusy ? 'Running…' : 'Run now'}
-            isLoading={isBusy}
-            isDisabled={isBusy || !connected}
-            onClick={handleRun}
-            variant="primary"
             size="sm"
-            className={cn(
-              'min-h-11 min-w-11 bg-brand text-brand-foreground hover:bg-brand-hover',
-              !isBusy && connected && 'brand-glow',
-            )}
+            className={cn('min-h-11 min-w-11', runClassName)}
           />
           <IconButton
             icon={<Menu aria-hidden className="size-4" />}
@@ -403,13 +355,7 @@ export function Topbar() {
 
               <nav aria-label="Main" className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
                 {role ? (
-                  <section aria-labelledby="m-account" className="drawer-section" style={{ animationDelay: '0ms' }}>
-                    <h3
-                      id="m-account"
-                      className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-                    >
-                      Account
-                    </h3>
+                  <DrawerSection id="m-account" title="Account" delay={0}>
                     <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/70 px-3 py-2">
                       <Token
                         label={role}
@@ -423,16 +369,10 @@ export function Topbar() {
                         </span>
                       ) : null}
                     </div>
-                  </section>
+                  </DrawerSection>
                 ) : null}
 
-                <section aria-labelledby="m-live" className="drawer-section" style={{ animationDelay: '40ms' }}>
-                  <h3
-                    id="m-live"
-                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-                  >
-                    Live status
-                  </h3>
+                <DrawerSection id="m-live" title="Live status" delay={40}>
                   <div
                     className={cn(
                       'rounded-md border border-border/60 bg-card/70 p-3 transition-shadow duration-300',
@@ -449,38 +389,19 @@ export function Topbar() {
                       {connected && !isBusy && 'Live connection active.'}
                     </p>
                     <Button
-                      label={isBusy ? 'Running…' : 'Run now'}
+                      {...runProps}
                       icon={<Play aria-hidden className={cn('size-4', isBusy && 'animate-pulse')} />}
-                      isLoading={isBusy}
-                      isDisabled={isBusy || !connected}
-                      onClick={handleRun}
-                      variant="primary"
                       width="100%"
-                      className={cn(
-                        'mt-3 min-h-11 bg-brand text-brand-foreground hover:bg-brand-hover',
-                        !isBusy && connected && 'brand-glow',
-                      )}
+                      className={cn('mt-3 min-h-11', runClassName)}
                     />
                   </div>
-                </section>
+                </DrawerSection>
 
-                <section aria-labelledby="m-theme" className="drawer-section" style={{ animationDelay: '80ms' }}>
-                  <h3
-                    id="m-theme"
-                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-                  >
-                    Theme
-                  </h3>
+                <DrawerSection id="m-theme" title="Theme" delay={80}>
                   <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} withLabels fullWidth />
-                </section>
+                </DrawerSection>
 
-                <section aria-labelledby="m-nav" className="drawer-section" style={{ animationDelay: '120ms' }}>
-                  <h3
-                    id="m-nav"
-                    className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-                  >
-                    Navigation
-                  </h3>
+                <DrawerSection id="m-nav" title="Navigation" delay={120}>
                   <ul className="flex flex-col gap-2">
                     {[
                       { href: '/settings', label: 'Settings', icon: Settings },
@@ -525,7 +446,7 @@ export function Topbar() {
                       );
                     })}
                   </ul>
-                </section>
+                </DrawerSection>
 
                 <div className="drawer-section mt-auto pt-2" style={{ animationDelay: '160ms' }}>
                   <Button

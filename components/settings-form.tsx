@@ -124,7 +124,7 @@ function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; 
               avoid a redundant, unlinked announcement - Token drops raw
               aria-* props (no ...rest in Token.tsx), so aria-hidden is
               applied on a wrapping span instead (same pattern as the
-              "Current" token in app/changelog/page.tsx). */}
+              "Current" token in app/(chrome)/changelog/page.tsx). */}
           <span aria-hidden>
             <Token label={`env default: ${envDefault}`} size="sm" className="font-mono text-[10px] tracking-wide" />
           </span>

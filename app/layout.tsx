@@ -5,7 +5,6 @@ import { ThemeProvider } from 'next-themes';
 import type { ReactNode } from 'react';
 
 import { AstryxProviders } from '@/components/astryx-providers';
-import { SessionShell } from '@/components/auth/session-shell';
 import { FocusMainOnNavigate } from '@/components/focus-main-on-navigate';
 import { resolveDisplayConfig } from '@/lib/runtime-config';
 import './globals.css';
@@ -56,7 +55,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AstryxProviders>
             <FocusMainOnNavigate />
-            <SessionShell>{children}</SessionShell>
+            {children}
           </AstryxProviders>
         </ThemeProvider>
       </body>

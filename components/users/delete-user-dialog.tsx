@@ -5,9 +5,8 @@ import { Button } from '@astryxdesign/core/Button';
 import { Dialog } from '@astryxdesign/core/Dialog';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { useToast } from '@astryxdesign/core/Toast';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
-import { useDialogA11yIds } from '@/components/use-dialog-a11y-ids';
 import { parseApiError } from '@/lib/api-client';
 
 type Props = {
@@ -19,7 +18,8 @@ type Props = {
 
 export function DeleteUserDialog({ open, onOpenChange, user, onDeleted }: Props) {
   const toast = useToast();
-  const { labelId: titleId, descriptionId } = useDialogA11yIds();
+  const titleId = useId();
+  const descriptionId = useId();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
