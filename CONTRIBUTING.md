@@ -64,8 +64,8 @@ Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's na
 - `lib/measurement/` - `cloudflare.ts` measures throughput against `speed.cloudflare.com` with raw `fetch` (HTTP-only, no browser, no `@cloudflare/speedtest`). `runner.ts` wraps it in a `globalThis.__speedtestRunning` mutex so only one run happens at a time.
 - `lib/db/` - Drizzle schema + singleton `bun:sqlite` client (lazy-required) with WAL, foreign keys, and `synchronous=NORMAL` enabled.
 - `lib/ws/` - WebSocket server + typed broadcasters consumed by the React hook in `components/use-live-measurements.ts`.
-- `lib/auth/` - [better-auth](https://better-auth.com) wiring (email/password + optional generic OIDC), `Bun.password` hashing, first-user bootstrap, and legacy account migration.
-- `lib/alerts/` - rule evaluation, per-condition state machine, and destination adapters (webhook, ntfy, Discord, Slack, SMTP). The MJML email template compiles to `lib/alerts/templates/alert-email.html.ts` via `bun run build:email`.
+- `lib/auth/` - [better-auth](https://better-auth.com) wiring (email/password + optional generic OIDC), `Bun.password` hashing, and first-user bootstrap.
+- `lib/alerts/` - rule evaluation, per-condition state machine, and destination adapters (webhook, ntfy, Discord, Slack, SMTP). The alert email template is a TS template literal in `lib/alerts/templates/render.ts`.
 - `lib/types.ts` - single `toMeasurementDto()` serialiser used by the page SSR, the API routes, and the WS broadcaster so the client always receives the same shape.
 
 ## Commits

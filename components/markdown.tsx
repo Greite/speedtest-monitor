@@ -31,11 +31,26 @@ function ReleaseLink({ href, children }: { href: string; children: ReactNode }) 
   );
 }
 
+// Release notes are external content: rendering `![alt](src)` as a real <img>
+// would let it load/track a remote URL just by being displayed. Astryx's own
+// `components.image` override only fires for images inline inside a
+// paragraph - a line that is *only* `![alt](src)` parses as its own block
+// node and always renders a raw <img>, bypassing that override entirely. So
+// instead of relying on it, strip the `!` that turns a link into an image
+// before parsing: every image (block or inline, direct or reference-style)
+// then renders through the already safeHref-gated `link` override above.
+// ponytail: plain string replace, not AST-aware - would also strip a literal
+// "![" inside a fenced code sample in a release note. Upgrade to stripping
+// only outside code spans if that ever shows up in practice.
+function stripImageSyntax(source: string): string {
+  return source.replace(/!(\[)/g, '$1');
+}
+
 export function Markdown({ source }: { source: string }) {
   // headingLevelStart={2}: release bodies use ## for sections; h1 is the page's.
   return (
     <AstryxMarkdown headingLevelStart={2} density="compact" components={{ link: ReleaseLink }}>
-      {source}
+      {stripImageSyntax(source)}
     </AstryxMarkdown>
   );
 }

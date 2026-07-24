@@ -63,4 +63,15 @@ describe('Markdown (rendered via Astryx)', () => {
     expect(html).not.toContain('tel:');
     expect(html).toContain('call us');
   });
+
+  it('renders images as a link, never an <img>, and drops unsafe image src entirely', () => {
+    const safe = renderToStaticMarkup(<Markdown source="![logo](https://example.com/x.png)" />);
+    expect(safe).not.toContain('<img');
+    expect(safe).toContain('<a');
+    expect(safe).toContain('href="https://example.com/x.png"');
+
+    const unsafe = renderToStaticMarkup(<Markdown source="![x](javascript:alert(1))" />);
+    expect(unsafe).not.toContain('<img');
+    expect(unsafe).not.toContain('<a');
+  });
 });

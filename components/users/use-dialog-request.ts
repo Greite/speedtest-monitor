@@ -30,7 +30,7 @@ export function useDialogRequest() {
       setPending(false);
       return false;
     }
-    if (!res.ok && res.status !== 204) {
+    if (!res.ok) {
       const apiErr = await parseApiError(res);
       if (apiErr.code === 'validation_failed' && apiErr.fields) {
         setFieldErrors(apiErr.fields);

@@ -161,6 +161,18 @@ The auth stack moved from next-auth v5 beta to Better Auth. Same env vars, but:
 4. User ids changed from auto-increment integers to UUIDs. Any external script
    that hard-coded a numeric user id needs to be updated.
 
+### Upgrading from a pre-better-auth version
+
+Deployments upgrading from a pre-better-auth version (older than v1.13, before
+2026-05) must upgrade through an intermediate release first - any v1.14
+through the latest v1.x - before moving further. Migration `0006` drops the
+legacy `users` table, and the automatic account backfill that those older
+releases ran at boot to populate the new `user`/`account` tables no longer
+exists in later versions, so skipping the intermediate release and jumping
+straight across both steps loses local accounts. Measurements are unaffected,
+and the admin account can be re-seeded afterwards via `/setup` or the
+`SPEEDTEST_ADMIN_EMAIL`/`SPEEDTEST_ADMIN_PASSWORD` env vars.
+
 ### Upgrading the measurement engine
 
 The 0.2+ release swaps the measurement backend from fast.com (via the
@@ -231,7 +243,7 @@ All routes require an authenticated session (cookie or OIDC). Mutating routes re
 | `/api/account/password` | PATCH | Change your own password |
 | `/api/auth/setup` | POST | First-run admin creation (only while no user exists) |
 | `/api/auth/[...all]` | * | Better Auth endpoints (sign-in, callback, session, ...) |
-| `/ws` | WebSocket | Pushes `measurement`, `running`, `settings_updated` events |
+| `/ws` | WebSocket | Pushes `measurement`, `running` events |
 
 ## Tests
 
@@ -241,7 +253,7 @@ Unit tests live next to the code they cover (`lib/**/*.test.ts`, `components/**/
 bun test
 ```
 
-Covered areas: cron expression generation, measurement DTO mapping, range and pagination query parsing, alert evaluation and per-condition state machine, alert dispatch and formatting, MJML email rendering, every destination adapter (webhook, ntfy, Discord, Slack, SMTP), auth bootstrap and config, password hashing, OIDC providers, and user management.
+Covered areas: the setInterval scheduler, measurement DTO mapping, range and pagination query parsing, alert evaluation and per-condition state machine, alert dispatch and formatting, alert email rendering, every destination adapter (webhook, ntfy, Discord, Slack, SMTP), auth bootstrap and config, password hashing, OIDC providers, and user management.
 
 ## Reverse proxy
 
