@@ -23,6 +23,12 @@ const config: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    // TypeScript 7 dropped the JS compiler API Next loads by default, so
+    // `next typegen` / `next build` bail out without this. Runs the
+    // project-local `tsc` binary instead.
+    useTypeScriptCli: true,
+  },
   env: {
     NEXT_PUBLIC_APP_VERSION: resolveAppVersion(),
   },
