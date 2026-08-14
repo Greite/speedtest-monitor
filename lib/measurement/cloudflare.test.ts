@@ -1,7 +1,7 @@
 // lib/measurement/cloudflare.test.ts
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 
-import { fetchCloudflareMeta, probeLatency, probeUpload } from './cloudflare';
+import { fetchCloudflareMeta, probeLatency, probeUpload, timedFetch } from './cloudflare';
 
 const fetchMock = mock();
 
@@ -64,6 +64,32 @@ describe('probeLatency', () => {
     expect(r.min).toBeGreaterThanOrEqual(0);
     expect(r.mean).toBeGreaterThanOrEqual(r.min);
     expect(r.jitter).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('timedFetch', () => {
+  function interruptedBody() {
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(1234));
+          setTimeout(() => controller.error(new Error('connection lost')), 20);
+        },
+      }),
+      { status: 200 },
+    );
+  }
+
+  it('credits bytes received before a mid-body error when partialOnError is set', async () => {
+    fetchMock.mockImplementation(async () => interruptedBody());
+    const r = await timedFetch('https://x/', {}, 1_000, { partialOnError: true });
+    expect(r.bytes).toBe(1234);
+    expect(r.status).toBe(200);
+  });
+
+  it('rethrows mid-body errors without partialOnError', async () => {
+    fetchMock.mockImplementation(async () => interruptedBody());
+    await expect(timedFetch('https://x/', {}, 1_000)).rejects.toThrow('connection lost');
   });
 });
 

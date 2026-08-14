@@ -38,6 +38,8 @@ Configuration:
 | `SPEEDTEST_LOG_MAX_FILES` | `5` | Rotated files kept (`app.log.1` … `app.log.N`); older ones are deleted |
 | `SPEEDTEST_TEST_DURATION_S` | `10` | Duration of each download/upload phase (seconds). Raise for multi-Gbps links so TCP can ramp up and the sample is not dominated by slow-start. |
 | `SPEEDTEST_PARALLEL_STREAMS` | `8` | Parallel HTTP streams per phase. More streams help saturate high-bandwidth links (try `16` on 10 Gbps). |
+| `SPEEDTEST_DOWNLOAD_MB_PER_REQUEST` | `100` | Download payload size (MB) per request. |
+| `SPEEDTEST_UPLOAD_MB_PER_REQUEST` | `25` | Upload payload size (MB) per request. Lower it (e.g. `5`) on slow uplinks: bytes only count when a request completes, so oversized payloads can yield `upload produced no bytes`. |
 | `SPEEDTEST_LOCALE` | `en-US` | BCP 47 locale for dates/times in the dashboard and alert emails (e.g. `fr-FR`, `de-DE`) |
 | `SPEEDTEST_TIMEZONE` | `UTC` | IANA timezone for dates/times in the dashboard and alert emails (e.g. `Europe/Paris`) |
 | `PORT` | `3000` | HTTP + WebSocket port |
