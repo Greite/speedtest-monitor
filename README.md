@@ -203,6 +203,8 @@ bun run test:a11y:page     # axe audit of /login with forced color scheme (--sch
 
 ### End-to-end check
 
+Run these from your host machine (the Docker image ships no curl).
+
 ```bash
 # trigger one measurement (~20s)
 curl -X POST http://localhost:3003/api/measurements/run
