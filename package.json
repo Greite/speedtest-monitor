@@ -37,11 +37,11 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "better-auth": "^1.6.27",
+    "better-auth": "^1.6.28",
     "@astryxdesign/core": "0.2.0",
     "@astryxdesign/theme-neutral": "0.2.0",
     "drizzle-orm": "^0.45.2",
-    "next": "^16.3.0",
+    "next": "^16.3.1",
     "nodemailer": "^9.0.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
