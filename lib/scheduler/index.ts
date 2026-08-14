@@ -1,5 +1,6 @@
 import { ensureSeededAdmin } from '../auth/bootstrap';
 import { runMigrations } from '../db/migrate';
+import { logger } from '../logger';
 import { runMeasurementSafe } from '../measurement/runner';
 import { purgeByRetention } from '../measurements';
 import { resolveDisplayConfig } from '../runtime-config';
@@ -58,8 +59,11 @@ export function rescheduleFromSettings() {
   }
   const periodMs = minutes * 60_000;
   const run = () => {
-    runMeasurementSafe().catch(() => {});
+    runMeasurementSafe().catch((err) => {
+      logger.error('[scheduler] scheduled measurement failed', err);
+    });
   };
+  logger.info(`[scheduler] measurements scheduled every ${minutes} min`);
   // Delay the first tick to the next clock boundary, then run on a plain
   // interval - setInterval alone would drift from whenever the app booted.
   const timer = setTimeout(
@@ -79,7 +83,10 @@ function startPurgeTimer() {
   const purge = () => {
     try {
       purgeByRetention(getRetentionDays());
-    } catch {}
+      logger.debug('[scheduler] retention purge done');
+    } catch (err) {
+      logger.error('[scheduler] retention purge failed', err);
+    }
   };
   // Run once at boot (covers deployments that restart more often than daily),
   // then daily at 03:00 in the app timezone.

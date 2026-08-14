@@ -2,6 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 
 import { getDb } from '../db/client';
 import { type Alert, type AlertKind, alerts, type Measurement, measurements } from '../db/schema';
+import { logger } from '../logger';
 import { loadAlertConfig } from './config';
 import { buildDestinations, type Destination } from './destinations';
 import { evaluateAlerts } from './evaluate';
@@ -42,6 +43,9 @@ export async function handleAlertsForMeasurement(measurement: Measurement): Prom
   const destinations = buildDestinations(cfg);
 
   for (const transition of transitions) {
+    logger.info(
+      `[alerts] ${transition.kind} ${transition.event} (observed=${transition.observed}, threshold=${transition.threshold})`,
+    );
     const inserted = insertPendingAlert(transition, measurement.id);
     void dispatchAndUpdate(inserted, transition, destinations, rules);
   }
@@ -203,6 +207,13 @@ async function dispatchAndUpdate(
     destinations,
     rules,
   });
+  for (const [name, result] of Object.entries(deliveryStatus)) {
+    if (result.ok) {
+      logger.debug(`[alerts] delivered "${title}" via ${name}`);
+    } else {
+      logger.error(`[alerts] delivery of "${title}" via ${name} failed: ${result.error}`);
+    }
+  }
   const db = getDb();
   db.update(alerts).set({ deliveryStatus }).where(eq(alerts.id, row.id)).run();
 }

@@ -2,6 +2,7 @@
 import { handleAlertsForMeasurement } from '../alerts/handle';
 import { getDb } from '../db/client';
 import { type Measurement, measurements } from '../db/schema';
+import { logger } from '../logger';
 import { broadcastMeasurement, broadcastRunning } from '../ws/broadcast';
 import { runCloudflareSpeedTest } from './cloudflare';
 
@@ -31,6 +32,7 @@ export async function runMeasurement(): Promise<Measurement> {
   }
   globalThis.__speedtestRunning = true;
   const startedAt = Date.now();
+  logger.debug('[measurement] speed test starting');
   broadcastRunning(startedAt);
 
   try {
@@ -53,12 +55,20 @@ export async function runMeasurement(): Promise<Measurement> {
       userIp: result.userIp,
       userIsp: result.userIsp,
     });
+    logger.info(
+      `[measurement] success: download=${row.downloadMbps} Mbps upload=${row.uploadMbps} Mbps latency=${row.latencyUnloadedMs} ms`,
+    );
     broadcastMeasurement(row);
     void handleAlertsForMeasurement(row);
     return row;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const isTimeout = message.toLowerCase().includes('timed out');
+    if (isTimeout) {
+      logger.warn(`[measurement] timed out: ${message}`);
+    } else {
+      logger.error(`[measurement] failed: ${message}`);
+    }
     const row = insertMeasurement({
       downloadMbps: null,
       uploadMbps: null,
@@ -87,6 +97,7 @@ export async function runMeasurementSafe(): Promise<Measurement | null> {
     return await runMeasurement();
   } catch (err) {
     if (err instanceof MeasurementBusyError) {
+      logger.debug('[measurement] skipped: a measurement is already running');
       return null;
     }
     throw err;

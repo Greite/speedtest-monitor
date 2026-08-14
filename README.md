@@ -32,6 +32,10 @@ Configuration:
 |---|---|---|
 | `SPEEDTEST_INTERVAL_MINUTES` | `15` | Default interval used if the DB has no override |
 | `SPEEDTEST_DB_PATH` | `/data/speedtest.db` | SQLite file path (volume-persisted) |
+| `SPEEDTEST_LOG_LEVEL` | `INFO` | Minimum level written to the log file: `DEBUG`, `INFO`, `WARNING` or `ERROR` |
+| `SPEEDTEST_LOG_DIR` | `/data/logs` | Directory for `app.log` and its rotated copies (volume-persisted in Docker, `./logs` outside) |
+| `SPEEDTEST_LOG_MAX_SIZE_MB` | `5` | Size at which `app.log` is rotated to `app.log.1` |
+| `SPEEDTEST_LOG_MAX_FILES` | `5` | Rotated files kept (`app.log.1` … `app.log.N`); older ones are deleted |
 | `SPEEDTEST_TEST_DURATION_S` | `10` | Duration of each download/upload phase (seconds). Raise for multi-Gbps links so TCP can ramp up and the sample is not dominated by slow-start. |
 | `SPEEDTEST_PARALLEL_STREAMS` | `8` | Parallel HTTP streams per phase. More streams help saturate high-bandwidth links (try `16` on 10 Gbps). |
 | `SPEEDTEST_LOCALE` | `en-US` | BCP 47 locale for dates/times in the dashboard and alert emails (e.g. `fr-FR`, `de-DE`) |

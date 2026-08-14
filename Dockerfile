@@ -43,6 +43,7 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
     SPEEDTEST_DB_PATH=/data/speedtest.db \
+    SPEEDTEST_LOG_DIR=/data/logs \
     SPEEDTEST_INTERVAL_MINUTES=15 \
     SPEEDTEST_LOCALE=en-US \
     SPEEDTEST_TIMEZONE=UTC \

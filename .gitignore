@@ -3,6 +3,7 @@ node_modules
 dist
 coverage
 *.log
+logs/
 .env
 .env.local
 data

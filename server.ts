@@ -7,6 +7,7 @@ import { WebSocketServer } from 'ws';
 import { auth } from './lib/auth/handler';
 import { getTrustedOrigins } from './lib/auth/origins';
 import { closeDb } from './lib/db/client';
+import { logger } from './lib/logger';
 import { bootScheduler, stopScheduler } from './lib/scheduler';
 import { attachWsBroadcaster } from './lib/ws/server';
 
@@ -63,6 +64,7 @@ async function main() {
     // CORS preflight to WS — cookies may be auto-attached from a malicious page).
     const origin = req.headers.origin;
     if (origin !== undefined && !trustedOrigins.has(origin)) {
+      logger.warn(`[ws] rejected cross-origin upgrade from ${origin}`);
       rejectUpgrade(socket, 403, 'Forbidden');
       return;
     }
@@ -72,10 +74,12 @@ async function main() {
     try {
       const session = await auth.api.getSession({ headers: toFetchHeaders(req) });
       if (!session?.user) {
+        logger.debug('[ws] rejected upgrade without valid session');
         rejectUpgrade(socket, 401, 'Unauthorized');
         return;
       }
-    } catch {
+    } catch (err) {
+      logger.warn('[ws] session check failed during upgrade', err);
       rejectUpgrade(socket, 401, 'Unauthorized');
       return;
     }
@@ -86,11 +90,11 @@ async function main() {
   await bootScheduler();
 
   httpServer.listen(port, hostname, () => {
-    console.log(`> speedtest-monitor ready on http://${hostname}:${port}`);
+    logger.info(`[server] speedtest-monitor ready on http://${hostname}:${port}`);
   });
 
   const shutdown = (signal: string) => {
-    console.log(`\n[server] received ${signal}, shutting down…`);
+    logger.info(`[server] received ${signal}, shutting down`);
     stopScheduler();
     wss.close();
     httpServer.close(() => {
@@ -105,6 +109,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('[server] fatal', err);
+  logger.error('[server] fatal', err);
   process.exit(1);
 });
