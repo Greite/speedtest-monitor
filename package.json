@@ -37,7 +37,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "better-auth": "^1.6.28",
+    "better-auth": "^1.6.29",
     "@astryxdesign/core": "0.2.0",
     "@astryxdesign/theme-neutral": "0.2.0",
     "drizzle-orm": "^0.45.2",
