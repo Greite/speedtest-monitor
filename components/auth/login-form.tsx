@@ -71,8 +71,8 @@ export function LoginForm({
   async function onOidc() {
     setError(null);
     setPending(true);
-    const res = await authClient.signIn.oauth2({
-      providerId: 'oidc',
+    const res = await authClient.signIn.social({
+      provider: 'oidc',
       callbackURL: callbackUrl,
     });
     if (res.error) {
