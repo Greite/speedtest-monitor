@@ -139,7 +139,19 @@ SPEEDTEST_OIDC_ADMIN_EMAIL=you@example.com
 SPEEDTEST_OIDC_ALLOW_NEW_USERS=true       # "false" = only admin-created users may sign in via OIDC
 ```
 
+Register `https://<your-host>/api/auth/callback/oidc` as the redirect URI in your
+provider. **Upgrading from v1.18.1 or earlier:** the path used to be
+`/api/auth/oauth2/callback/oidc` - update the redirect URI in your provider or SSO
+sign-in will fail after the upgrade (better-auth 1.7 moved generic OAuth to the
+standard social callback path).
+
 Tested with Authelia, Authentik, and Keycloak (any OIDC-compliant provider should work).
+
+> Known issue: since v1.13.0, accounts created through OIDC sign-in are stored with
+> provider `local` and no OIDC subject - an upstream better-auth change (1.6.21)
+> stopped OAuth profile sync from writing `input: false` user fields. Admin
+> promotion via `SPEEDTEST_OIDC_ADMIN_EMAIL` still works (it runs server-side);
+> the only visible effect is the Users card labeling those accounts LOCAL.
 
 ### User management
 
