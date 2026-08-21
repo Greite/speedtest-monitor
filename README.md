@@ -9,7 +9,7 @@ Self-hosted internet speed monitor. Runs [`@cloudflare/speedtest`](https://www.n
 ## Stack
 
 - **Runtime**: Bun 1.x
-- **Package manager**: Bun 1.3
+- **Package manager**: Bun 1.4
 - **Framework**: Next.js 16 (App Router) + TypeScript 7 + Biome 2 + Tailwind v4
 - **UI**: [Astryx](https://astryx.atmeta.com/) design system (`@astryxdesign/core`, exact-pinned) with a custom pre-built theme (`lib/astryx-theme.ts` -> `bun run theme:build`)
 - **Custom server** (`server.ts`): hosts Next.js **and** a `ws` WebSocket endpoint on the same port

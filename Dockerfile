@@ -20,12 +20,6 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
 # Dummy value used only during `next build`; runtime requires a real
 # AUTH_SECRET supplied via `docker run -e AUTH_SECRET=...`.
 ENV AUTH_SECRET=build-time-placeholder-not-used-at-runtime
-# Bun 1.3.10-1.3.14 crashes (SIGILL/SIGTRAP) building Next 16.3.x
-# (oven-sh/bun#36866). A real node in /usr/bin outranks the image's
-# node->bun fallback shim (last in PATH), so `next`, whose shebang is
-# `#!/usr/bin/env node`, builds under Node while bun handles the rest.
-# Drop once the upstream bug is fixed.
-RUN apk add --no-cache nodejs
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # `next build` + pattern trim of build-only/experimental variants Next ships
