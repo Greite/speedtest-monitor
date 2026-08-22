@@ -95,6 +95,9 @@ export const account = sqliteTable('account', {
   id: text('id').primaryKey(),
   accountId: text('account_id').notNull(),
   providerId: text('provider_id').notNull(),
+  // Better Auth >= 1.7 keys accounts by (issuer, accountId). Nullable so
+  // older rows can be backfilled at boot (see backfillAccountIssuers).
+  issuer: text('issuer'),
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),

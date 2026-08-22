@@ -38,6 +38,7 @@ beforeEach(() => {
       id TEXT PRIMARY KEY,
       account_id TEXT NOT NULL,
       provider_id TEXT NOT NULL,
+      issuer TEXT,
       user_id TEXT NOT NULL,
       access_token TEXT,
       refresh_token TEXT,

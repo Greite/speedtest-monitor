@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
 
 import * as schema from '../db/schema';
-import { ensureSeededAdmin } from './bootstrap';
+import { backfillAccountIssuers, ensureSeededAdmin } from './bootstrap';
 import { verifyPassword } from './hash';
 import { findUserByEmail, getCredentialPasswordHash } from './users';
 
@@ -29,6 +29,7 @@ beforeEach(() => {
       id TEXT PRIMARY KEY,
       account_id TEXT NOT NULL,
       provider_id TEXT NOT NULL,
+      issuer TEXT,
       user_id TEXT NOT NULL,
       access_token TEXT,
       refresh_token TEXT,
@@ -73,5 +74,34 @@ describe('ensureSeededAdmin', () => {
     updateUser(before!.id, { role: 'viewer' });
     await ensureSeededAdmin();
     expect(findUserByEmail('a@x')?.role).toBe('admin');
+  });
+});
+
+describe('backfillAccountIssuers', () => {
+  it('fills issuer on pre-1.7 rows and leaves existing values alone', () => {
+    process.env.SPEEDTEST_OIDC_ISSUER = 'https://sso.example.com/';
+    process.env.SPEEDTEST_OIDC_CLIENT_ID = 'id';
+    process.env.SPEEDTEST_OIDC_CLIENT_SECRET = 'secret';
+    const sqlite = globalThis.__speedtestDb?.sqlite;
+    if (!sqlite) {
+      throw new Error('db not initialised');
+    }
+    sqlite.exec(`
+      INSERT INTO user (id, email) VALUES ('u1', 'a@x'), ('u2', 'b@x');
+      INSERT INTO account (id, account_id, provider_id, user_id, issuer) VALUES
+        ('a1', 'u1', 'credential', 'u1', NULL),
+        ('a2', 'sub-123', 'oidc', 'u2', NULL),
+        ('a3', 'u2', 'credential', 'u2', 'local:credential');
+    `);
+    backfillAccountIssuers();
+    const rows = sqlite.query('SELECT id, issuer FROM account ORDER BY id').all() as { id: string; issuer: string }[];
+    expect(rows).toEqual([
+      { id: 'a1', issuer: 'local:credential' },
+      { id: 'a2', issuer: 'https://sso.example.com' },
+      { id: 'a3', issuer: 'local:credential' },
+    ]);
+    delete process.env.SPEEDTEST_OIDC_ISSUER;
+    delete process.env.SPEEDTEST_OIDC_CLIENT_ID;
+    delete process.env.SPEEDTEST_OIDC_CLIENT_SECRET;
   });
 });

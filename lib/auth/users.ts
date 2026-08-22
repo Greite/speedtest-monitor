@@ -137,6 +137,7 @@ export function setCredentialPassword(userId: string, passwordHash: string): voi
       id: randomUUID(),
       accountId: userId,
       providerId: 'credential',
+      issuer: 'local:credential',
       userId,
       password: passwordHash,
     })

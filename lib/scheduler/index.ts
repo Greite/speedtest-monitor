@@ -1,4 +1,4 @@
-import { ensureSeededAdmin } from '../auth/bootstrap';
+import { backfillAccountIssuers, ensureSeededAdmin } from '../auth/bootstrap';
 import { runMigrations } from '../db/migrate';
 import { logger } from '../logger';
 import { runMeasurementSafe } from '../measurement/runner';
@@ -17,6 +17,7 @@ const PURGE_HOUR_MS = 3 * 60 * 60 * 1000;
 
 export async function bootScheduler() {
   runMigrations();
+  backfillAccountIssuers();
   await ensureSeededAdmin();
   rescheduleFromSettings();
   startPurgeTimer();

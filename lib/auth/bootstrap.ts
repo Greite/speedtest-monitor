@@ -1,6 +1,35 @@
+import { and, eq, isNull } from 'drizzle-orm';
+
+import { getDb } from '../db/client';
+import { account } from '../db/schema';
 import { loadAuthConfig } from './config';
 import { hashPassword, verifyPassword } from './hash';
 import { createUser, findUserByEmail, getCredentialPasswordHash, setCredentialPassword, updateUser } from './users';
+
+// Better Auth 1.7 looks accounts up by (issuer, accountId); rows written by
+// older versions have no issuer and are invisible to sign-in.
+// ponytail: the OIDC issuer is assumed to equal the configured one minus the
+// trailing slash (what the discovery document must return per spec). If a
+// provider violates that, set SPEEDTEST_OIDC_ISSUER to the discovered value.
+export function backfillAccountIssuers(): void {
+  const db = getDb();
+  db.update(account)
+    .set({ issuer: 'local:credential' })
+    .where(and(isNull(account.issuer), eq(account.providerId, 'credential')))
+    .run();
+  let oidcIssuer: string | undefined;
+  try {
+    oidcIssuer = loadAuthConfig().oidc?.issuer.replace(/\/+$/, '');
+  } catch {
+    return; // Missing AUTH_SECRET - surfaced elsewhere.
+  }
+  if (oidcIssuer) {
+    db.update(account)
+      .set({ issuer: oidcIssuer })
+      .where(and(isNull(account.issuer), eq(account.providerId, 'oidc')))
+      .run();
+  }
+}
 
 export async function ensureSeededAdmin(): Promise<void> {
   let cfg: ReturnType<typeof loadAuthConfig>;
