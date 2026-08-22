@@ -51,7 +51,7 @@ async function main() {
 
   const trustedOrigins = new Set(getTrustedOrigins());
 
-  httpServer.on('upgrade', async (req, socket, head) => {
+  httpServer.on('upgrade', (req, socket, head) => {
     const url = req.url ?? '';
     const pathname = url.split('?')[0];
     if (pathname !== '/ws') {
@@ -70,21 +70,26 @@ async function main() {
     }
 
     // Require a valid Better-Auth session. Middleware (proxy.ts) does not run
-    // for WS upgrades, so the gate must be enforced here.
-    try {
-      const session = await auth.api.getSession({ headers: toFetchHeaders(req) });
-      if (!session?.user) {
-        logger.debug('[ws] rejected upgrade without valid session');
-        rejectUpgrade(socket, 401, 'Unauthorized');
+    // for WS upgrades, so the gate must be enforced here. handleUpgrade() is
+    // called synchronously - Bun's ws shim breaks when it runs after an await
+    // (oven-sh/bun#39766) - and the session check happens on the upgraded
+    // socket before it is handed to the broadcaster.
+    wss.handleUpgrade(req, socket, head, async (ws) => {
+      ws.on('error', () => {});
+      let authed = false;
+      try {
+        const session = await auth.api.getSession({ headers: toFetchHeaders(req) });
+        authed = Boolean(session?.user);
+      } catch (err) {
+        logger.warn('[ws] session check failed during upgrade', err);
+      }
+      if (!authed) {
+        logger.debug('[ws] closed upgrade without valid session');
+        ws.close(1008, 'Unauthorized');
         return;
       }
-    } catch (err) {
-      logger.warn('[ws] session check failed during upgrade', err);
-      rejectUpgrade(socket, 401, 'Unauthorized');
-      return;
-    }
-
-    wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+      wss.emit('connection', ws, req);
+    });
   });
 
   await bootScheduler();
