@@ -44,6 +44,8 @@ Configuration:
 | `SPEEDTEST_TIMEZONE` | `UTC` | IANA timezone for dates/times in the dashboard and alert emails (e.g. `Europe/Paris`) |
 | `PORT` | `3000` | HTTP + WebSocket port |
 | `TZ` | - | Container system timezone (log lines only; display uses `SPEEDTEST_TIMEZONE`) |
+| `PUID` | `1001` | UID the server runs as; `/data` is chowned to it at startup (linuxserver.io-style). Unraid: `99` |
+| `PGID` | `1001` | GID the server runs as. Unraid: `100` |
 
 Change the interval at any time via the UI (`/settings`) - it is persisted in SQLite and takes effect immediately without a restart.
 

@@ -43,7 +43,8 @@ ENV NODE_ENV=production \
     SPEEDTEST_TIMEZONE=UTC \
     AUTH_TRUST_HOST=true
 
-RUN apk add --no-cache ca-certificates dumb-init \
+# shadow (usermod/groupmod) + su-exec: PUID/PGID remap in docker-entrypoint.sh
+RUN apk add --no-cache ca-certificates dumb-init shadow su-exec \
  && addgroup -S -g 1001 nodejs \
  && adduser  -S -u 1001 -G nodejs -h /home/nodejs nodejs \
  && mkdir -p /data \
@@ -60,12 +61,14 @@ COPY --from=builder --chown=nodejs:nodejs /app/drizzle         ./drizzle
 COPY --from=builder --chown=nodejs:nodejs /app/server.ts       ./server.ts
 COPY --from=builder --chown=nodejs:nodejs /app/lib             ./lib
 COPY --from=builder --chown=nodejs:nodejs /app/tsconfig.json   ./tsconfig.json
+COPY --chmod=755 docker-entrypoint.sh /docker-entrypoint.sh
 
-USER nodejs
+# No USER: the entrypoint remaps `nodejs` to PUID/PGID (default 1001:1001)
+# and drops privileges itself. `--user` still works (remap is skipped).
 VOLUME ["/data"]
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD bun -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-ENTRYPOINT ["dumb-init", "--"]
+ENTRYPOINT ["dumb-init", "--", "/docker-entrypoint.sh"]
 CMD ["bun", "server.ts"]
