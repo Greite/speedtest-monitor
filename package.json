@@ -37,24 +37,23 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "better-auth": "^1.7.2",
     "@astryxdesign/core": "0.2.0",
     "@astryxdesign/theme-neutral": "0.2.0",
+    "better-auth": "^1.7.2",
     "drizzle-orm": "^0.45.2",
     "next": "^16.3.4",
-    "nodemailer": "^9.1.1",
+    "nodemailer": "^10.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "ws": "^8.21.3",
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.12",
     "@astryxdesign/cli": "0.2.0",
+    "@biomejs/biome": "^2.5.12",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/bun": "^1.4.0",
     "@types/node": "^26.4.1",
-    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@types/ws": "^8.18.1",
