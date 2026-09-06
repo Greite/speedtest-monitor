@@ -39,7 +39,7 @@
   "dependencies": {
     "@astryxdesign/core": "0.2.0",
     "@astryxdesign/theme-neutral": "0.2.0",
-    "better-auth": "^1.7.2",
+    "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",
     "next": "^16.3.4",
     "nodemailer": "^10.0.0",
