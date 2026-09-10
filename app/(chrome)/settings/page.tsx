@@ -14,6 +14,7 @@ import {
   getIntervalMinutes,
   getRetentionDays,
 } from '@/lib/settings';
+import { pillLinkClasses } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,17 +35,12 @@ export default async function SettingsPage() {
     >
       <div className="flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Configuration
-          </span>
+          <span className="label-eyebrow">Configuration</span>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Settings<span className="text-brand">.</span>
           </h1>
         </div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
+        <Link href="/" className={pillLinkClasses}>
           <ArrowLeft className="size-3.5" aria-hidden />
           Back to dashboard
         </Link>

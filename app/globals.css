@@ -14,6 +14,9 @@
 @import '../lib/speedtest.css';
 
 @custom-variant dark (&:is(.dark *));
+/* Touch devices fire :hover on tap and keep it stuck until the next tap, so
+   every hover-driven transform/shadow is gated behind a fine pointer. */
+@custom-variant hover-fine (@media (hover: hover) and (pointer: fine));
 
 @theme inline {
   --font-sans:
@@ -66,8 +69,19 @@
   --space-stack-md: 1rem;
   --space-stack-lg: 1.5rem;
   --space-stack-xl: 2rem;
-  /* Touch target floor (WCAG 2.5.5 / Apple HIG) */
-  --touch-min: 44px;
+}
+
+/* Motion tokens. Curves are the strong variants of the built-in easings (the
+   CSS defaults are too weak to read as deliberate); durations mirror the
+   Astryx theme's --duration-* scale, redeclared here because the theme's live
+   inside an @scope and this file's rules also style nodes outside it. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-fast: 125ms;
+  --motion-medium: 300ms;
+  --motion-slow: 700ms;
 }
 
 :root {
@@ -184,8 +198,10 @@
     top: 0.5rem;
     left: 0.5rem;
     z-index: 100;
+    /* No transition: focusing this is a keyboard action, and for a keyboard-only
+       user it is the first Tab of every page load. Animation there only delays
+       the confirmation that focus landed. */
     transform: translateY(-200%);
-    transition: transform 150ms ease-out;
     padding: 0.5rem 0.75rem;
     border-radius: var(--radius-md);
     background: var(--brand);
@@ -211,6 +227,34 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-eyebrow);
   color: var(--muted-foreground);
+}
+
+/* Mono variant: same tracking token, used inside Tokens/badges that bring their
+   own color - so this one deliberately does not set `color`. */
+.label-eyebrow-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+}
+
+/* ---- Press feedback (Apple: respond on pointer-down, not on release) -------
+   Astryx controls already ship `:active { transform: scale(.98) }`; this covers
+   the hand-rolled buttons/links, which otherwise have hover-only feedback and
+   therefore none at all on touch. */
+/* Longhand, and transform listed alongside the color properties: this rule is
+   unlayered, so a `transition` shorthand here would silently drop the
+   `transition-colors` these call sites already carry. */
+.press {
+  transition-property: transform, color, background-color, border-color;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--ease-out);
+}
+.press:active {
+  transform: scale(0.97);
+  transition-duration: 100ms;
 }
 
 /* ---- Atmosphere: soft grid + brand glow ---------------------------------- */
@@ -249,33 +293,6 @@
     0 2px 6px -2px color-mix(in oklab, var(--brand) 45%, transparent);
 }
 
-/* ---- Live "running" indicators for chart card --------------------------- */
-
-/* Glow pulse on the card border (no interference with chart content) */
-@keyframes live-glow-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--color-brand) 18%, transparent),
-      0 6px 22px -8px color-mix(in oklab, var(--color-brand) 22%, transparent);
-  }
-  50% {
-    box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--color-brand) 45%, transparent),
-      0 10px 32px -6px color-mix(in oklab, var(--color-brand) 45%, transparent);
-  }
-}
-.live-glow {
-  animation: live-glow-pulse 2.2s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .live-glow {
-    animation: none;
-    box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--color-brand) 35%, transparent),
-      0 6px 22px -8px color-mix(in oklab, var(--color-brand) 30%, transparent);
-  }
-}
-
 /* ---- Pulsing ring for live status --------------------------------------- */
 @keyframes pulse-ring {
   0% { transform: scale(0.85); opacity: 0.7; }
@@ -287,16 +304,32 @@
   inset: 0;
   border-radius: 9999px;
   background: currentColor;
-  animation: pulse-ring 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-ring 1.4s var(--ease-out) infinite;
 }
 
-/* ---- KPI count-up entry animation --------------------------------------- */
-@keyframes kpi-flash {
-  0% { background-color: color-mix(in oklab, var(--brand) 14%, transparent); }
-  100% { background-color: transparent; }
-}
+/* ---- KPI "new measurement landed" highlight ----------------------------
+   A transition, not a @keyframes: measurements can land back-to-back (an
+   automatic run followed by a manual one), and a keyframe restarts from zero,
+   which is why this previously needed a forced-reflow hack to re-trigger. The
+   overlay snaps to full opacity (0ms) and decays over --motion-slow, so a
+   second measurement mid-decay retargets smoothly from wherever it is.
+   Opacity on a pseudo-element also keeps it composited - the old version
+   animated background-color, which repaints. */
 .kpi-flash {
-  animation: kpi-flash 1.2s ease-out;
+  position: relative;
+}
+.kpi-flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: color-mix(in oklab, var(--brand) 14%, transparent);
+  opacity: 0;
+  transition: opacity var(--motion-slow) var(--ease-out);
+}
+.kpi-flash[data-flash='true']::after {
+  opacity: 1;
+  transition-duration: 0ms;
 }
 
 /* ---- Drawer section stagger entry --------------------------------------- */
@@ -311,7 +344,41 @@
   }
 }
 .drawer-section {
-  animation: drawer-section-in 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation: drawer-section-in 280ms var(--ease-drawer) both;
+}
+
+/* The drawer leaves the way it arrived, back toward the Menu button that opened
+   it (Apple: symmetric paths, anchored origins). The staggered sections are
+   suppressed on the way out so the panel reads as one object. */
+@keyframes drawer-out {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+.drawer-out {
+  transform-origin: top right;
+  animation: drawer-out 180ms var(--ease-drawer) both;
+}
+.drawer-out .drawer-section {
+  animation: none;
+}
+
+/* ---- Scroll edge effect (no divider until content is actually under it) ---
+   Scroll-driven, zero JS. Browsers without scroll timelines keep the static
+   border, which is the previous behaviour. */
+@supports (animation-timeline: scroll()) {
+  @keyframes scroll-edge-in {
+    to {
+      border-bottom-color: color-mix(in oklab, var(--border) 60%, transparent);
+    }
+  }
+  .scroll-edge {
+    border-bottom-color: transparent;
+    animation: scroll-edge-in linear both;
+    animation-timeline: scroll();
+    animation-range: 0 56px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -322,6 +389,33 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Reduced motion means a gentler equivalent, not no feedback. All three are
+     color/opacity changes rather than movement, and each carries meaning: the
+     flash says a new measurement landed, the edge says content is under the
+     chrome, the theme fade softens a full-viewport brightness jump. */
+  .kpi-flash::after {
+    transition-duration: var(--motion-slow) !important;
+  }
+  .scroll-edge {
+    animation-duration: auto !important;
+  }
+  .theme-ready body,
+  .theme-ready .app-backdrop {
+    transition-duration: var(--motion-fast) !important;
+  }
+}
+
+/* ---- Reduced transparency: frost the translucent chrome solid ------------- */
+@media (prefers-reduced-transparency: reduce) {
+  .material-chrome {
+    background: var(--background) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .app-backdrop {
+    display: none;
   }
 }
 
@@ -358,5 +452,33 @@
   }
   .app-backdrop {
     display: none;
+  }
+}
+
+/* ---- Theme switch: soften the full-viewport brightness flip --------------
+   Scoped to `body` and the backdrop rather than `*` on purpose: those two
+   surfaces are the flip, and a universal color transition would both cost a
+   paint on every node and clobber the transition shorthand of every component
+   that sets its own. `.theme-ready` is added after hydration (see
+   components/astryx-providers.tsx) so this never plays on first paint. */
+.theme-ready body,
+.theme-ready .app-backdrop {
+  transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+/* ---- Panel entrance -----------------------------------------------------
+   For conditionally-rendered panels that would otherwise teleport in.
+   Enter only: @starting-style has no exit counterpart, and the collapse is
+   driven by an unmount we do not hold open. Degrades to the previous instant
+   appearance where @starting-style is unsupported. */
+.panel-enter {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--motion-medium) var(--ease-out), transform var(--motion-medium) var(--ease-out);
+}
+@starting-style {
+  .panel-enter {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 }

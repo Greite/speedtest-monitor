@@ -1,3 +1,7 @@
+'use client';
+
+import { useId } from 'react';
+
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -10,7 +14,15 @@ type Props = {
  * viewBox at (16,16) so it visually aligns with adjacent text.
  */
 export function LogoMark({ size = 32, className }: Props) {
-  const id = 'lm';
+  // Unique per instance: the topbar, the mobile drawer and the footer all
+  // render a LogoMark on the same page, so the previous hardcoded 'lm' emitted
+  // the same DOM ids two to four times. That is invalid HTML, and every
+  // url(#lm-stroke) resolved to whichever instance rendered first - harmless
+  // only because the gradients happen to be identical.
+  //
+  // Non-alphanumerics are stripped: React's generated ids carry delimiters
+  // that are not safe inside a url(#...) fragment reference.
+  const id = `lm${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <span
       aria-hidden

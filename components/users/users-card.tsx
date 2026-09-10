@@ -12,7 +12,6 @@ import {
   type TableSortState,
   useTableSortable,
 } from '@astryxdesign/core/Table';
-import { Heading } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useToast } from '@astryxdesign/core/Toast';
 import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
@@ -24,6 +23,7 @@ import { AddUserDialog } from './add-user-dialog';
 import { DeleteUserDialog } from './delete-user-dialog';
 import { ResetPasswordDialog } from './reset-password-dialog';
 
+import { CardTitle } from '@/components/card-title';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
 import { formatDateTime } from '@/lib/format';
@@ -236,10 +236,7 @@ export function UsersCard() {
   return (
     <Card padding={0} className="flex flex-col gap-6 overflow-hidden py-6">
       <div className="px-6">
-        <Heading level={2} className="label-eyebrow flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-          Users
-        </Heading>
+        <CardTitle>Users</CardTitle>
       </div>
       <div className="flex flex-col gap-4 px-6">
         <div className="flex flex-wrap items-end gap-3">
@@ -253,10 +250,12 @@ export function UsersCard() {
             startIcon={Search}
             hasClear
           />
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-muted-foreground" aria-hidden>
-              Role
-            </span>
+          {/* fieldset + legend, matching the filter blocks in table-filters.tsx:
+              same UI (toggle pills filtering a table), so same structure. The
+              legend names the group visually and in the a11y tree, which the
+              previous aria-hidden span could not do. */}
+          <fieldset className="flex flex-col gap-1">
+            <legend className="label-eyebrow mb-2">Role</legend>
             <div className={togglePillClasses}>
               <ToggleButtonGroup
                 label="Filter by role"
@@ -270,11 +269,9 @@ export function UsersCard() {
                 <ToggleButton value="viewer" label="Viewer" />
               </ToggleButtonGroup>
             </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-muted-foreground" aria-hidden>
-              Provider
-            </span>
+          </fieldset>
+          <fieldset className="flex flex-col gap-1">
+            <legend className="label-eyebrow mb-2">Provider</legend>
             <div className={togglePillClasses}>
               <ToggleButtonGroup
                 label="Filter by provider"
@@ -288,7 +285,7 @@ export function UsersCard() {
                 <ToggleButton value="oidc" label="OIDC" />
               </ToggleButtonGroup>
             </div>
-          </div>
+          </fieldset>
           {hasActiveFilter ? (
             <Button
               variant="ghost"

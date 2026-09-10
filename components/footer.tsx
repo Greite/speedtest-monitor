@@ -20,7 +20,10 @@ export function Footer() {
   const year = new Date().getFullYear();
   const isTagged = APP_VERSION !== 'dev';
   return (
-    <footer role="contentinfo" className="mt-auto border-t border-border/60 bg-background/40 backdrop-blur-sm">
+    <footer
+      role="contentinfo"
+      className="material-chrome mt-auto border-t border-border/60 bg-background/40 backdrop-blur-sm"
+    >
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 text-sm text-muted-foreground md:flex-row md:px-6">
         <div className="flex items-center gap-2.5">
           <LogoMark size={20} />
@@ -33,7 +36,7 @@ export function Footer() {
         <div className="flex items-center gap-2">
           <Link
             href="/changelog"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-2.5 py-0.5 font-mono text-[11px] font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="press inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-2.5 py-0.5 font-mono text-[11px] font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={isTagged ? `Version ${APP_VERSION}, view changelog` : 'Development build, view changelog'}
           >
             <span
@@ -46,7 +49,7 @@ export function Footer() {
             href={GITHUB_REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="press inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label="Source code on GitHub (opens in a new tab)"
           >
             <GithubMark className="size-4" />

@@ -10,6 +10,7 @@ import { useRef, useState } from 'react';
 import { LogoMark } from '@/components/logo-mark';
 import { authClient } from '@/lib/auth/client';
 import type { NativeInputAttrs } from '@/lib/native-input-attrs';
+import { authCardClasses } from '@/lib/utils';
 
 const LOGIN_ERROR_ID = 'login-error';
 
@@ -88,13 +89,11 @@ export function LoginForm({
       className="relative mx-auto flex min-h-[100dvh] w-full max-w-sm scroll-mt-16 flex-col justify-center px-4 py-8 outline-none"
     >
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 app-backdrop" />
-      <Card variant="transparent" padding={0} className="rounded-2xl border border-border/60 bg-card/80 p-8 shadow-sm">
+      <Card variant="transparent" padding={0} className={authCardClasses}>
         <div className="mb-6 flex flex-col items-center gap-3">
           <LogoMark size={48} />
           <div className="flex flex-col items-center gap-1">
-            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-              Speedtest·Monitor
-            </span>
+            <span className="label-eyebrow-mono text-muted-foreground">Speedtest·Monitor</span>
             <Heading level={1} className="text-2xl font-semibold tracking-tight">
               Welcome back<span className="text-brand">.</span>
             </Heading>
@@ -145,7 +144,7 @@ export function LoginForm({
           </p>
           {oidcAvailable && (
             <>
-              <div className="relative my-1 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="relative my-1 flex items-center gap-3 label-eyebrow">
                 <span className="h-px flex-1 bg-border/70" />
                 <span>or</span>
                 <span className="h-px flex-1 bg-border/70" />

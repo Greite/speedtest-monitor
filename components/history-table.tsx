@@ -11,11 +11,11 @@ import {
   type TableSortState,
   useTableSortable,
 } from '@astryxdesign/core/Table';
-import { Heading } from '@astryxdesign/core/Text';
 import { Token } from '@astryxdesign/core/Token';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { CardTitle } from '@/components/card-title';
 import { TableFilters } from '@/components/table-filters';
 import { useTableMeasurements } from '@/components/use-table-measurements';
 import {
@@ -165,10 +165,7 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
   return (
     <Card padding={0} className="flex flex-col gap-6 overflow-hidden py-6">
       <div className="px-6">
-        <Heading level={2} className="label-eyebrow flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-          Recent measurements
-        </Heading>
+        <CardTitle>Recent measurements</CardTitle>
       </div>
       <div className="flex flex-col gap-4 px-6">
         <TableFilters
@@ -180,7 +177,7 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
         />
         {measurements.length === 0 ? (
           <div className="py-6 text-center text-muted-foreground" role="status">
-            {loading && 'Loading...'}
+            {loading && 'Loading…'}
             {!loading && totalCount === 0 && 'No measurements.'}
             {!loading && totalCount !== 0 && 'No rows match filters.'}
           </div>

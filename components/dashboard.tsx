@@ -58,9 +58,7 @@ export function Dashboard({ initial, initialRange }: { initial: MeasurementDto[]
     <div className="flex flex-col gap-6">
       <div className="flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Network status
-          </span>
+          <span className="label-eyebrow">Network status</span>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Overview<span className="text-brand">.</span>
           </h1>
@@ -68,7 +66,7 @@ export function Dashboard({ initial, initialRange }: { initial: MeasurementDto[]
         <TimeRangePicker value={range} onChange={setRange} />
       </div>
       <KpiCards latest={latest} averages={averages} busy={running} measurements={measurements} />
-      <HistoryChart measurements={measurements} running={running} />
+      <HistoryChart measurements={measurements} />
       <HistoryTable refreshSignal={refreshSignal} />
     </div>
   );

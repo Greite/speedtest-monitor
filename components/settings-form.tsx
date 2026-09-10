@@ -2,12 +2,12 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
-import { Heading } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Token } from '@astryxdesign/core/Token';
 import { useState } from 'react';
 
+import { CardTitle } from '@/components/card-title';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
 import type { NativeInputAttrs } from '@/lib/native-input-attrs';
@@ -101,10 +101,7 @@ function IntervalCard({ initialMinutes, envDefault }: { initialMinutes: number; 
   return (
     <Card padding={0} className="flex flex-col gap-6 py-6">
       <div className="px-6">
-        <Heading level={2} className="label-eyebrow flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-          Measurement interval
-        </Heading>
+        <CardTitle>Measurement interval</CardTitle>
       </div>
       <div className="flex flex-col gap-4 px-6">
         <TextInput
@@ -200,10 +197,7 @@ function RetentionCard({ initialRetentionDays, envDefault }: { initialRetentionD
   return (
     <Card padding={0} className="flex flex-col gap-6 py-6">
       <div className="px-6">
-        <Heading level={2} className="label-eyebrow flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-          Data retention
-        </Heading>
+        <CardTitle>Data retention</CardTitle>
       </div>
       <div className="flex flex-col gap-4 px-6">
         <TextInput

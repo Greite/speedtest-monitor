@@ -164,7 +164,10 @@ export function TableFilters({
   }
 
   return (
-    <div className="mb-4 rounded-lg border bg-card">
+    // A recessed well, not a second Card: this sits inside the history Card, and
+    // `bg-card` on `bg-card` made it read as a card-in-card whose only cue was
+    // its border. Heavier material separates a structural region.
+    <div className="mb-4 rounded-lg border border-border/60 bg-muted/30">
       <div className="flex flex-wrap items-center gap-2 px-4 py-2">
         <div className="flex items-center gap-2">
           <IconButton
@@ -202,7 +205,7 @@ export function TableFilters({
         ) : null}
       </div>
       {open ? (
-        <div id="table-filters-panel" className="flex flex-wrap items-start gap-x-8 gap-y-4 border-t p-4">
+        <div id="table-filters-panel" className="panel-enter flex flex-wrap items-start gap-x-8 gap-y-4 border-t p-4">
           <fieldset className="flex flex-col gap-2">
             <legend className="label-eyebrow mb-2">Time</legend>
             <div className="flex flex-col gap-1">

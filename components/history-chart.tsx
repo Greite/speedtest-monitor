@@ -2,7 +2,6 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
-import { Heading } from '@astryxdesign/core/Text';
 import { LineChartIcon, TableIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
@@ -17,6 +16,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { CardTitle } from '@/components/card-title';
 import { formatDateTime, formatShortDate, formatTime, type LatencyLevel, latencyLevel } from '@/lib/format';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -42,7 +42,7 @@ const LEVEL_STROKE: Record<LatencyLevel, string> = {
   bad: 'var(--color-latency-bad)',
 };
 
-export function HistoryChart({ measurements, running = false }: { measurements: MeasurementDto[]; running?: boolean }) {
+export function HistoryChart({ measurements }: { measurements: MeasurementDto[] }) {
   const [showTable, setShowTable] = useState(false);
   const data = useMemo<Point[]>(() => {
     const sorted = [...measurements].sort((a, b) => a.timestamp - b.timestamp);
@@ -73,10 +73,7 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
     return (
       <Card padding={0} className="flex flex-col gap-6 py-6">
         <div className="px-6">
-          <Heading level={2} className="label-eyebrow flex items-center gap-2">
-            <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-            History
-          </Heading>
+          <CardTitle>History</CardTitle>
         </div>
         <div className="px-6">
           <div className="flex h-64 flex-col items-center justify-center gap-2 px-6 text-center" role="status">
@@ -99,15 +96,9 @@ export function HistoryChart({ measurements, running = false }: { measurements: 
   const summary = buildSummary(data);
 
   return (
-    <Card
-      padding={0}
-      className={cn('relative flex flex-col gap-6 overflow-hidden py-6 transition-shadow', running && 'live-glow')}
-    >
+    <Card padding={0} className="relative flex flex-col gap-6 overflow-hidden py-6">
       <div className="flex flex-col gap-2 px-6 sm:flex-row sm:items-center sm:justify-between">
-        <Heading level={2} className="label-eyebrow flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-          History
-        </Heading>
+        <CardTitle>History</CardTitle>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <Legend color="var(--color-speed-down)" label="Download" />
           <Legend color="var(--color-speed-up)" label="Upload" />

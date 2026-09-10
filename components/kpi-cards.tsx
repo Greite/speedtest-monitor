@@ -122,7 +122,6 @@ export function KpiCards({
         sparkColor="var(--color-speed-down)"
         accentDot="bg-speed-down"
         flashKey={latest?.id}
-        busy={busy}
       />
       <Kpi
         label="Upload"
@@ -136,7 +135,6 @@ export function KpiCards({
         sparkColor="var(--color-speed-up)"
         accentDot="bg-speed-up"
         flashKey={latest?.id}
-        busy={busy}
       />
       <Kpi
         label="Latency"
@@ -149,7 +147,6 @@ export function KpiCards({
         sparkColor={`var(--color-latency-${latencyCurrentLevel ?? 'ok'})`}
         accentDot={latencyCurrentLevel ? levelColor[latencyCurrentLevel] : 'bg-muted-foreground'}
         flashKey={latest?.id}
-        busy={busy}
       />
     </section>
   );
@@ -167,7 +164,6 @@ function Kpi({
   sparkColor,
   accentDot,
   flashKey,
-  busy,
 }: {
   label: string;
   icon: ReactNode;
@@ -180,28 +176,35 @@ function Kpi({
   sparkColor: string;
   accentDot: string;
   flashKey?: number;
-  busy?: boolean;
 }) {
   const summary = level ? `${label} ${value}, status ${levelLabel[level]}. ${sub}.` : `${label} ${value}. ${sub}.`;
 
   const hasSpark = spark.filter((v): v is number => v != null).length >= 2;
 
-  // Trigger a flash anim when a new measurement lands.
-  const ref = useRef<HTMLDivElement | null>(null);
+  // Flash the card when a new measurement lands. The highlight is a CSS
+  // transition (see .kpi-flash), so this only has to drive the attribute:
+  // true snaps the overlay on, false lets it decay. Back-to-back measurements
+  // retarget from the current opacity instead of restarting - which is what
+  // the old classList/offsetWidth reflow hack was working around.
+  const [flashing, setFlashing] = useState(false);
   const lastKey = useRef<number | undefined>(flashKey);
   useEffect(() => {
-    if (flashKey !== lastKey.current && ref.current) {
-      ref.current.classList.remove('kpi-flash');
-      // force reflow so the animation re-triggers
-      void ref.current.offsetWidth;
-      ref.current.classList.add('kpi-flash');
-      lastKey.current = flashKey;
+    if (flashKey === lastKey.current) {
+      return;
     }
+    lastKey.current = flashKey;
+    setFlashing(true);
+    const id = setTimeout(() => setFlashing(false), 50);
+    return () => clearTimeout(id);
   }, [flashKey]);
 
   return (
-    <Card aria-label={summary} padding={0} className="relative gap-0 overflow-hidden transition-shadow hover:shadow-md">
-      <div ref={ref} className="flex flex-col gap-3 px-6 pt-6 pb-4">
+    <Card
+      aria-label={summary}
+      padding={0}
+      className="relative gap-0 overflow-hidden transition-shadow hover-fine:hover:shadow-md"
+    >
+      <div className="kpi-flash flex flex-col gap-3 px-6 pt-6 pb-4" data-flash={flashing}>
         <div>
           <Heading level={2} className="label-eyebrow flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
@@ -210,16 +213,7 @@ function Kpi({
             </span>
             {level ? (
               <span className="inline-flex items-center font-normal normal-case tracking-normal" aria-hidden>
-                <Token
-                  label={levelLabel[level]}
-                  color={levelTokenColor[level]}
-                  size="sm"
-                  icon={
-                    busy ? (
-                      <span className="pulse-ring relative inline-flex size-2 rounded-full bg-current" />
-                    ) : undefined
-                  }
-                />
+                <Token label={levelLabel[level]} color={levelTokenColor[level]} size="sm" />
               </span>
             ) : null}
           </Heading>

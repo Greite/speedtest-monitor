@@ -8,6 +8,7 @@ import Link from 'next/link';
 
 import { Markdown } from '@/components/markdown';
 import { loadReleases } from '@/lib/releases';
+import { pillLinkClasses } from '@/lib/utils';
 import { APP_VERSION, GITHUB_REPO_URL } from '@/lib/version';
 
 export const runtime = 'nodejs';
@@ -35,18 +36,13 @@ export default function ChangelogPage() {
       <header className="flex flex-col gap-3">
         <div className="flex items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Release history
-            </span>
+            <span className="label-eyebrow">Release history</span>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Changelog<span className="text-brand">.</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
+            <Link href="/" className={pillLinkClasses}>
               <ArrowLeft className="size-3.5" aria-hidden />
               Back to dashboard
             </Link>
@@ -54,7 +50,7 @@ export default function ChangelogPage() {
               href={`${GITHUB_REPO_URL}/releases`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className={pillLinkClasses}
             >
               View on GitHub
               <ExternalLink className="size-3.5" aria-hidden />
@@ -115,7 +111,7 @@ export default function ChangelogPage() {
                   href={r.url}
                   target="_blank"
                   padding={0}
-                  className="flex flex-col gap-6 py-6 scroll-mt-20 border-border/60 bg-card/80 transition-shadow hover:shadow-md"
+                  className="flex flex-col gap-6 py-6 scroll-mt-20 border-border/60 bg-card/80 transition-shadow hover-fine:hover:shadow-md"
                 >
                   <div className="flex flex-col gap-2 px-6">
                     <div className="flex flex-wrap items-center gap-2">

@@ -6,15 +6,15 @@ import { Card } from '@astryxdesign/core/Card';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Switch } from '@astryxdesign/core/Switch';
-import { Heading } from '@astryxdesign/core/Text';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Token } from '@astryxdesign/core/Token';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { CardTitle } from '@/components/card-title';
 import { parseApiError } from '@/lib/api-client';
 import { authClient } from '@/lib/auth/client';
-import { cn } from '@/lib/utils';
+import { cn, switchTouchClasses } from '@/lib/utils';
 
 type Configured = {
   webhook: boolean;
@@ -101,10 +101,7 @@ export function AlertsCard() {
     return (
       <Card padding={0} className="flex flex-col gap-6 py-6">
         <div className="px-6">
-          <Heading level={2} className="label-eyebrow flex items-center gap-2">
-            <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-            Alerts
-          </Heading>
+          <CardTitle>Alerts</CardTitle>
         </div>
         <div className="flex flex-col gap-4 px-6">
           {error ? (
@@ -198,10 +195,7 @@ export function AlertsCard() {
   return (
     <Card padding={0} className="flex flex-col gap-6 py-6">
       <div className="px-6">
-        <Heading level={2} className="label-eyebrow flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-          Alerts
-        </Heading>
+        <CardTitle>Alerts</CardTitle>
       </div>
       <div className="flex flex-col gap-6 px-6">
         {/* Switch's track is a fixed 40x24 box and the actual hit target - its
@@ -210,7 +204,7 @@ export function AlertsCard() {
             wrapper enlarges the rendered input on mobile only, same idiom as the
             ToggleButton wrapper in table-filters.tsx. min-w-10/min-h-6 restore
             the native 40x24 size at md and up. */}
-        <div className="[&_input]:min-h-11 [&_input]:min-w-11 md:[&_input]:min-h-6 md:[&_input]:min-w-10">
+        <div className={switchTouchClasses}>
           <Switch
             label="Enable alerts"
             value={rules.enabled}
@@ -274,8 +268,11 @@ export function AlertsCard() {
               const configured = rules.destinationsConfigured[key];
               const result = testResult[key];
               return (
-                <div key={key} className="flex flex-wrap items-center gap-3 rounded-md border bg-card/50 px-3 py-2">
-                  <div className="[&_input]:min-h-11 [&_input]:min-w-11 md:[&_input]:min-h-6 md:[&_input]:min-w-10">
+                <div
+                  key={key}
+                  className="flex flex-wrap items-center gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2"
+                >
+                  <div className={switchTouchClasses}>
                     <Switch
                       label={label}
                       value={rules.destinations[key]}
@@ -296,6 +293,12 @@ export function AlertsCard() {
                     onClick={() => test(key)}
                   />
                   {result ? <TestResultPill state={result} /> : null}
+                  {/* TestResultPill is visual only; a screen-reader user gets
+                      nothing back from "Send test" without this. Mirrors the
+                      redirect announcement in auth/login-form.tsx. */}
+                  <p className="sr-only" aria-live="polite" role="status">
+                    {result && result !== 'pending' ? `${label} test: ${result.message}` : ''}
+                  </p>
                 </div>
               );
             })}

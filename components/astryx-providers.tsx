@@ -40,6 +40,10 @@ export function AstryxProviders({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
+    // Arms the theme-switch colour fade (see .theme-ready in globals.css).
+    // Gated on mount so it never plays during the first paint, which would
+    // fade the whole page in from the wrong palette on every load.
+    document.documentElement.classList.add('theme-ready');
   }, []);
   const mode = mounted ? resolveAstryxMode(resolvedTheme) : 'system';
   return (

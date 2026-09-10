@@ -2,11 +2,11 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
-import { Heading } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useToast } from '@astryxdesign/core/Toast';
 import { useState } from 'react';
 
+import { CardTitle } from '@/components/card-title';
 import { parseApiError } from '@/lib/api-client';
 import type { NativeInputAttrs } from '@/lib/native-input-attrs';
 
@@ -63,10 +63,7 @@ export function PasswordChangeCard() {
   return (
     <Card id="account" padding={0} className="flex flex-col gap-6 py-6">
       <div className="px-6">
-        <Heading level={2} className="label-eyebrow flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-          Account
-        </Heading>
+        <CardTitle>Account</CardTitle>
       </div>
       <div className="px-6">
         <form onSubmit={submit} className="flex max-w-sm flex-col gap-3">
