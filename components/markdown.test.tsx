@@ -50,10 +50,18 @@ describe('Markdown (rendered via Astryx)', () => {
     expect(html).toContain('rel="noopener noreferrer"');
   });
 
-  it('renders an unsafe link as plain text, not an anchor', () => {
+  // Two independent layers reject a script-capable scheme, and they degrade
+  // differently. Astryx (since 0.5.x) refuses to parse `javascript:`/`data:`
+  // into a link node at all and emits the raw source as escaped text, so
+  // ReleaseLink never runs and the literal string "javascript:" survives as
+  // inert text content. Assert the invariant that actually matters - nothing
+  // renders an anchor or an href - rather than the absence of that substring.
+  // safeHref's own rejection is covered directly by the unit tests above, and
+  // is still reached for schemes Astryx does parse (see the tel: case below).
+  it('renders an unsafe link without an anchor or href', () => {
     const html = renderToStaticMarkup(<Markdown source="[x](javascript:alert(1))" />);
     expect(html).not.toContain('<a');
-    expect(html).not.toContain('javascript:');
+    expect(html).not.toContain('href=');
     expect(html).toContain('x');
   });
 
