@@ -39,18 +39,18 @@
   "dependencies": {
     "@astryxdesign/core": "0.5.4",
     "@astryxdesign/theme-neutral": "0.5.4",
-    "better-auth": "^1.7.3",
+    "better-auth": "^1.7.4",
     "drizzle-orm": "^0.45.2",
     "next": "^16.3.4",
     "nodemailer": "^10.0.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "ws": "^8.21.3",
-    "zod": "^4.6.1"
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@astryxdesign/cli": "0.5.4",
-    "@biomejs/biome": "^2.5.12",
+    "@biomejs/biome": "^2.5.13",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/bun": "^1.4.2",
     "@types/node": "^26.5.1",
