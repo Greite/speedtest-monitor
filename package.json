@@ -46,7 +46,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "ws": "^8.21.3",
-    "zod": "^4.6.4"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@astryxdesign/cli": "0.5.4",
@@ -62,7 +62,7 @@
     "drizzle-kit": "^0.31.10",
     "husky": "^9.1.7",
     "knip": "^6.35.1",
-    "lucide-react": "^1.45.0",
+    "lucide-react": "^1.46.0",
     "next-themes": "^0.4.6",
     "postcss": "^8.5.28",
     "puppeteer-core": "25.10.0",
