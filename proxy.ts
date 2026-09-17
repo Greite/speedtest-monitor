@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { apiError } from '@/lib/api-errors';
+import { loadAuthConfig } from '@/lib/auth/config';
 import { auth } from '@/lib/auth/handler';
 import { countUsers } from '@/lib/auth/users';
 
@@ -22,7 +23,9 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const noUsers = countUsers() === 0;
+  // With password login disabled the setup wizard (local admin) is pointless:
+  // the first admin comes from SPEEDTEST_OIDC_ADMIN_EMAIL, so never route to it.
+  const noUsers = !loadAuthConfig().passwordLoginDisabled && countUsers() === 0;
 
   if (pathname === '/setup' || pathname === '/api/auth/setup') {
     if (noUsers) {

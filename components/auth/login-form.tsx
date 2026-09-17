@@ -37,10 +37,12 @@ function syncErrorDescribedBy(describedById: string | null) {
 }
 
 export function LoginForm({
+  passwordEnabled,
   oidcAvailable,
   oidcName,
   callbackUrl,
 }: {
+  passwordEnabled: boolean;
   oidcAvailable: boolean;
   oidcName: string;
   callbackUrl: string;
@@ -101,26 +103,30 @@ export function LoginForm({
           </div>
         </div>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <TextInput
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            isRequired
-            status={error ? { type: 'error' } : undefined}
-            ref={syncErrorDescribedBy(error ? LOGIN_ERROR_ID : null)}
-            {...({ autoComplete: 'email', required: true } satisfies NativeInputAttrs)}
-          />
-          <TextInput
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            isRequired
-            status={error ? { type: 'error' } : undefined}
-            ref={syncErrorDescribedBy(error ? LOGIN_ERROR_ID : null)}
-            {...({ autoComplete: 'current-password', required: true } satisfies NativeInputAttrs)}
-          />
+          {passwordEnabled && (
+            <>
+              <TextInput
+                label="Email"
+                type="email"
+                value={email}
+                onChange={setEmail}
+                isRequired
+                status={error ? { type: 'error' } : undefined}
+                ref={syncErrorDescribedBy(error ? LOGIN_ERROR_ID : null)}
+                {...({ autoComplete: 'email', required: true } satisfies NativeInputAttrs)}
+              />
+              <TextInput
+                label="Password"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                isRequired
+                status={error ? { type: 'error' } : undefined}
+                ref={syncErrorDescribedBy(error ? LOGIN_ERROR_ID : null)}
+                {...({ autoComplete: 'current-password', required: true } satisfies NativeInputAttrs)}
+              />
+            </>
+          )}
           {error ? (
             <Banner
               id={LOGIN_ERROR_ID}
@@ -131,28 +137,33 @@ export function LoginForm({
               className="outline-none"
             />
           ) : null}
-          <Button
-            type="submit"
-            label="Sign in"
-            isLoading={pending}
-            variant="primary"
-            width="100%"
-            className="brand-glow"
-          />
+          {passwordEnabled && (
+            <Button
+              type="submit"
+              label="Sign in"
+              isLoading={pending}
+              variant="primary"
+              width="100%"
+              className="brand-glow"
+            />
+          )}
           <p className="sr-only" aria-live="polite" role="status">
             {redirecting ? 'Signed in, redirecting…' : ''}
           </p>
           {oidcAvailable && (
             <>
-              <div className="relative my-1 flex items-center gap-3 label-eyebrow">
-                <span className="h-px flex-1 bg-border/70" />
-                <span>or</span>
-                <span className="h-px flex-1 bg-border/70" />
-              </div>
+              {passwordEnabled && (
+                <div className="relative my-1 flex items-center gap-3 label-eyebrow">
+                  <span className="h-px flex-1 bg-border/70" />
+                  <span>or</span>
+                  <span className="h-px flex-1 bg-border/70" />
+                </div>
+              )}
               <Button
                 type="button"
-                variant="secondary"
-                isDisabled={pending}
+                variant={passwordEnabled ? 'secondary' : 'primary'}
+                isDisabled={passwordEnabled && pending}
+                isLoading={!passwordEnabled && pending}
                 label={`Sign in with ${oidcName}`}
                 onClick={onOidc}
               />

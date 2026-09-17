@@ -32,7 +32,7 @@ function build() {
       schema: { user, account, session, verification },
     }),
     emailAndPassword: {
-      enabled: true,
+      enabled: !cfg.passwordLoginDisabled,
       autoSignIn: true,
       disableSignUp: true,
       password: {

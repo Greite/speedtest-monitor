@@ -10,6 +10,7 @@ const KEYS = [
   'SPEEDTEST_OIDC_DISPLAY_NAME',
   'SPEEDTEST_OIDC_ADMIN_EMAIL',
   'SPEEDTEST_OIDC_ALLOW_NEW_USERS',
+  'SPEEDTEST_DISABLE_PASSWORD_LOGIN',
   'SPEEDTEST_ADMIN_EMAIL',
   'SPEEDTEST_ADMIN_PASSWORD',
 ];
@@ -57,6 +58,17 @@ describe('auth/config', () => {
     process.env.SPEEDTEST_OIDC_ISSUER = 'https://idp';
     // client id/secret missing
     expect(loadAuthConfig().oidc).toBeNull();
+  });
+
+  it('disables password login only when OIDC is configured', () => {
+    process.env.AUTH_SECRET = 's';
+    expect(loadAuthConfig().passwordLoginDisabled).toBe(false);
+    process.env.SPEEDTEST_DISABLE_PASSWORD_LOGIN = 'true';
+    expect(loadAuthConfig().passwordLoginDisabled).toBe(false); // no OIDC: ignored, avoids lockout
+    process.env.SPEEDTEST_OIDC_ISSUER = 'https://idp';
+    process.env.SPEEDTEST_OIDC_CLIENT_ID = 'cid';
+    process.env.SPEEDTEST_OIDC_CLIENT_SECRET = 'csec';
+    expect(loadAuthConfig().passwordLoginDisabled).toBe(true);
   });
 
   it('parses seed admin', () => {

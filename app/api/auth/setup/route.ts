@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { apiError, apiValidationError } from '@/lib/api-errors';
+import { loadAuthConfig } from '@/lib/auth/config';
 import { hashPassword } from '@/lib/auth/hash';
 import { emailSchema } from '@/lib/auth/schema';
 import { countUsers, createUser, setCredentialPassword } from '@/lib/auth/users';
@@ -15,7 +16,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  if (countUsers() !== 0) {
+  if (countUsers() !== 0 || loadAuthConfig().passwordLoginDisabled) {
     return apiError('not_found', 'Setup is no longer available.', 404);
   }
   let body: unknown;

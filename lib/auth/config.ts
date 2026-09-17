@@ -1,3 +1,5 @@
+import { logger } from '../logger';
+
 type OidcConfig = {
   issuer: string;
   clientId: string;
@@ -13,6 +15,7 @@ export type AuthConfig = {
   secret: string;
   oidc: OidcConfig | null;
   seed: SeedAdmin | null;
+  passwordLoginDisabled: boolean;
 };
 
 export function loadAuthConfig(): AuthConfig {
@@ -42,5 +45,11 @@ export function loadAuthConfig(): AuthConfig {
   const seedPass = process.env.SPEEDTEST_ADMIN_PASSWORD;
   const seed: SeedAdmin | null = seedEmail && seedPass ? { email: seedEmail, password: seedPass } : null;
 
-  return { secret, oidc, seed };
+  // Only honored with OIDC configured - otherwise nobody could sign in.
+  const wantsNoPassword = process.env.SPEEDTEST_DISABLE_PASSWORD_LOGIN === 'true';
+  if (wantsNoPassword && !oidc) {
+    logger.warn('[auth] SPEEDTEST_DISABLE_PASSWORD_LOGIN is ignored: OIDC is not configured.');
+  }
+
+  return { secret, oidc, seed, passwordLoginDisabled: wantsNoPassword && oidc !== null };
 }

@@ -139,7 +139,13 @@ SPEEDTEST_OIDC_CLIENT_SECRET=...
 SPEEDTEST_OIDC_DISPLAY_NAME=SSO           # label on the sign-in button
 SPEEDTEST_OIDC_ADMIN_EMAIL=you@example.com
 SPEEDTEST_OIDC_ALLOW_NEW_USERS=true       # "false" = only admin-created users may sign in via OIDC
+SPEEDTEST_DISABLE_PASSWORD_LOGIN=false    # "true" = SSO only: no password form, no /setup wizard
 ```
+
+`SPEEDTEST_DISABLE_PASSWORD_LOGIN=true` is ignored unless OIDC is configured. Email/password
+sign-in is rejected server-side and `/setup` is disabled, so bootstrap the first admin with
+`SPEEDTEST_OIDC_ADMIN_EMAIL` (Path C). Do not combine it with
+`SPEEDTEST_OIDC_ALLOW_NEW_USERS=false` on an empty database: nobody could sign in.
 
 Register `https://<your-host>/api/auth/callback/oidc` as the redirect URI in your
 provider. **Upgrading from v1.18.1 or earlier:** the path used to be

@@ -7,6 +7,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const cfg = loadAuthConfig();
   const { callbackUrl = '/' } = await searchParams;
   return (
-    <LoginForm oidcAvailable={cfg.oidc !== null} oidcName={cfg.oidc?.displayName ?? 'SSO'} callbackUrl={callbackUrl} />
+    <LoginForm
+      passwordEnabled={!cfg.passwordLoginDisabled}
+      oidcAvailable={cfg.oidc !== null}
+      oidcName={cfg.oidc?.displayName ?? 'SSO'}
+      callbackUrl={callbackUrl}
+    />
   );
 }

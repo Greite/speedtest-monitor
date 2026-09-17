@@ -21,7 +21,7 @@ A fresh SQLite database is created at `./speedtest.db` on the first run (overrid
 `AUTH_SECRET` is required to boot - generate one with `openssl rand -base64 32` and put it in `.env`. The first user to sign up becomes the admin. Optional env vars:
 
 - `SPEEDTEST_ADMIN_EMAIL` / `SPEEDTEST_ADMIN_PASSWORD` - seed an admin account on boot.
-- `SPEEDTEST_OIDC_ISSUER` / `SPEEDTEST_OIDC_CLIENT_ID` / `SPEEDTEST_OIDC_CLIENT_SECRET` (and the optional `SPEEDTEST_OIDC_DISPLAY_NAME`, `SPEEDTEST_OIDC_ADMIN_EMAIL`, `SPEEDTEST_OIDC_ALLOW_NEW_USERS`) - enable SSO via a generic OIDC provider.
+- `SPEEDTEST_OIDC_ISSUER` / `SPEEDTEST_OIDC_CLIENT_ID` / `SPEEDTEST_OIDC_CLIENT_SECRET` (and the optional `SPEEDTEST_OIDC_DISPLAY_NAME`, `SPEEDTEST_OIDC_ADMIN_EMAIL`, `SPEEDTEST_OIDC_ALLOW_NEW_USERS`, `SPEEDTEST_DISABLE_PASSWORD_LOGIN`) - enable SSO via a generic OIDC provider.
 
 ## Required checks
 
