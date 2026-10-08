@@ -2,9 +2,6 @@ import { Dashboard } from '@/components/dashboard';
 import { isRange, listMeasurements, type Range } from '@/lib/measurements';
 import { toMeasurementDto } from '@/lib/types';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export default async function Page({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const { range: rangeParam } = await searchParams;
   const range: Range = rangeParam && isRange(rangeParam) ? rangeParam : '24h';

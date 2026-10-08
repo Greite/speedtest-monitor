@@ -16,11 +16,11 @@ import {
 } from '@/lib/settings';
 import { pillLinkClasses } from '@/lib/utils';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export default async function SettingsPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  // Request data first: `auth.api` opens SQLite, which must never run in the
+  // build-time prerender of this segment.
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
   const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const intervalMinutes = getIntervalMinutes();
   const envDefaultMinutes = getEnvDefaultIntervalMinutes();

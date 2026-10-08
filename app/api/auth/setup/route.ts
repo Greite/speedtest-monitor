@@ -7,9 +7,6 @@ import { hashPassword } from '@/lib/auth/hash';
 import { emailSchema } from '@/lib/auth/schema';
 import { countUsers, createUser, setCredentialPassword } from '@/lib/auth/users';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const schema = z.object({
   email: emailSchema,
   password: z.string().min(10).max(1024),

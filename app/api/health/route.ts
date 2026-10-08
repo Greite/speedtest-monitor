@@ -1,12 +1,11 @@
-import { NextResponse } from 'next/server';
+import { connection, NextResponse } from 'next/server';
 
 import { pingDb } from '@/lib/db/client';
 import { isWsReady } from '@/lib/ws/server';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-export function GET() {
+export async function GET() {
+  // No request data is read, so without this the handler is prerendered at build.
+  await connection();
   const db = pingDb();
   const ws = isWsReady();
 

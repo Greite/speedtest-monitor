@@ -4,14 +4,13 @@ import { Heading } from '@astryxdesign/core/Text';
 import { Token } from '@astryxdesign/core/Token';
 import { ArrowLeft, ExternalLink, GitCommit } from 'lucide-react';
 import type { Metadata } from 'next';
+import { cacheLife } from 'next/cache';
 import Link from 'next/link';
 
 import { Markdown } from '@/components/markdown';
 import { loadReleases } from '@/lib/releases';
 import { pillLinkClasses } from '@/lib/utils';
 import { APP_VERSION, GITHUB_REPO_URL } from '@/lib/version';
-
-export const runtime = 'nodejs';
 
 export const metadata: Metadata = {
   title: 'Changelog - Speedtest Monitor',
@@ -24,7 +23,11 @@ const DATE_FMT = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
 });
 
-export default function ChangelogPage() {
+export default async function ChangelogPage() {
+  // Releases are fetched at build time and never change at runtime: render the
+  // Markdown of every release once instead of on each request.
+  'use cache';
+  cacheLife('max');
   const releases = loadReleases();
 
   return (

@@ -5,9 +5,6 @@ import { listMeasurementsPaged } from '@/lib/measurements';
 import { parseTableQuery, type TableQuery } from '@/lib/measurements-query';
 import { toMeasurementDto } from '@/lib/types';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export function GET(req: Request) {
   const url = new URL(req.url);
   let query: TableQuery;

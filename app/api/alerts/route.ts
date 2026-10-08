@@ -4,9 +4,6 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/client';
 import { alerts } from '@/lib/db/schema';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export function GET(req: Request) {
   const url = new URL(req.url);
   const rawLimit = url.searchParams.get('limit');

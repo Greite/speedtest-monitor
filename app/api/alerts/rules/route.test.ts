@@ -1,9 +1,14 @@
 import { Database } from 'bun:sqlite';
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 
 import { drizzle } from 'drizzle-orm/bun-sqlite';
+import * as nextServer from 'next/server';
 
-import { GET, PATCH } from './route';
+// connection() throws outside a Next request scope; the handler is called
+// directly here. The route is imported after the mock, as in the other tests.
+mock.module('next/server', () => ({ ...nextServer, connection: async () => {} }));
+
+const { GET, PATCH } = await import('./route');
 
 import * as schema from '@/lib/db/schema';
 

@@ -4,8 +4,6 @@ import { apiError } from '@/lib/api-errors';
 import { MeasurementBusyError, runMeasurement } from '@/lib/measurement/runner';
 import { toMeasurementDto } from '@/lib/types';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 export const maxDuration = 200;
 
 export async function POST() {

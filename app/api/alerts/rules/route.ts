@@ -1,12 +1,9 @@
-import { NextResponse } from 'next/server';
+import { connection, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { loadAlertConfig } from '@/lib/alerts/config';
 import { getAlertRules, setAlertRules } from '@/lib/alerts/rules';
 import { apiError, apiValidationError } from '@/lib/api-errors';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 const patchSchema = z
   .object({
@@ -47,7 +44,9 @@ function withConfigured() {
   };
 }
 
-export function GET() {
+export async function GET() {
+  // No request data is read, so without this the handler is prerendered at build.
+  await connection();
   return NextResponse.json(withConfigured());
 }
 

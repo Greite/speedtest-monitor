@@ -1,3 +1,4 @@
+import { cacheLife } from 'next/cache';
 import Link from 'next/link';
 
 import { LogoMark } from '@/components/logo-mark';
@@ -16,8 +17,16 @@ function GithubMark({ className }: { className?: string }) {
   );
 }
 
-export function Footer() {
-  const year = new Date().getFullYear();
+// Cache Components refuses an uncached `new Date()` in a prerender; a daily
+// cache keeps the shell static and still flips the year without a rebuild.
+async function currentYear() {
+  'use cache';
+  cacheLife('days');
+  return new Date().getFullYear();
+}
+
+export async function Footer() {
+  const year = await currentYear();
   const isTagged = APP_VERSION !== 'dev';
   return (
     <footer

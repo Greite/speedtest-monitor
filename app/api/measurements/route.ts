@@ -4,9 +4,6 @@ import { apiError } from '@/lib/api-errors';
 import { isRange, listMeasurements } from '@/lib/measurements';
 import { toMeasurementDto } from '@/lib/types';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 export function GET(req: Request) {
   const url = new URL(req.url);
   const rangeParam = url.searchParams.get('range') ?? '24h';

@@ -6,9 +6,6 @@ import { requireAdmin } from '@/lib/auth/authorize';
 import { hashPassword } from '@/lib/auth/hash';
 import { findUserById, revokeUserSessions, setCredentialPassword } from '@/lib/auth/users';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const schema = z.object({ newPassword: z.string().min(10).max(1024) });
 
 type Params = { params: Promise<{ id: string }> };

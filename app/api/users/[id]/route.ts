@@ -5,9 +5,6 @@ import { apiError, apiValidationError } from '@/lib/api-errors';
 import { requireAdmin } from '@/lib/auth/authorize';
 import { countAdmins, deleteUser, findUserById, toPublicUser, updateUser } from '@/lib/auth/users';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const patchSchema = z
   .object({
     role: z.enum(['admin', 'viewer']).optional(),

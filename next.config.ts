@@ -21,6 +21,11 @@ const config: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   reactCompiler: true,
+  // Next 17 default. Everything here is request-bound (runtime env in the root
+  // layout, sync SQLite reads), so it mostly guards against build-time baking;
+  // see `connection()` calls before DB reads.
+  cacheComponents: true,
+  partialPrefetching: true,
   typescript: {
     ignoreBuildErrors: true,
   },

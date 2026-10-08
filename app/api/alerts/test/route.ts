@@ -6,9 +6,6 @@ import { buildDestinations } from '@/lib/alerts/destinations';
 import type { AlertPayload, DestinationName } from '@/lib/alerts/types';
 import { apiValidationError } from '@/lib/api-errors';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const bodySchema = z
   .object({
     destination: z.enum(['webhook', 'ntfy', 'discord', 'slack', 'smtp']).optional(),

@@ -6,9 +6,6 @@ import { requireSession } from '@/lib/auth/authorize';
 import { hashPassword, verifyPassword } from '@/lib/auth/hash';
 import { findUserById, getCredentialPasswordHash, revokeUserSessions, setCredentialPassword } from '@/lib/auth/users';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const schema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(10).max(1024),

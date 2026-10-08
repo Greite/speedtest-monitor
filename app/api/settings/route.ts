@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { connection, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { apiError, apiValidationError } from '@/lib/api-errors';
@@ -11,9 +11,6 @@ import {
   setRetentionDays,
 } from '@/lib/settings';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
 const patchSchema = z
   .object({
     intervalMinutes: z.number().int().min(1).max(1440).optional(),
@@ -23,7 +20,9 @@ const patchSchema = z
     message: 'at least one of intervalMinutes or retentionDays is required',
   });
 
-export function GET() {
+export async function GET() {
+  // No request data is read, so without this the handler is prerendered at build.
+  await connection();
   return NextResponse.json({
     intervalMinutes: getIntervalMinutes(),
     envDefaultIntervalMinutes: getEnvDefaultIntervalMinutes(),

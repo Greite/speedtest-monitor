@@ -28,6 +28,11 @@ export const metadata: Metadata = {
   description: 'Self-hosted internet speed monitor',
 };
 
+// `<html lang>` and the inline config script need runtime env, and `<html>`
+// cannot sit inside a <Suspense>: the root layout blocks on purpose, so no
+// route ships a static shell. Pages below still prerender their own segments.
+export const instant = false;
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // Force dynamic rendering so the config reflects runtime env vars, never
   // values captured during `next build` (the Docker image is built without
