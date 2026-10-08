@@ -3,7 +3,7 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, ViewTransition } from 'react';
 
 import { HistoryTable } from './history-table';
 import { KpiCards } from './kpi-cards';
@@ -61,8 +61,12 @@ export function Dashboard({ initial, initialRange }: { initial: MeasurementDto[]
         </div>
         <TimeRangePicker value={range} onChange={setRange} />
       </div>
-      <KpiCards latest={latest} averages={averages} busy={running} measurements={measurements} />
-      <HistoryChart measurements={measurements} />
+      {/* Crossfades when a range refetch lands (a transition, see
+          useLiveMeasurements); live WS pushes are urgent and don't animate. */}
+      <ViewTransition update="auto" default="none">
+        <KpiCards latest={latest} averages={averages} busy={running} measurements={measurements} />
+        <HistoryChart measurements={measurements} />
+      </ViewTransition>
       <HistoryTable refreshSignal={refreshSignal} />
     </div>
   );

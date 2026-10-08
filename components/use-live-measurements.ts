@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Range } from '@/lib/measurements';
 import type { MeasurementDto, WsEventDto } from '@/lib/types';
@@ -47,10 +47,19 @@ export function useLiveMeasurements(initial: MeasurementDto[], range: Range = '2
     });
   }, []);
 
+  const shownRange = useRef(range);
   const refetch = useCallback(async () => {
     try {
       const rows = await fetchMeasurements(range);
-      setState((prev) => ({ ...prev, measurements: rows }));
+      const apply = () => setState((prev) => ({ ...prev, measurements: rows }));
+      // Only a range switch is a transition (Dashboard's <ViewTransition>
+      // crossfades it); same-range refreshes (mount, WS reconnect) stay instant.
+      if (shownRange.current === range) {
+        apply();
+      } else {
+        shownRange.current = range;
+        startTransition(apply);
+      }
     } catch {
       /* ignore */
     }

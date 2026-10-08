@@ -381,6 +381,18 @@
   }
 }
 
+/* ---- React <ViewTransition> ----------------------------------------------
+   Page swaps and range-data swaps crossfade. Opacity only, so they stay under
+   reduced motion (same stance as below); the global `*` rule does not reach
+   ::view-transition-* pseudos anyway. The overlay must not eat clicks. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-group(*) {
+  animation-duration: var(--motion-medium);
+  animation-timing-function: var(--ease-out);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
