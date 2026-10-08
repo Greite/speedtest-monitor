@@ -8,7 +8,8 @@ import { ChevronRight, FileClock, LogOut, Menu, Monitor, Moon, Play, Settings, S
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, Suspense, use, useEffect, useState } from 'react';
+import { browser } from 'react-dom';
 
 import { useLiveMeasurements } from './use-live-measurements';
 
@@ -48,19 +49,31 @@ function liveLabel({ running, connected }: { running: boolean; connected: boolea
   return 'Idle';
 }
 
-function ThemeSegmented({
-  mounted,
+type ThemeButtonsProps = { withLabels?: boolean; fullWidth?: boolean };
+
+// The chosen theme lives in localStorage, so the server can't know which button
+// is pressed: it renders them all unpressed (the fallback) and the client fills
+// in the real state once hydrated.
+function ThemeSegmented(props: ThemeButtonsProps) {
+  return (
+    <Suspense fallback={<ThemeButtons {...props} />}>
+      <LiveThemeButtons {...props} />
+    </Suspense>
+  );
+}
+
+function LiveThemeButtons(props: ThemeButtonsProps) {
+  use(browser());
+  const { theme, setTheme } = useTheme();
+  return <ThemeButtons {...props} theme={theme} setTheme={setTheme} />;
+}
+
+function ThemeButtons({
   theme,
   setTheme,
   withLabels = false,
   fullWidth = false,
-}: {
-  mounted: boolean;
-  theme: string | undefined;
-  setTheme: (t: string) => void;
-  withLabels?: boolean;
-  fullWidth?: boolean;
-}) {
+}: ThemeButtonsProps & { theme?: string; setTheme?: (t: string) => void }) {
   return (
     <fieldset
       aria-label="Theme"
@@ -70,14 +83,14 @@ function ThemeSegmented({
       )}
     >
       {THEMES.map(({ value, label, icon: Icon }) => {
-        const active = mounted && theme === value;
+        const active = theme === value;
         return (
           <button
             key={value}
             type="button"
             aria-pressed={active}
             aria-label={label}
-            onClick={() => setTheme(value)}
+            onClick={() => setTheme?.(value)}
             className={cn(
               'press inline-flex items-center justify-center gap-1.5 rounded-sm text-xs font-medium transition-colors',
               withLabels ? 'h-9 flex-1 px-2' : 'size-9 md:size-7',
@@ -118,23 +131,16 @@ export function Topbar() {
   const { data: session } = authClient.useSession();
   const role = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role ?? null;
   const { running, connected, triggerRun } = useLiveMeasurements([], '24h');
-  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
 
-  const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   // Held open for the duration of the exit animation so the drawer leaves the
   // way it came in, instead of snapping out.
   const [menuClosing, setMenuClosing] = useState(false);
   const [runFailed, setRunFailed] = useState(false);
 
-  useEffect(() => setMounted(true), []);
-
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
     const mq = window.matchMedia('(min-width: 768px)');
     const onChange = (e: MediaQueryListEvent) => {
       if (e.matches) {
@@ -241,7 +247,7 @@ export function Topbar() {
             className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
           />
 
-          <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} />
+          <ThemeSegmented />
 
           {role ? (
             <Token
@@ -363,7 +369,7 @@ export function Topbar() {
                 </DrawerSection>
 
                 <DrawerSection id="m-theme" title="Theme" delay={80}>
-                  <ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} withLabels fullWidth />
+                  <ThemeSegmented withLabels fullWidth />
                 </DrawerSection>
 
                 <DrawerSection id="m-nav" title="Navigation" delay={120}>
