@@ -139,7 +139,7 @@ export function useLiveMeasurements(initial: MeasurementDto[], range: Range = '2
     };
   }, [handleMeasurement, refetch]);
 
-  const triggerRun = useCallback(async () => {
+  async function triggerRun() {
     setState((prev) => ({ ...prev, running: true, lastRunStartedAt: Date.now() }));
     const res = await fetch('/api/measurements/run', { method: 'POST' });
     if (!res.ok) {
@@ -150,7 +150,7 @@ export function useLiveMeasurements(initial: MeasurementDto[], range: Range = '2
     const body = (await res.json()) as { measurement: MeasurementDto };
     handleMeasurement(body.measurement);
     return body.measurement;
-  }, [handleMeasurement]);
+  }
 
   return { ...state, triggerRun };
 }

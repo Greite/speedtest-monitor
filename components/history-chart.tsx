@@ -3,7 +3,7 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { LineChartIcon, TableIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   Area,
   CartesianGrid,
@@ -44,30 +44,28 @@ const LEVEL_STROKE: Record<LatencyLevel, string> = {
 
 export function HistoryChart({ measurements }: { measurements: MeasurementDto[] }) {
   const [showTable, setShowTable] = useState(false);
-  const data = useMemo<Point[]>(() => {
-    const sorted = [...measurements].sort((a, b) => a.timestamp - b.timestamp);
-    let prevDate: string | null = null;
-    return sorted.map((m) => {
-      const timeLabel = formatTime(m.timestamp);
-      const dateLabel = formatShortDate(m.timestamp);
-      const showDate = dateLabel !== prevDate;
-      prevDate = dateLabel;
-      return {
-        t: m.timestamp,
-        label: `${dateLabel} ${timeLabel}`,
-        timeLabel,
-        dateLabel,
-        showDate,
-        download: m.downloadMbps,
-        upload: m.uploadMbps,
-        latency: m.latencyLoadedMs,
-        latencyLevel: m.latencyLoadedMs != null ? latencyLevel(m.latencyLoadedMs) : null,
-        serverLocations: m.serverLocations,
-        userLocation: m.userLocation,
-        userIp: m.userIp,
-      };
-    });
-  }, [measurements]);
+  const sorted = [...measurements].sort((a, b) => a.timestamp - b.timestamp);
+  let prevDate: string | null = null;
+  const data: Point[] = sorted.map((m) => {
+    const timeLabel = formatTime(m.timestamp);
+    const dateLabel = formatShortDate(m.timestamp);
+    const showDate = dateLabel !== prevDate;
+    prevDate = dateLabel;
+    return {
+      t: m.timestamp,
+      label: `${dateLabel} ${timeLabel}`,
+      timeLabel,
+      dateLabel,
+      showDate,
+      download: m.downloadMbps,
+      upload: m.uploadMbps,
+      latency: m.latencyLoadedMs,
+      latencyLevel: m.latencyLoadedMs != null ? latencyLevel(m.latencyLoadedMs) : null,
+      serverLocations: m.serverLocations,
+      userLocation: m.userLocation,
+      userIp: m.userIp,
+    };
+  });
 
   if (data.length === 0) {
     return (

@@ -145,10 +145,9 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
   // clickable header affordance and aria-sort, it never sorts data itself.
   // allowUnsortedState is false so the sort array always has exactly one
   // entry, matching TableQuery.sort/sortDir (both mandatory, non-optional).
-  const sortEntries = useMemo<TableSortState<SortColumn>>(
-    () => [{ sortKey: sort.column, direction: sort.dir === 'asc' ? 'ascending' : 'descending' }],
-    [sort],
-  );
+  const sortEntries: TableSortState<SortColumn> = [
+    { sortKey: sort.column, direction: sort.dir === 'asc' ? 'ascending' : 'descending' },
+  ];
   const sortable = useTableSortable<MeasurementDto, SortColumn>({
     sort: sortEntries,
     onSortChange: (next) => {

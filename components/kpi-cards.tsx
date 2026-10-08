@@ -5,7 +5,7 @@ import { Heading } from '@astryxdesign/core/Text';
 import { Token } from '@astryxdesign/core/Token';
 import { ArrowDown, ArrowUp, Gauge, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   computeDelta,
@@ -90,17 +90,15 @@ export function KpiCards({
   const relative = useRelativeTime(latest?.timestamp ?? null);
 
   // Sparkline series, oldest -> newest, last 30 successes.
-  const series = useMemo(() => {
-    const successes = measurements
-      .filter((m) => m.status === 'success')
-      .slice(0, 30)
-      .reverse();
-    return {
-      download: successes.map((m) => m.downloadMbps),
-      upload: successes.map((m) => m.uploadMbps),
-      latency: successes.map((m) => m.latencyLoadedMs),
-    };
-  }, [measurements]);
+  const successes = measurements
+    .filter((m) => m.status === 'success')
+    .slice(0, 30)
+    .reverse();
+  const series = {
+    download: successes.map((m) => m.downloadMbps),
+    upload: successes.map((m) => m.uploadMbps),
+    latency: successes.map((m) => m.latencyLoadedMs),
+  };
 
   return (
     <section

@@ -20,6 +20,7 @@ function resolveAppVersion(): string {
 const config: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  reactCompiler: true,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -28,6 +29,8 @@ const config: NextConfig = {
     // `next typegen` / `next build` bail out without this. Runs the
     // project-local `tsc` binary instead.
     useTypeScriptCli: true,
+    // Native React Compiler inside Turbopack (no babel-plugin-react-compiler).
+    turbopackRustReactCompiler: true,
   },
   env: {
     NEXT_PUBLIC_APP_VERSION: resolveAppVersion(),

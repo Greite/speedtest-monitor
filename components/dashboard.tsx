@@ -3,7 +3,7 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import dynamic from 'next/dynamic';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { HistoryTable } from './history-table';
 import { KpiCards } from './kpi-cards';
@@ -32,27 +32,23 @@ function computeAverage(values: (number | null)[]): number | null {
 
 export function Dashboard({ initial, initialRange }: { initial: MeasurementDto[]; initialRange: Range }) {
   const [range, setRangeState] = useState<Range>(initialRange);
-  const setRange = useCallback((next: Range) => {
+  function setRange(next: Range) {
     setRangeState(next);
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.set('range', next);
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, []);
+    const url = new URL(window.location.href);
+    url.searchParams.set('range', next);
+    window.history.replaceState({}, '', url.toString());
+  }
 
   const { measurements, running } = useLiveMeasurements(initial, range);
   const latest = measurements.find((m) => m.status === 'success') ?? null;
   const refreshSignal = measurements[0]?.id ?? null;
 
-  const averages = useMemo(() => {
-    const successes = measurements.filter((m) => m.status === 'success');
-    return {
-      download: computeAverage(successes.map((m) => m.downloadMbps)),
-      upload: computeAverage(successes.map((m) => m.uploadMbps)),
-      latency: computeAverage(successes.map((m) => m.latencyLoadedMs)),
-    };
-  }, [measurements]);
+  const successes = measurements.filter((m) => m.status === 'success');
+  const averages = {
+    download: computeAverage(successes.map((m) => m.downloadMbps)),
+    upload: computeAverage(successes.map((m) => m.uploadMbps)),
+    latency: computeAverage(successes.map((m) => m.latencyLoadedMs)),
+  };
 
   return (
     <div className="flex flex-col gap-6">

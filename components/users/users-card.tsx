@@ -17,7 +17,7 @@ import { useToast } from '@astryxdesign/core/Toast';
 import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
 import { Token } from '@astryxdesign/core/Token';
 import { KeyRound, Search, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { AddUserDialog } from './add-user-dialog';
 import { DeleteUserDialog } from './delete-user-dialog';
@@ -111,94 +111,88 @@ export function UsersCard() {
     refresh();
   }, [refresh]);
 
-  const setRole = useCallback(
-    async (id: string, role: 'admin' | 'viewer') => {
-      const res = await fetch(`/api/users/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role }),
-      });
-      if (!res.ok) {
-        const err = await parseApiError(res);
-        toast({ body: err.message, type: 'error' });
-        return;
-      }
-      await refresh();
-      toast({ body: 'Role updated' });
-    },
-    [refresh, toast],
-  );
+  async function setRole(id: string, role: 'admin' | 'viewer') {
+    const res = await fetch(`/api/users/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role }),
+    });
+    if (!res.ok) {
+      const err = await parseApiError(res);
+      toast({ body: err.message, type: 'error' });
+      return;
+    }
+    await refresh();
+    toast({ body: 'Role updated' });
+  }
 
-  const columns = useMemo<TableColumn<UserRow>[]>(
-    () => [
-      {
-        key: 'email',
-        header: 'Email',
-        width: proportional(2),
-        sortable: { sortKey: 'email' },
-        renderCell: (u) => <span className="font-medium">{u.email}</span>,
-      },
-      {
-        key: 'role',
-        header: 'Role',
-        width: pixel(110),
-        sortable: { sortKey: 'role' },
-        renderCell: (u) => (
-          <Selector
-            label={`Role for ${u.email}`}
-            isLabelHidden
+  const columns: TableColumn<UserRow>[] = [
+    {
+      key: 'email',
+      header: 'Email',
+      width: proportional(2),
+      sortable: { sortKey: 'email' },
+      renderCell: (u) => <span className="font-medium">{u.email}</span>,
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      width: pixel(110),
+      sortable: { sortKey: 'role' },
+      renderCell: (u) => (
+        <Selector
+          label={`Role for ${u.email}`}
+          isLabelHidden
+          size="sm"
+          options={ROLE_SELECT_OPTIONS}
+          value={u.role}
+          onChange={(v) => setRole(u.id, v as 'admin' | 'viewer')}
+        />
+      ),
+    },
+    {
+      key: 'provider',
+      header: 'Provider',
+      width: pixel(96),
+      sortable: { sortKey: 'provider' },
+      renderCell: (u) => <Token label={u.provider.toUpperCase()} size="sm" />,
+    },
+    {
+      key: 'lastLoginAt',
+      header: 'Last login',
+      width: proportional(1),
+      sortable: { sortKey: 'lastLoginAt' },
+      renderCell: (u) => (
+        <span className="text-xs text-muted-foreground">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : '-'}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: pixel(112),
+      resizable: false,
+      renderCell: (u) => (
+        <div className="flex items-center justify-end gap-2">
+          <IconButton
+            icon={<KeyRound aria-hidden className="size-4" />}
+            label={`Reset password for ${u.email}`}
+            variant="secondary"
             size="sm"
-            options={ROLE_SELECT_OPTIONS}
-            value={u.role}
-            onChange={(v) => setRole(u.id, v as 'admin' | 'viewer')}
+            className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+            onClick={() => setResetTarget({ id: u.id, email: u.email })}
           />
-        ),
-      },
-      {
-        key: 'provider',
-        header: 'Provider',
-        width: pixel(96),
-        sortable: { sortKey: 'provider' },
-        renderCell: (u) => <Token label={u.provider.toUpperCase()} size="sm" />,
-      },
-      {
-        key: 'lastLoginAt',
-        header: 'Last login',
-        width: proportional(1),
-        sortable: { sortKey: 'lastLoginAt' },
-        renderCell: (u) => (
-          <span className="text-xs text-muted-foreground">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : '-'}</span>
-        ),
-      },
-      {
-        key: 'actions',
-        header: '',
-        width: pixel(112),
-        resizable: false,
-        renderCell: (u) => (
-          <div className="flex items-center justify-end gap-2">
-            <IconButton
-              icon={<KeyRound aria-hidden className="size-4" />}
-              label={`Reset password for ${u.email}`}
-              variant="secondary"
-              size="sm"
-              className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
-              onClick={() => setResetTarget({ id: u.id, email: u.email })}
-            />
-            <IconButton
-              icon={<Trash2 aria-hidden className="size-4" />}
-              label={`Delete ${u.email}`}
-              variant="destructive"
-              size="sm"
-              className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
-              onClick={() => setDeleteTarget({ id: u.id, email: u.email })}
-            />
-          </div>
-        ),
-      },
-    ],
-    [setRole],
-  );
+          <IconButton
+            icon={<Trash2 aria-hidden className="size-4" />}
+            label={`Delete ${u.email}`}
+            variant="destructive"
+            size="sm"
+            className="min-h-11 min-w-11 md:min-h-7 md:min-w-7"
+            onClick={() => setDeleteTarget({ id: u.id, email: u.email })}
+          />
+        </div>
+      ),
+    },
+  ];
 
   const sortable = useTableSortable<UserRow, SortKey>({
     sort,
@@ -206,26 +200,16 @@ export function UsersCard() {
     allowUnsortedState: true,
   });
 
-  const filteredUsers = useMemo(() => {
-    if (!users) {
-      return [];
-    }
-    const email = emailQuery.trim().toLowerCase();
-    return users.filter((u) => {
-      if (email && !u.email.toLowerCase().includes(email)) {
-        return false;
-      }
-      if (roleFilter !== 'all' && u.role !== roleFilter) {
-        return false;
-      }
-      if (providerFilter !== 'all' && u.provider !== providerFilter) {
-        return false;
-      }
-      return true;
-    });
-  }, [users, emailQuery, roleFilter, providerFilter]);
-
-  const sortedUsers = useMemo(() => sortUsers(filteredUsers, sort), [filteredUsers, sort]);
+  const email = emailQuery.trim().toLowerCase();
+  const sortedUsers = sortUsers(
+    (users ?? []).filter(
+      (u) =>
+        (!email || u.email.toLowerCase().includes(email)) &&
+        (roleFilter === 'all' || u.role === roleFilter) &&
+        (providerFilter === 'all' || u.provider === providerFilter),
+    ),
+    sort,
+  );
 
   if ((session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin') {
     return null;

@@ -9,7 +9,7 @@ import { Switch } from '@astryxdesign/core/Switch';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Token } from '@astryxdesign/core/Token';
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CardTitle } from '@/components/card-title';
 import { parseApiError } from '@/lib/api-client';
@@ -65,12 +65,7 @@ export function AlertsCard() {
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<Record<string, TestState>>({});
 
-  const dirty = useMemo(() => {
-    if (!savedRules || !rules) {
-      return false;
-    }
-    return JSON.stringify(rules) !== JSON.stringify(savedRules);
-  }, [rules, savedRules]);
+  const dirty = !!savedRules && !!rules && JSON.stringify(rules) !== JSON.stringify(savedRules);
 
   useEffect(() => {
     let cancelled = false;
