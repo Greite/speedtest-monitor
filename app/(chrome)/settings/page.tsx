@@ -2,6 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { ArrowLeft } from 'lucide-react';
 import { headers } from 'next/headers';
 import Link from 'next/link';
+import { connection } from 'next/server';
 
 import { PasswordChangeCard } from '@/components/auth/password-change-card';
 import { AlertsCard } from '@/components/settings/alerts-card';
@@ -16,11 +17,14 @@ import {
 } from '@/lib/settings';
 import { pillLinkClasses } from '@/lib/utils';
 
+// Session + live settings: rendered per request, by design.
+export const instant = false;
+
 export default async function SettingsPage() {
-  // Request data first: `auth.api` opens SQLite, which must never run in the
-  // build-time prerender of this segment.
-  const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
+  // headers() alone is not a guard: partial prefetching resolves it in its
+  // prerender, which would then open SQLite and run better-auth's new Date().
+  await connection();
+  const session = await auth.api.getSession({ headers: await headers() });
   const readOnly = (session?.user as { role?: 'admin' | 'viewer' } | undefined)?.role !== 'admin';
   const intervalMinutes = getIntervalMinutes();
   const envDefaultMinutes = getEnvDefaultIntervalMinutes();

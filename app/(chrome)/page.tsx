@@ -1,8 +1,16 @@
+import { connection } from 'next/server';
+
 import { Dashboard } from '@/components/dashboard';
 import { isRange, listMeasurements, type Range } from '@/lib/measurements';
 import { toMeasurementDto } from '@/lib/types';
 
+// Server-rendered from live SQLite data on every request, by design.
+export const instant = false;
+
 export default async function Page({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
+  // `searchParams` alone does not keep the sync SQLite read (and its Date.now())
+  // out of prerenders: Next resolves it during prefetch/validation renders.
+  await connection();
   const { range: rangeParam } = await searchParams;
   const range: Range = rangeParam && isRange(rangeParam) ? rangeParam : '24h';
   const initial = listMeasurements(range).map(toMeasurementDto);
