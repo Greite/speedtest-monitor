@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 
@@ -33,6 +34,16 @@ function rejectUpgrade(socket: Duplex, status: number, reason: string) {
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME ?? '0.0.0.0';
 const port = Number.parseInt(process.env.PORT ?? '3003', 10);
+
+// The image ships no next.config.*, so `next()` would boot with default config
+// (cacheComponents off) against a cacheComponents build: every connection()
+// route then fails with DYNAMIC_SERVER_USAGE. Hand it the build's resolved
+// config, as Next's generated standalone server.js does.
+if (!dev) {
+  process.env.__NEXT_PRIVATE_STANDALONE_CONFIG ??= JSON.stringify(
+    JSON.parse(readFileSync('.next/required-server-files.json', 'utf8')).config,
+  );
+}
 
 const app = next({ dev, hostname, port });
 
