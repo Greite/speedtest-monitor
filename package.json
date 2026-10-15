@@ -39,12 +39,12 @@
   "dependencies": {
     "@astryxdesign/core": "0.5.4",
     "@astryxdesign/theme-neutral": "0.5.4",
-    "better-auth": "^1.7.7",
+    "better-auth": "^1.7.9",
     "drizzle-orm": "^0.45.4",
-    "next": "^16.4.0",
+    "next": "^16.4.1",
     "nodemailer": "^10.1.1",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "ws": "^8.22.0",
     "zod": "^4.6.7"
   },
