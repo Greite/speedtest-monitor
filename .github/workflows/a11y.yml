@@ -45,7 +45,7 @@ jobs:
           done
 
       - name: Run axe scan
-        run: bunx -p @axe-core/cli axe http://localhost:3003/login --exit --tags wcag2a,wcag2aa,wcag21a,wcag21aa
+        run: bunx -p @axe-core/cli axe http://localhost:3003/login --exit --tags wcag2a,wcag2aa,wcag21a,wcag21aa --chromedriver-path "$CHROMEWEBDRIVER/chromedriver"
 
       - name: Run Lighthouse CI
         run: bunx -p @lhci/cli lhci autorun --config=.lighthouserc.json || true
