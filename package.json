@@ -42,7 +42,7 @@
     "better-auth": "^1.7.12",
     "drizzle-orm": "^0.45.4",
     "next": "^16.4.2",
-    "nodemailer": "^10.1.7",
+    "nodemailer": "^10.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "ws": "^8.22.0",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@astryxdesign/cli": "0.5.4",
-    "@biomejs/biome": "^2.6.0",
+    "@biomejs/biome": "^2.6.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/bun": "^1.4.3",
     "@types/node": "^26.6.5",
