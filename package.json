@@ -33,7 +33,7 @@
     "test:a11y:page": "bun scripts/axe-audit.ts http://localhost:3003/login",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bun scripts/migrate.ts",
-    "theme:build": "bun scripts/theme-build.ts",
+    "theme:build": "bunx astryx theme build lib/astryx-theme.ts",
     "prepare": "husky"
   },
   "dependencies": {
