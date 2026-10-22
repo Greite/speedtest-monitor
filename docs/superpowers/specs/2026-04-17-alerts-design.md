@@ -31,13 +31,13 @@ Out of scope (v2+):
 
 Five `AlertKind`s, each with independent OK / ALERTING state:
 
-| Kind | Triggers when | Observed value | Threshold source |
-|---|---|---|---|
-| `download_below` | `measurement.status==='success' && downloadMbps < rules.thresholds.downloadMbps` | `downloadMbps` | `rules.thresholds.downloadMbps` |
-| `upload_below` | idem with `uploadMbps` | `uploadMbps` | `rules.thresholds.uploadMbps` |
-| `latency_above` | `latencyUnloadedMs > rules.thresholds.latencyMs` | `latencyUnloadedMs` | `rules.thresholds.latencyMs` |
-| `bufferbloat_above` | `bufferBloatMs > rules.thresholds.bufferBloatMs` | `bufferBloatMs` | `rules.thresholds.bufferBloatMs` |
-| `failure_streak` | `streakCount >= rules.failureStreak` where streak counts consecutive non-success measurements ending at current | `streakCount` | `rules.failureStreak` |
+| Kind                | Triggers when                                                                                                   | Observed value      | Threshold source                 |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------- | -------------------------------- |
+| `download_below`    | `measurement.status==='success' && downloadMbps < rules.thresholds.downloadMbps`                                | `downloadMbps`      | `rules.thresholds.downloadMbps`  |
+| `upload_below`      | idem with `uploadMbps`                                                                                          | `uploadMbps`        | `rules.thresholds.uploadMbps`    |
+| `latency_above`     | `latencyUnloadedMs > rules.thresholds.latencyMs`                                                                | `latencyUnloadedMs` | `rules.thresholds.latencyMs`     |
+| `bufferbloat_above` | `bufferBloatMs > rules.thresholds.bufferBloatMs`                                                                | `bufferBloatMs`     | `rules.thresholds.bufferBloatMs` |
+| `failure_streak`    | `streakCount >= rules.failureStreak` where streak counts consecutive non-success measurements ending at current | `streakCount`       | `rules.failureStreak`            |
 
 Recovery (condition E) is implicit in the state machine: `ALERTING` → `OK` emits event `resolved` for the same kind.
 
@@ -111,12 +111,12 @@ Rules stored as a single JSON value in the existing `settings` key-value table u
 type AlertRules = {
   enabled: boolean;
   thresholds: {
-    downloadMbps: number | null;   // null disables the condition
+    downloadMbps: number | null; // null disables the condition
     uploadMbps: number | null;
     latencyMs: number | null;
     bufferBloatMs: number | null;
   };
-  failureStreak: number | null;    // N consecutive non-success measurements
+  failureStreak: number | null; // N consecutive non-success measurements
   destinations: {
     webhook: boolean;
     ntfy: boolean;
@@ -139,11 +139,11 @@ Common payload:
 type AlertPayload = {
   event: 'fired' | 'resolved';
   kind: AlertKind;
-  title: string;           // pre-formatted
-  body: string;            // pre-formatted
+  title: string; // pre-formatted
+  body: string; // pre-formatted
   observed: number | null;
   threshold: number | null;
-  timestamp: number;       // ms epoch
+  timestamp: number; // ms epoch
   measurementId: number | null;
   alertId: number;
 };
@@ -164,10 +164,8 @@ Per-destination mapping:
 Dispatch logic:
 
 ```ts
-const active = destinations.filter(d => d.isConfigured() && rules.destinations[d.name]);
-const results = await Promise.allSettled(
-  active.map(d => withTimeout(d.send(payload), 10_000))
-);
+const active = destinations.filter((d) => d.isConfigured() && rules.destinations[d.name]);
+const results = await Promise.allSettled(active.map((d) => withTimeout(d.send(payload), 10_000)));
 // normalize settled results → Record<name, DeliveryResult>
 ```
 
@@ -209,12 +207,12 @@ Parsed at boot by `loadAlertConfig()` with zod. Invalid values log a warning and
 
 ## API
 
-| Method | Path | Body / Query | Returns |
-|---|---|---|---|
-| GET | `/api/alerts/rules` | — | `{...AlertRules, destinationsConfigured: Record<name, boolean>}` — **never** returns secrets |
-| PATCH | `/api/alerts/rules` | `Partial<AlertRules>` (zod-validated) | updated rules |
-| POST | `/api/alerts/test` | `{destination?: name}` — if absent tests all configured | `Record<name, DeliveryResult>` |
-| GET | `/api/alerts?limit=50` | `limit` query (default 50, max 500) | `{alerts: Alert[]}` |
+| Method | Path                   | Body / Query                                            | Returns                                                                                      |
+| ------ | ---------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| GET    | `/api/alerts/rules`    | —                                                       | `{...AlertRules, destinationsConfigured: Record<name, boolean>}` — **never** returns secrets |
+| PATCH  | `/api/alerts/rules`    | `Partial<AlertRules>` (zod-validated)                   | updated rules                                                                                |
+| POST   | `/api/alerts/test`     | `{destination?: name}` — if absent tests all configured | `Record<name, DeliveryResult>`                                                               |
+| GET    | `/api/alerts?limit=50` | `limit` query (default 50, max 500)                     | `{alerts: Alert[]}`                                                                          |
 
 WebSocket broadcast: after a dispatch completes, `broadcastAlert({id, kind, event, deliveryStatus, ...})` pushes to connected clients so the UI history panel updates live.
 
@@ -252,20 +250,20 @@ Reuses existing form patterns from the Measurement interval / Data retention car
 
 Colocated `.test.ts` files, vitest. Pure modules first, then adapters, then integration.
 
-| File | Coverage |
-|---|---|
-| `lib/alerts/evaluate.test.ts` | Table-driven: 5 kinds × {OK→ALERTING, ALERTING→OK, OK→OK, ALERTING→ALERTING} + edge cases (status=error, threshold=null, null measurement values) |
-| `lib/alerts/format.test.ts` | title + body per kind, fired vs resolved, TZ-correct timestamps |
-| `lib/alerts/destinations/webhook.test.ts` | URL, header merge from SPEEDTEST_WEBHOOK_HEADERS, body shape, non-2xx → DeliveryResult.ok=false |
-| `lib/alerts/destinations/ntfy.test.ts` | X-Title/X-Priority/X-Tags correctness, optional auth |
-| `lib/alerts/destinations/discord.test.ts` | embed color/timestamp/description shape |
-| `lib/alerts/destinations/slack.test.ts` | blocks + text fallback shape |
-| `lib/alerts/destinations/smtp.test.ts` | nodemailer mocked: subject, from/to, secure/port logic |
-| `lib/alerts/dispatch.test.ts` | parallel dispatch, per-destination timeout, partial failures don't bubble |
-| `lib/alerts/streak.test.ts` | fixtures (alternating success/fail, all-fail, all-success, empty) |
-| `lib/alerts/handle.test.ts` | integration with `:memory:` sqlite — insert → evaluate → dispatch stub → update delivery_status |
-| `app/api/alerts/rules.test.ts` | GET never returns secrets, PATCH zod-valid, destinationsConfigured correctness |
-| `app/api/alerts/test/route.test.ts` | dispatches to all configured when no body, or to specified one |
+| File                                      | Coverage                                                                                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/alerts/evaluate.test.ts`             | Table-driven: 5 kinds × {OK→ALERTING, ALERTING→OK, OK→OK, ALERTING→ALERTING} + edge cases (status=error, threshold=null, null measurement values) |
+| `lib/alerts/format.test.ts`               | title + body per kind, fired vs resolved, TZ-correct timestamps                                                                                   |
+| `lib/alerts/destinations/webhook.test.ts` | URL, header merge from SPEEDTEST_WEBHOOK_HEADERS, body shape, non-2xx → DeliveryResult.ok=false                                                   |
+| `lib/alerts/destinations/ntfy.test.ts`    | X-Title/X-Priority/X-Tags correctness, optional auth                                                                                              |
+| `lib/alerts/destinations/discord.test.ts` | embed color/timestamp/description shape                                                                                                           |
+| `lib/alerts/destinations/slack.test.ts`   | blocks + text fallback shape                                                                                                                      |
+| `lib/alerts/destinations/smtp.test.ts`    | nodemailer mocked: subject, from/to, secure/port logic                                                                                            |
+| `lib/alerts/dispatch.test.ts`             | parallel dispatch, per-destination timeout, partial failures don't bubble                                                                         |
+| `lib/alerts/streak.test.ts`               | fixtures (alternating success/fail, all-fail, all-success, empty)                                                                                 |
+| `lib/alerts/handle.test.ts`               | integration with `:memory:` sqlite — insert → evaluate → dispatch stub → update delivery_status                                                   |
+| `app/api/alerts/rules.test.ts`            | GET never returns secrets, PATCH zod-valid, destinationsConfigured correctness                                                                    |
+| `app/api/alerts/test/route.test.ts`       | dispatches to all configured when no body, or to specified one                                                                                    |
 
 ## Migration & dependencies
 

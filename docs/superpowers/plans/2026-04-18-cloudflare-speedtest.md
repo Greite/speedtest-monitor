@@ -15,7 +15,6 @@
 ## Task 1: Deps swap
 
 **Files:** `package.json`, `bun.lock`
-
 - [ ] **Step 1: Add Cloudflare + remove fast-cli**
 
 ```bash
@@ -24,12 +23,10 @@ bun remove fast-cli
 ```
 
 If `bun remove fast-cli` reports that `fast-cli` is not in dependencies (e.g. pruned already), move on.
-
 - [ ] **Step 2: Typecheck**
 
 Run: `bunx tsc --noEmit`
 Expected: clean (no references to `fast-cli` exist yet in code; we'll remove imports in Task 6).
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -42,7 +39,6 @@ git commit -m "deps: swap fast-cli for @cloudflare/speedtest"
 ## Task 2: Add 3 nullable columns to measurements
 
 **Files:** `lib/db/schema.ts`, `drizzle/NNNN_*.sql` (generated)
-
 - [ ] **Step 1: Extend the schema**
 
 Open `lib/db/schema.ts`. Find the `measurements` table definition and append three columns inside the object, after the existing `userIp` line (still within the same `sqliteTable('measurements', { … })` call):
@@ -54,17 +50,14 @@ Open `lib/db/schema.ts`. Find the `measurements` table definition and append thr
 ```
 
 Save the file.
-
 - [ ] **Step 2: Generate the migration**
 
 Run: `bunx drizzle-kit generate`
 Expected: a new `drizzle/NNNN_*.sql` file appears with three `ALTER TABLE measurements ADD COLUMN ...` statements. Inspect with `ls drizzle/` and open the newest file to confirm.
-
 - [ ] **Step 3: Typecheck**
 
 Run: `bunx tsc --noEmit`
 Expected: clean. `Measurement` and `NewMeasurement` types now have the three new optional fields.
-
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -77,19 +70,17 @@ git commit -m "feat(db): add jitter_ms, packet_loss_pct, user_isp on measurement
 ## Task 3: Extend MeasurementDto and toMeasurementDto
 
 **Files:** `lib/types.ts`
-
 - [ ] **Step 1: Read current file**
 
 Open `lib/types.ts`. It contains `MeasurementDto` (typed fields) and `toMeasurementDto(row)` (mapper).
-
 - [ ] **Step 2: Add the three fields on `MeasurementDto`**
 
 Add these properties to the `MeasurementDto` type, after `userIp`:
 
 ```ts
-  jitterMs: number | null;
-  packetLossPct: number | null;
-  userIsp: string | null;
+jitterMs: number | null;
+packetLossPct: number | null;
+userIsp: string | null;
 ```
 
 - [ ] **Step 3: Forward them in `toMeasurementDto`**
@@ -111,7 +102,6 @@ Run: `bun run test`
 Expected: 118 tests passing (existing `lib/types.test.ts` tolerates new fields because they are included in the returned DTO).
 
 If `lib/types.test.ts` fails, open it and update the expected object to include the three new fields with `null` values (they are not set in the test fixtures).
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -124,7 +114,6 @@ git commit -m "feat(types): expose jitterMs, packetLossPct, userIsp on Measureme
 ## Task 4: Create `lib/measurement/types.ts`
 
 **Files:** Create `lib/measurement/types.ts`
-
 - [ ] **Step 1: Write the file**
 
 ```ts
@@ -149,7 +138,6 @@ export type EngineResult = {
 
 Run: `bunx tsc --noEmit`
 Expected: clean.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -323,7 +311,6 @@ describe('runCloudflareSpeedTest', () => {
 
 Run: `bunx vitest run lib/measurement/cloudflare.test.ts`
 Expected: FAIL — cannot resolve `./cloudflare`.
-
 - [ ] **Step 3: Implement `cloudflare.ts`**
 
 ```ts
@@ -404,8 +391,7 @@ export function runCloudflareSpeedTest(): Promise<EngineResult> {
         typeof s.downLoadedLatency === 'number' || typeof s.upLoadedLatency === 'number'
           ? Math.max(s.downLoadedLatency ?? 0, s.upLoadedLatency ?? 0)
           : null;
-      const bufferBloat =
-        loaded != null && unloaded != null ? Math.max(0, Math.round(loaded - unloaded)) : null;
+      const bufferBloat = loaded != null && unloaded != null ? Math.max(0, Math.round(loaded - unloaded)) : null;
       const colo = meta.colo ?? null;
       resolve({
         downloadMbps: downMbps,
@@ -436,7 +422,6 @@ export function runCloudflareSpeedTest(): Promise<EngineResult> {
 
 Run: `bunx vitest run lib/measurement/cloudflare.test.ts`
 Expected: 4 tests pass.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -476,8 +461,7 @@ vi.mock('../alerts/handle', () => ({
   handleAlertsForMeasurement: vi.fn(),
 }));
 
-const { runMeasurement, runMeasurementSafe, MeasurementBusyError, isMeasurementRunning } =
-  await import('./runner');
+const { runMeasurement, runMeasurementSafe, MeasurementBusyError, isMeasurementRunning } = await import('./runner');
 
 const fullResult: EngineResult = {
   downloadMbps: 300,
@@ -564,7 +548,6 @@ describe('runMeasurement', () => {
 
 Run: `bunx vitest run lib/measurement/runner.test.ts`
 Expected: FAIL — cannot resolve `./runner`.
-
 - [ ] **Step 3: Implement `runner.ts`**
 
 ```ts
@@ -587,9 +570,7 @@ export class MeasurementBusyError extends Error {
   }
 }
 
-function insertMeasurement(
-  row: Omit<Measurement, 'id' | 'timestamp'> & { timestamp?: Date },
-): Measurement {
+function insertMeasurement(row: Omit<Measurement, 'id' | 'timestamp'> & { timestamp?: Date }): Measurement {
   const db = getDb();
   return db
     .insert(measurements)
@@ -607,9 +588,7 @@ export async function runMeasurement(): Promise<Measurement> {
   try {
     const result = await runCloudflareSpeedTest();
     if (result.downloadMbps === null || result.uploadMbps === null) {
-      throw new Error(
-        `incomplete results: download=${result.downloadMbps} upload=${result.uploadMbps}`,
-      );
+      throw new Error(`incomplete results: download=${result.downloadMbps} upload=${result.uploadMbps}`);
     }
     const row = insertMeasurement({
       downloadMbps: result.downloadMbps,
@@ -673,7 +652,6 @@ export function isMeasurementRunning(): boolean {
 
 Run: `bunx vitest run lib/measurement/runner.test.ts`
 Expected: 6 tests pass.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -711,7 +689,6 @@ import { runMeasurementSafe } from '../measurement/runner';
 ```
 
 Run `grep -rn "fastcli\|fast-cli" app lib --include='*.ts' --include='*.tsx'` to confirm no other consumer references the old path. If there are any, update them too.
-
 - [ ] **Step 2: Delete the old module and the puppeteer rc**
 
 ```bash
@@ -726,7 +703,6 @@ bunx tsc --noEmit
 bun run test
 ```
 Expected: typecheck clean. Tests: all passing (the two new test files from Tasks 5/6 add coverage, no removed tests since `lib/fastcli/` had none).
-
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -739,11 +715,9 @@ git commit -m "refactor(measurement): rename lib/fastcli to lib/measurement, dro
 ## Task 8: Dockerfile — remove Chromium + swap dep
 
 **Files:** `Dockerfile`
-
 - [ ] **Step 1: Read current Dockerfile**
 
 Open `Dockerfile`. Find the `runtime-deps` stage and the `runner` stage.
-
 - [ ] **Step 2: `runtime-deps` — swap dep**
 
 Inside the `runtime-deps` stage's `bun add \` list:
@@ -768,7 +742,6 @@ The resulting list:
 ```
 
 (`execa` is kept for now — auditing its usage is Task 9. Do not remove it here.)
-
 - [ ] **Step 3: `runner` — remove Chromium, its fonts, and all chromium purges**
 
 Find the `FROM ${NODE_IMAGE} AS runner` block. Replace the `ENV` block to remove the `PUPPETEER_*` vars:
@@ -815,7 +788,6 @@ RUN apt-get update \
 ```
 
 This deletes: the `chromium` + `fonts-liberation` apt packages, the Vulkan validation library removal, the chromium locale pruning, the icons removal. Keeps: `ca-certificates` (for HTTPS to speed.cloudflare.com), `dumb-init`, the nodejs user creation, and the shared docs/locale pruning.
-
 - [ ] **Step 4: Build**
 
 Run: `docker build -t speedtest-cf-test . 2>&1 | tail -5`
@@ -823,7 +795,6 @@ Expected: build succeeds.
 
 Run: `docker images speedtest-cf-test --format "{{.Size}}"`
 Expected: roughly `350MB`–`450MB` (vs. ~1.13 GB before).
-
 - [ ] **Step 5: Smoke-test container boot**
 
 ```bash
@@ -843,7 +814,6 @@ docker rmi speedtest-cf-test
 ```
 
 Expected: `settings HTTP 401` (unauth is normal, auth enabled on that route).
-
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -856,11 +826,9 @@ git commit -m "build(docker): drop Chromium, switch measurement dep to @cloudfla
 ## Task 9: Audit and prune `execa` if unused
 
 **Files:** `package.json`, `Dockerfile`, `bun.lock`
-
 - [ ] **Step 1: Grep for any remaining execa usage**
 
 Run: `grep -rn "execa\|'execa'\|\"execa\"" app lib --include='*.ts' --include='*.tsx'`
-
 - [ ] **Step 2: If there are zero hits**
 
 ```bash
@@ -868,7 +836,6 @@ bun remove execa
 ```
 
 Then edit `Dockerfile` and remove the `      execa@^9.6.1 \` line from the `runtime-deps` `bun add` list.
-
 - [ ] **Step 3: Typecheck + tests**
 
 ```bash
@@ -876,7 +843,6 @@ bunx tsc --noEmit
 bun run test
 ```
 Expected: clean + all tests pass.
-
 - [ ] **Step 4: Commit (only if step 2 made changes)**
 
 ```bash
@@ -891,17 +857,14 @@ If step 1 found hits, skip steps 2–4: execa has other consumers, leave it in p
 ## Task 10: README updates
 
 **Files:** `README.md`
-
 - [ ] **Step 1: Update the Stack section**
 
 Open `README.md` and look at the `## Stack` section. Find any mention of "fast.com" or "fast-cli" or "Puppeteer" or "Chromium" and replace them with Cloudflare Speed Test equivalents. Example edit — if the list has a line like `- fast-cli / puppeteer (headless Chromium)`, change it to `- @cloudflare/speedtest (HTTP-only, no browser)`.
 
 Keep every other bullet unchanged.
-
 - [ ] **Step 2: Update the End-to-end check duration**
 
 In the `### End-to-end check` section, find the comment `# trigger one measurement (~90s)` and change the duration to `~20s`.
-
 - [ ] **Step 3: Append an Upgrade note**
 
 Add a new subsection under `## Authentication → ### Upgrading from a pre-auth version` (or at the end of the `## Development` section if there is no upgrade section) titled `### Upgrading the measurement engine` with this content:
@@ -912,7 +875,6 @@ Add a new subsection under `## Authentication → ### Upgrading from a pre-auth 
 The 0.2+ release swaps the measurement backend from fast.com (via the
 `fast-cli` + Chromium browser) to Cloudflare Speed Test (HTTP only). On
 first boot after the upgrade:
-
 - Three new nullable columns (`jitter_ms`, `packet_loss_pct`, `user_isp`)
   are added to the `measurements` table. Historical rows keep them
   `null` — the data was never captured.
@@ -941,7 +903,6 @@ git commit -m "docs: Cloudflare speedtest engine in Stack + upgrade note"
 
 Run: `bun run test`
 Expected: all tests passing (baseline 118 + 4 new Cloudflare tests + 6 new runner tests = ~128).
-
 - [ ] **Step 2: Lint**
 
 Run: `bun run lint`

@@ -31,17 +31,16 @@ La migration complète du projet vers Astryx est actée. Cette première étape 
 
 Remplacement direct des primitives, logique métier intacte :
 
-| Fichier | shadcn actuel | Astryx |
-|---|---|---|
-| `dashboard.tsx` | Card, CardContent, Skeleton | Card, Skeleton |
-| `kpi-cards.tsx` | Card, CardContent, CardHeader, CardTitle | Card, Heading |
-| `time-range-picker.tsx` | Segmented control fait main (pill animée, ~90 lignes) | SegmentedControl |
-| `history-chart.tsx` | Button, Card, CardContent, CardHeader, CardTitle | Button, Card (Recharts conservé) |
-| `history-table.tsx` | Badge, Button, Card, Select, Table + TanStack Table | Card, Heading, Selector, IconButton, Token, Table Astryx (data-driven : `columns` + `data` + `renderCell`) |
-| `table-filters.tsx` | Badge, Button, Input, Label | TextInput, DateTimeInput, Token, Button, IconButton, ToggleButtonGroup/ToggleButton |
+| Fichier                 | shadcn actuel                                         | Astryx                                                                                                     |
+| ----------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `dashboard.tsx`         | Card, CardContent, Skeleton                           | Card, Skeleton                                                                                             |
+| `kpi-cards.tsx`         | Card, CardContent, CardHeader, CardTitle              | Card, Heading                                                                                              |
+| `time-range-picker.tsx` | Segmented control fait main (pill animée, ~90 lignes) | SegmentedControl                                                                                           |
+| `history-chart.tsx`     | Button, Card, CardContent, CardHeader, CardTitle      | Button, Card (Recharts conservé)                                                                           |
+| `history-table.tsx`     | Badge, Button, Card, Select, Table + TanStack Table   | Card, Heading, Selector, IconButton, Token, Table Astryx (data-driven : `columns` + `data` + `renderCell`) |
+| `table-filters.tsx`     | Badge, Button, Input, Label                           | TextInput, DateTimeInput, Token, Button, IconButton, ToggleButtonGroup/ToggleButton                        |
 
 Notes :
-
 - Les composants shadcn de `components/ui` restent en place (utilisés par la topbar, le footer et les autres pages). Ils seront supprimés en fin de migration complète, pas dans cette phase.
 - La Table Astryx est data-driven et ne peut pas envelopper du markup TanStack. Comme le tri, les filtres et la pagination de `history-table` sont déjà gérés côté serveur (`/api/measurements/table`) avec du state local, TanStack n'y sert que de couche de rendu : il est remplacé par les `TableColumn` Astryx (`renderCell`) et son plugin de tri contrôlé. Décision validée le 2026-07-21. Amendement d'implémentation : le retrait de `@tanstack/react-table` du package.json est reporté à la phase settings, car `components/users/users-card.tsx` (hors périmètre dashboard) en dépend encore ; plus aucun fichier du dashboard ne l'importe.
 - `@astryxdesign/charts` n'existe qu'en canary : Recharts est conservé pour `history-chart.tsx`, avec un style de tooltip aligné sur les tokens Astryx.

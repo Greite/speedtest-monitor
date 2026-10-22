@@ -85,22 +85,18 @@ to:
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 ```
 Every other line stays.
-
 - [ ] **Step 4: Update `drizzle.config.ts` if needed**
 
 Run: `cat drizzle.config.ts`
 If the config sets `driver: 'better-sqlite'`, change to `driver: 'bun-sqlite'`. If it only sets `dialect: 'sqlite'`, leave unchanged (dialect drives SQL generation, not the runtime driver).
-
 - [ ] **Step 5: Typecheck**
 
 Run: `bunx tsc --noEmit`
 Expected: clean.
-
 - [ ] **Step 6: Smoke-run dev**
 
 Run: `bun run dev &` in one terminal; `sleep 6; curl -sS http://localhost:3003/api/measurements?range=24h; kill %1`.
 Expected: server boots without errors, GET returns valid JSON (`{"range":"24h","measurements":[...]}`), no `bun:sqlite` stack trace.
-
 - [ ] **Step 7: Commit**
 
 ```bash
@@ -161,12 +157,10 @@ Preserve the imported names verbatim. If the file imports `vi` (it does not in t
 
 Run: `grep -l "from 'vitest'" lib/format.test.ts lib/scheduler/cron-expr.test.ts lib/alerts/evaluate.test.ts lib/alerts/format.test.ts lib/auth/config.test.ts lib/auth/hash.test.ts lib/alerts/config.test.ts`
 Expected: (empty output - zero files still reference 'vitest')
-
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test lib/format.test.ts lib/scheduler/cron-expr.test.ts lib/alerts/evaluate.test.ts lib/alerts/format.test.ts lib/auth/config.test.ts lib/auth/hash.test.ts lib/alerts/config.test.ts`
 Expected: all tests pass.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -211,12 +205,10 @@ Apply the same pattern to the other six files. The `Database.Database` type (as 
 
 Run: `grep -n "Database\.Database\|'vitest'\|'better-sqlite3'" lib/types.test.ts lib/measurements.test.ts lib/auth/users.test.ts lib/auth/bootstrap.test.ts lib/alerts/rules.test.ts lib/alerts/state.test.ts lib/alerts/streak.test.ts`
 Expected: (empty output)
-
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test lib/types.test.ts lib/measurements.test.ts lib/auth/users.test.ts lib/auth/bootstrap.test.ts lib/alerts/rules.test.ts lib/alerts/state.test.ts lib/alerts/streak.test.ts`
 Expected: all pass.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -242,7 +234,6 @@ Convert seven files. These use `vi.fn()`, `vi.mock()`, and sometimes `vi.useFake
 - [ ] **Step 1: Per-file swap rules**
 
 For each file, apply these substitutions:
-
 1. Import line:
    - `import { <...> , vi , <...> } from 'vitest';` -> replace `vi` with `mock, spyOn, jest` as needed. The bun:test module also re-exports `beforeAll`, `afterAll`, `beforeEach`, `afterEach`, `describe`, `it`, `expect`. Import only what the file actually uses.
    - Change source from `'vitest'` to `'bun:test'`.
@@ -295,13 +286,19 @@ import { describe, expect, it, jest, mock } from 'bun:test';
 // before
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const fetchMock = vi.fn();
-beforeEach(() => { fetchMock.mockReset(); globalThis.fetch = fetchMock as never; });
+beforeEach(() => {
+  fetchMock.mockReset();
+  globalThis.fetch = fetchMock as never;
+});
 afterEach(() => vi.restoreAllMocks());
 
 // after
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 const fetchMock = mock();
-beforeEach(() => { fetchMock.mockReset(); globalThis.fetch = fetchMock as never; });
+beforeEach(() => {
+  fetchMock.mockReset();
+  globalThis.fetch = fetchMock as never;
+});
 afterEach(() => mock.restore());
 ```
 
@@ -328,12 +325,10 @@ const { createSmtpDestination } = await import('./smtp');
 
 Run: `grep -n "'vitest'\|\\bvi\\." lib/alerts/destinations/webhook.test.ts lib/alerts/destinations/ntfy.test.ts lib/alerts/destinations/discord.test.ts lib/alerts/destinations/slack.test.ts lib/alerts/destinations/smtp.test.ts lib/alerts/dispatch.test.ts lib/alerts/handle.test.ts`
 Expected: (empty)
-
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test lib/alerts/destinations/ lib/alerts/dispatch.test.ts lib/alerts/handle.test.ts`
 Expected: all pass.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -376,7 +371,6 @@ mock.module('../alerts/handle', () => ({ handleAlertsForMeasurement: mock() }));
 
 Run: `bun test lib/measurement/`
 Expected: 12 tests pass.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -394,12 +388,10 @@ git commit -m "test(B4): migrate measurement engine + runner tests to bun:test"
 - [ ] **Step 1: Apply the swap**
 
 Same rewrite rules as Task 5 Step 1. This file imports `beforeEach`, `describe`, `expect`, `it` from vitest and uses `new Database(':memory:')` fixture (also needs the bun:sqlite + bun-sqlite adapter swap from Task 4 Step 1).
-
 - [ ] **Step 2: Run**
 
 Run: `bun test lib/auth/providers.test.ts`
 Expected: all pass.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -453,12 +445,10 @@ const { POST } = await import('./route');
 
 Run: `grep -rn "'vitest'\|'better-sqlite3'\|\\bvi\\." app/api/users/ app/api/auth/setup/ app/api/account/password/`
 Expected: (empty)
-
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test app/api/users/ app/api/auth/setup/ app/api/account/password/`
 Expected: all pass.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -478,12 +468,10 @@ git commit -m "test(B6): migrate user + auth API route tests to bun:test"
 - [ ] **Step 1: Apply the swap**
 
 Same rules. `alerts/rules/route.test.ts` uses DB fixtures + auth mock. `alerts/test/route.test.ts` uses `vi.mock('@/lib/alerts/destinations', ...)`. `settings-schema.test.ts` is pure (only validates a zod schema).
-
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test app/api/alerts/ app/api/settings/`
 Expected: all pass.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -522,7 +510,6 @@ bun remove vitest
 
 Run: `bun test`
 Expected: every test passes. If any file still imports from `vitest`, fix it now and re-run.
-
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -562,7 +549,6 @@ Change:
 In the `deps` stage, delete the `RUN apt-get ...` line that installs `python3 make g++ ca-certificates`. Keep a slimmer `RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*` only if needed for https; however `oven/bun:1-slim` already ships with `ca-certificates` - verify with `docker run --rm oven/bun:1-slim cat /etc/ssl/certs/ca-certificates.crt | head -1`. If present, omit the entire apt install from `deps` entirely.
 
 Same treatment for `runtime-deps`: remove `python3 make g++ binutils` from the apt install (keep binutils only if still used elsewhere - grep the file; as of this plan it is only referenced in the strip commands which still work on bun images). After the change the RUN block becomes just the `bun add ...` pipeline plus the `find ... strip ...` lines.
-
 - [ ] **Step 4: Drop `better-sqlite3` from the runtime-deps `bun add` list**
 
 Inside the `bun add \` list, delete the `better-sqlite3@^12.9.0 \` line. Also delete the block that prunes `node_modules/better-sqlite3/prebuilds/...` - that directory no longer exists after the swap. Final list:
@@ -686,7 +672,6 @@ bunx tsc --noEmit
 ```
 
 Expected: suite green, lint clean (2 pre-existing infos ok), typecheck clean.
-
 - [ ] **Step 2: Dev-mode smoke**
 
 ```bash
@@ -696,7 +681,6 @@ curl -sS -o /dev/null -w "root HTTP %{http_code}\n" http://localhost:3003/
 kill %1
 ```
 Expected: `root HTTP 307` (redirect to /login if no user, /setup if 0 user). No stack traces.
-
 - [ ] **Step 3: Final Docker E2E**
 
 ```bash

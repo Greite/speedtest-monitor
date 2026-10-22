@@ -50,15 +50,15 @@ Out of scope (separate phases):
 
 Runtime stack after Phase 1:
 
-| Concern | Before | After |
-|---|---|---|
-| Dev runtime | Bun 1.3 (tsx-under-Bun) | Bun 1.x |
-| Prod runtime | Node 24 | Bun 1.x |
-| SQLite driver | `better-sqlite3` (N-API) | `bun:sqlite` (built-in) |
-| Drizzle adapter | `drizzle-orm/better-sqlite3` | `drizzle-orm/bun-sqlite` |
-| WebSocket | `ws` npm package | `ws` npm package (same) |
-| Password hashing | `@node-rs/argon2` | `@node-rs/argon2` (same) |
-| Test runner | vitest | bun:test |
+| Concern          | Before                       | After                    |
+| ---------------- | ---------------------------- | ------------------------ |
+| Dev runtime      | Bun 1.3 (tsx-under-Bun)      | Bun 1.x                  |
+| Prod runtime     | Node 24                      | Bun 1.x                  |
+| SQLite driver    | `better-sqlite3` (N-API)     | `bun:sqlite` (built-in)  |
+| Drizzle adapter  | `drizzle-orm/better-sqlite3` | `drizzle-orm/bun-sqlite` |
+| WebSocket        | `ws` npm package             | `ws` npm package (same)  |
+| Password hashing | `@node-rs/argon2`            | `@node-rs/argon2` (same) |
+| Test runner      | vitest                       | bun:test                 |
 
 ### `lib/db/client.ts`
 
@@ -173,7 +173,7 @@ namespace) - `import { jest } from 'bun:test'` gives access to
 ### Hoisting caveat
 
 `vi.mock(path, factory)` is hoisted to the top of the file by vitest's
-transformer. `bun:test`'s `mock.module(path, factory)` is *not*
+transformer. `bun:test`'s `mock.module(path, factory)` is _not_
 hoisted - the call must execute before anything imports the mocked
 module. Our existing pattern already handles this with dynamic imports:
 
@@ -191,15 +191,15 @@ needed.
 Tests are migrated in seven batches. Each batch runs `bun test` on its
 own scope; the suite is committed green before moving on.
 
-| Batch | Files | Theme |
-|---|---|---|
-| B1 | `lib/format.test.ts`, `lib/scheduler/cron-expr.test.ts`, `lib/alerts/evaluate.test.ts`, `lib/alerts/format.test.ts`, `lib/auth/config.test.ts`, `lib/auth/hash.test.ts`, `lib/alerts/config.test.ts` | pure, no DB, no mocks |
-| B2 | `lib/types.test.ts`, `lib/measurements.test.ts`, `lib/auth/users.test.ts`, `lib/auth/bootstrap.test.ts`, `lib/alerts/rules.test.ts`, `lib/alerts/state.test.ts`, `lib/alerts/streak.test.ts` | DB fixtures (:memory:) |
-| B3 | `lib/alerts/destinations/webhook.test.ts`, `ntfy`, `discord`, `slack`, `smtp`, `lib/alerts/dispatch.test.ts`, `lib/alerts/handle.test.ts` | fetch mocks, mock.module |
-| B4 | `lib/measurement/cloudflare.test.ts`, `lib/measurement/runner.test.ts` | measurement engine |
-| B5 | `lib/auth/providers.test.ts` | providers |
-| B6 | `app/api/users/route.test.ts`, `app/api/users/[id]/route.test.ts`, `app/api/users/[id]/reset-password/route.test.ts`, `app/api/auth/setup/route.test.ts`, `app/api/account/password/route.test.ts` | API routes: users + auth |
-| B7 | `app/api/alerts/rules/route.test.ts`, `app/api/alerts/test/route.test.ts`, `app/api/settings/settings-schema.test.ts` | API routes: alerts + settings |
+| Batch | Files                                                                                                                                                                                                | Theme                         |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| B1    | `lib/format.test.ts`, `lib/scheduler/cron-expr.test.ts`, `lib/alerts/evaluate.test.ts`, `lib/alerts/format.test.ts`, `lib/auth/config.test.ts`, `lib/auth/hash.test.ts`, `lib/alerts/config.test.ts` | pure, no DB, no mocks         |
+| B2    | `lib/types.test.ts`, `lib/measurements.test.ts`, `lib/auth/users.test.ts`, `lib/auth/bootstrap.test.ts`, `lib/alerts/rules.test.ts`, `lib/alerts/state.test.ts`, `lib/alerts/streak.test.ts`         | DB fixtures (:memory:)        |
+| B3    | `lib/alerts/destinations/webhook.test.ts`, `ntfy`, `discord`, `slack`, `smtp`, `lib/alerts/dispatch.test.ts`, `lib/alerts/handle.test.ts`                                                            | fetch mocks, mock.module      |
+| B4    | `lib/measurement/cloudflare.test.ts`, `lib/measurement/runner.test.ts`                                                                                                                               | measurement engine            |
+| B5    | `lib/auth/providers.test.ts`                                                                                                                                                                         | providers                     |
+| B6    | `app/api/users/route.test.ts`, `app/api/users/[id]/route.test.ts`, `app/api/users/[id]/reset-password/route.test.ts`, `app/api/auth/setup/route.test.ts`, `app/api/account/password/route.test.ts`   | API routes: users + auth      |
+| B7    | `app/api/alerts/rules/route.test.ts`, `app/api/alerts/test/route.test.ts`, `app/api/settings/settings-schema.test.ts`                                                                                | API routes: alerts + settings |
 
 Seven commits (one per batch).
 
@@ -310,12 +310,12 @@ DB is still readable by better-sqlite3 (shared format).
 
 ## Risks and validation
 
-| Risk | Validation |
-|---|---|
-| Bun + Next.js 16 edge case in prod build | `docker build` + container smoke test (healthcheck + manual measurement) as part of the final task |
-| Timing-sensitive fake-timer tests break under `jest.useFakeTimers()` compat | Targeted re-run of `dispatch.test.ts` and `cloudflare.test.ts` in batch B3 / B4 |
-| `drizzle-orm/bun-sqlite` adapter regression | Existing test suite covers all DB read/write paths; each B2-B7 batch green = coverage |
-| `@node-rs/argon2` prebuild missing for Bun+Debian-slim combo | `bun add @node-rs/argon2@^2` in the runtime-deps stage is verified end-to-end by the auth tests (B5, B6) and the final Docker build |
+| Risk                                                                        | Validation                                                                                                                          |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Bun + Next.js 16 edge case in prod build                                    | `docker build` + container smoke test (healthcheck + manual measurement) as part of the final task                                  |
+| Timing-sensitive fake-timer tests break under `jest.useFakeTimers()` compat | Targeted re-run of `dispatch.test.ts` and `cloudflare.test.ts` in batch B3 / B4                                                     |
+| `drizzle-orm/bun-sqlite` adapter regression                                 | Existing test suite covers all DB read/write paths; each B2-B7 batch green = coverage                                               |
+| `@node-rs/argon2` prebuild missing for Bun+Debian-slim combo                | `bun add @node-rs/argon2@^2` in the runtime-deps stage is verified end-to-end by the auth tests (B5, B6) and the final Docker build |
 
 ## Deliverable
 

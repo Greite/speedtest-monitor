@@ -11,7 +11,6 @@ La phase 1 (dashboard) est terminée et validée visuellement : fondations posé
 ## Objectif et périmètre
 
 Migrer tout ce qui reste sur shadcn/ui, puis supprimer shadcn et ses dépendances. Fichiers concernés (12 fichiers UI + toasts) :
-
 - Settings : `app/settings/page.tsx`, `components/settings-form.tsx`, `components/settings/alerts-card.tsx`, `components/auth/password-change-card.tsx`
 - Users : `components/users/users-card.tsx` (TanStack -> Table Astryx), `add-user-dialog.tsx`, `delete-user-dialog.tsx`, `reset-password-dialog.tsx`
 - Auth : `components/auth/login-form.tsx`, `components/auth/setup-form.tsx`
@@ -25,15 +24,15 @@ Critère de succès : parité visuelle et fonctionnelle, zéro régression a11y,
 
 ## Mapping des nouvelles primitives
 
-| shadcn | Astryx | Usages |
-|---|---|---|
-| Alert | Banner | 9 |
-| Dialog, ConfirmDialog | Dialog | 6 |
-| Input + Label + RequiredMark | TextInput (`isRequired`) + FormLayout/Field | 15 |
-| PasswordInput | TextInput `type="password"` | 5 |
-| DropdownMenu (topbar) | DropdownMenu | 1 |
-| Switch | Switch | 1 |
-| sonner (`toast.*`) | Toast Astryx | layout + 7 fichiers |
+| shadcn                       | Astryx                                      | Usages              |
+| ---------------------------- | ------------------------------------------- | ------------------- |
+| Alert                        | Banner                                      | 9                   |
+| Dialog, ConfirmDialog        | Dialog                                      | 6                   |
+| Input + Label + RequiredMark | TextInput (`isRequired`) + FormLayout/Field | 15                  |
+| PasswordInput                | TextInput `type="password"`                 | 5                   |
+| DropdownMenu (topbar)        | DropdownMenu                                | 1                   |
+| Switch                       | Switch                                      | 1                   |
+| sonner (`toast.*`)           | Toast Astryx                                | layout + 7 fichiers |
 
 Les primitives déjà mappées en phase 1 (Card+Heading, Button/IconButton, Badge->Token, Select->Selector, Skeleton, Table data-driven) réutilisent les idiomes établis. `users-card.tsx` suit le pattern `history-table` (colonnes `renderCell`, tri via `useTableSortable` si applicable, `width` par colonne dès le départ).
 
@@ -49,7 +48,6 @@ Les primitives déjà mappées en phase 1 (Card+Heading, Button/IconButton, Badg
 ## Nettoyage final
 
 Une fois les 12 fichiers migrés et les toasts remplacés :
-
 - Supprimer `components/ui/*` en entier.
 - `bun remove radix-ui class-variance-authority tw-animate-css @tanstack/react-table sonner` (lève l'amendement de la phase 1 sur TanStack).
 - Vérifier via knip qu'aucun orphelin ni dépendance morte ne reste ; `@astryxdesign/cli` reste (build du thème).

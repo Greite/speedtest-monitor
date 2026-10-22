@@ -26,19 +26,19 @@
 
 ## File Structure
 
-| Tâche | Fichiers |
-|---|---|
-| 1 Toasts | `app/layout.tsx`, `components/settings/alerts-card.tsx`, `components/settings-form.tsx`, `components/auth/password-change-card.tsx`, `components/users/{delete-user,reset-password,add-user}-dialog.tsx`, `components/users/users-card.tsx` (appels toast uniquement) |
-| 2 Auth | `components/auth/login-form.tsx`, `components/auth/setup-form.tsx` |
-| 3 Password card | `components/auth/password-change-card.tsx` |
-| 4 Settings form | `components/settings-form.tsx` |
-| 5 Alerts card | `components/settings/alerts-card.tsx` |
-| 6 Dialogs users | `components/users/{add-user,delete-user,reset-password}-dialog.tsx` |
-| 7 Users table | `components/users/users-card.tsx` |
-| 8 Topbar | `components/topbar.tsx` |
-| 9 Pages | `app/changelog/page.tsx`, `app/settings/page.tsx` |
-| 10 Cleanup | `components/ui/*` (suppression), `package.json`, `app/globals.css` |
-| 11 Validation | aucun nouveau fichier |
+| Tâche           | Fichiers                                                                                                                                                                                                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Toasts        | `app/layout.tsx`, `components/settings/alerts-card.tsx`, `components/settings-form.tsx`, `components/auth/password-change-card.tsx`, `components/users/{delete-user,reset-password,add-user}-dialog.tsx`, `components/users/users-card.tsx` (appels toast uniquement) |
+| 2 Auth          | `components/auth/login-form.tsx`, `components/auth/setup-form.tsx`                                                                                                                                                                                                    |
+| 3 Password card | `components/auth/password-change-card.tsx`                                                                                                                                                                                                                            |
+| 4 Settings form | `components/settings-form.tsx`                                                                                                                                                                                                                                        |
+| 5 Alerts card   | `components/settings/alerts-card.tsx`                                                                                                                                                                                                                                 |
+| 6 Dialogs users | `components/users/{add-user,delete-user,reset-password}-dialog.tsx`                                                                                                                                                                                                   |
+| 7 Users table   | `components/users/users-card.tsx`                                                                                                                                                                                                                                     |
+| 8 Topbar        | `components/topbar.tsx`                                                                                                                                                                                                                                               |
+| 9 Pages         | `app/changelog/page.tsx`, `app/settings/page.tsx`                                                                                                                                                                                                                     |
+| 10 Cleanup      | `components/ui/*` (suppression), `package.json`, `app/globals.css`                                                                                                                                                                                                    |
+| 11 Validation   | aucun nouveau fichier                                                                                                                                                                                                                                                 |
 
 ---
 
@@ -59,19 +59,18 @@ rtk proxy sh -c "cat node_modules/@astryxdesign/core/dist/Toast/ToastViewport.d.
 ```
 
 Expected: props de positionnement (attendu `position?: ToastPosition`). Adapter le Step 2 si besoin.
-
 - [ ] **Step 2: Remplacer le Toaster dans `app/layout.tsx`**
 
 Supprimer `import { Toaster } from 'sonner';` et remplacer :
 
 ```tsx
-          <Toaster position="top-right" richColors closeButton />
+<Toaster position="top-right" richColors closeButton />;
 ```
 
 par :
 
 ```tsx
-          <ToastViewport position="topEnd" />
+<ToastViewport position="topEnd" />;
 ```
 
 avec l'import :
@@ -81,7 +80,6 @@ import { ToastViewport } from '@astryxdesign/core/Toast';
 ```
 
 Note : `ToastViewport` est un composant client ; si `app/layout.tsx` (Server Component) refuse de le rendre directement, le déplacer dans `components/astryx-providers.tsx` (client) à la place, après `{children}` - documenter le choix dans le rapport.
-
 - [ ] **Step 3: Convertir les appels dans les 7 fichiers**
 
 Dans chaque fichier : supprimer `import { toast } from 'sonner';`, ajouter `import { useToast } from '@astryxdesign/core/Toast';` et `const toast = useToast();` en tête du composant qui contient les handlers. Conversions mécaniques :
@@ -99,7 +97,6 @@ toast({ body: err instanceof Error ? err.message : 'Save failed', type: 'error' 
 ```
 
 Attention : `useToast` est un hook - il doit être appelé au niveau du composant, pas dans un handler ni dans une fonction utilitaire hors composant. Si un fichier appelle `toast` hors composant React, remonter le hook dans le composant appelant et passer la fonction en argument.
-
 - [ ] **Step 4: Vérifier qu'aucun usage sonner ne reste dans le code**
 
 ```bash
@@ -107,7 +104,6 @@ rtk grep -rn "from 'sonner'" app components
 ```
 
 Expected: aucune occurrence. (`lib/generated/releases.json` peut mentionner sonner : fichier généré de notes de release, hors périmètre.) Ne PAS retirer sonner de package.json ici (Task 10).
-
 - [ ] **Step 5: Gates et vérification comportementale**
 
 ```bash
@@ -116,7 +112,6 @@ rtk proxy bun test
 ```
 
 Expected: PASS. Les toasts d'erreur ne s'auto-ferment pas par défaut (comportement Astryx voulu : `isAutoHide` défaut false pour error) - c'est un changement accepté vs sonner, le noter dans le rapport. Vérification de déclenchement réel différée à la passe visuelle (pages authentifiées).
-
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -142,11 +137,9 @@ rtk proxy sh -c "cat node_modules/@astryxdesign/core/dist/Banner/Banner.d.ts | h
 ```
 
 Expected: valeurs de `BannerStatus` (attendu au moins error/warning/info/success) et directions de FormLayout.
-
 - [ ] **Step 2: Migrer `login-form.tsx`**
 
 Mapping (logique de soumission, better-auth et redirections inchangées) :
-
 - `Card`/`CardContent`/`CardHeader`/`CardTitle` -> `Card` + `Heading level={1}` (c'est le titre principal de la page login) + divs, idiome phase 1.
 - `Input` + `Label htmlFor` -> `TextInput label="Email" type="email" ...` (le label intégré remplace le Label séparé ; supprimer les `id`/`htmlFor` devenus inutiles).
 - `PasswordInput` -> `TextInput label="Password" type="password"`. Si l'ancien composant avait un bouton afficher/masquer, vérifier si `TextInput` l'offre (`hasClear`/variantes dans le .d.ts) ; sinon le perdre et le noter au rapport (écart mineur accepté).
@@ -156,7 +149,6 @@ Mapping (logique de soumission, better-auth et redirections inchangées) :
 - [ ] **Step 3: Migrer `setup-form.tsx`**
 
 Même mapping que le Step 2 (email, password, confirmation password, erreurs). La logique de création du premier compte ne change pas.
-
 - [ ] **Step 4: Vérifier sur la page publique**
 
 ```bash
@@ -166,7 +158,6 @@ sleep 4 && rtk curl http://localhost:3003/login | grep -c "astryx"
 ```
 
 Expected: lint/tests PASS ; le HTML de /login contient des classes Astryx et plus aucune classe des composants shadcn migrés. Tuer le serveur. Soumission réelle du formulaire vérifiable en Task 11 (axe + navigateur).
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -187,7 +178,6 @@ rtk git add components/auth/login-form.tsx components/auth/setup-form.tsx && rtk
 - [ ] **Step 1: Migrer le fichier**
 
 Mapping identique à la Task 2 : Card+Header/Title -> Card + `Heading level={2}` (c'est une carte de la page settings, pas un titre de page), 3 PasswordInput -> TextInput type password (current/new/confirm), Button submit avec `isLoading`, erreurs -> Banner status="error". Validation côté client (longueur, correspondance) inchangée.
-
 - [ ] **Step 2: Gates et commit**
 
 ```bash
@@ -211,7 +201,6 @@ Expected: PASS. Page authentifiée : vérification statique seulement, le noter.
 - [ ] **Step 1: Migrer le fichier**
 
 Deux sections (intervalle de mesure, rétention). Mapping : Input+Label -> TextInput (garder `inputMode`/patterns actuels s'ils existent et que TextInput les propage via rest ; sinon noter la perte), Select -> Selector (options en strings, comme le pageSize de history-table), Button submit avec isLoading. La logique de fetch PATCH et la gestion d'erreur par champ (`status={{type:'error', message}}` sur le champ concerné si le code actuel le fait par champ) inchangées.
-
 - [ ] **Step 2: Gates et commit**
 
 ```bash
@@ -237,11 +226,9 @@ rtk proxy sh -c "cat node_modules/@astryxdesign/core/dist/Switch/Switch.d.ts | h
 ```
 
 Expected: confirmer `value: boolean` (convention Astryx : composants contrôlés par `value`, pas `checked`).
-
 - [ ] **Step 2: Migrer le fichier**
 
 Mapping : shadcn Switch (`checked`/`onCheckedChange`) -> Astryx Switch (`value`/`onChange(checked)`) avec son `label` intégré (supprimer le Label séparé) ; Inputs SMTP/destinataires -> TextInput (type email où pertinent) ; Alert de statut -> Banner ; Badge éventuels -> Token. Les 44px tactiles s'appliquent au Switch si sa taille est sous le plancher (wrapper `[&_button]`/`[&_input]` selon le DOM rendu - vérifier). Logique de test SMTP et de sauvegarde inchangée.
-
 - [ ] **Step 3: Gates et commit**
 
 ```bash
@@ -269,7 +256,6 @@ rtk proxy sh -c "cat node_modules/@astryxdesign/core/dist/Dialog/*.d.ts | head -
 ```
 
 Expected: props exactes (`variant`, `purpose`, `position`) et sous-composants éventuels (DialogHeader/DialogBody/DialogFooter ou children libres). Adapter le pattern du Step 2.
-
 - [ ] **Step 2: Convertir `add-user-dialog.tsx` (pattern de référence pour les trois)**
 
 ```tsx
@@ -302,15 +288,12 @@ Expected: props exactes (`variant`, `purpose`, `position`) et sous-composants é
 ```
 
 `DialogClose` disparaît (le Dialog Astryx gère Escape/backdrop) ; `open` -> `isOpen` ; le titre doit rester lié au dialog pour l'accessible name (vérifier si Dialog pose `aria-labelledby` automatiquement ou s'il faut `aria-label` sur le Dialog - le .d.ts du Step 1 le dit).
-
 - [ ] **Step 3: Convertir `delete-user-dialog.tsx` et `reset-password-dialog.tsx`**
 
 Même pattern. delete-user est une confirmation destructive : le bouton principal passe en `variant="destructive"` avec `label="Delete user"`. reset-password a un état de résultat (mot de passe généré affiché) : le conserver tel quel dans les children.
-
 - [ ] **Step 4: Vérification de rendu statique des trois dialogs**
 
 Script jetable `renderToStaticMarkup` (supprimé après) rendant chaque dialog avec `open={true}` dans le Theme : asserter la présence du Heading, des champs et des boutons. Si `<dialog>` natif ne se rend pas en SSR statique (showModal étant impératif), utiliser `isInline` UNIQUEMENT dans le script de test jetable (jamais dans le code de prod) et le documenter.
-
 - [ ] **Step 5: Gates et commit**
 
 ```bash
@@ -334,7 +317,6 @@ Expected: PASS. Re-test manuel focus/Escape différé à la passe visuelle (spec
 - [ ] **Step 1: Lire `components/history-table.tsx` comme référence du pattern**
 
 C'est la migration jumelle déjà validée : colonnes data-driven, `idKey`, widths. La table users est plus simple (peu de lignes, pas de pagination serveur a priori - vérifier dans le fichier actuel ce que TanStack y fait réellement et ne reproduire QUE ça).
-
 - [ ] **Step 2: Migrer le fichier**
 
 - ColumnDef TanStack -> `TableColumn` avec `renderCell` et `width` explicites dès le départ (leçon phase 1 : `proportional(2)` pour la colonne principale email/nom, `pixel()` pour les colonnes d'actions).
@@ -348,7 +330,6 @@ rtk grep -rn "@tanstack" app components lib
 ```
 
 Expected: zéro occurrence. Ne PAS retirer la dépendance ici (Task 10).
-
 - [ ] **Step 3: Gates et commit**
 
 ```bash
@@ -374,7 +355,6 @@ rtk proxy sh -c "cat node_modules/@astryxdesign/core/dist/DropdownMenu/*.d.ts | 
 ```
 
 Expected: signature de `button` (ReactNode ou props de bouton ?), composants d'item (MenuItem/DropdownMenuItem), support des séparateurs, des labels de section et d'un état coché (le menu thème actuel affiche un Check sur le thème actif - trouver l'équivalent : item avec `icon`, `isSelected`, ou role menuitemradio).
-
 - [ ] **Step 2: Migrer le menu utilisateur et le menu thème**
 
 - `DropdownMenu`+`DropdownMenuTrigger asChild`+`DropdownMenuContent` -> `DropdownMenu button={...} placement="..."` avec les items Astryx en children.
@@ -385,7 +365,6 @@ Expected: signature de `button` (ReactNode ou props de bouton ?), composants d'i
 - [ ] **Step 3: Migrer le reste du fichier**
 
 Badges/indicateurs -> Token ; boutons -> Button/IconButton avec `label`. Le déclenchement de mesure (bouton Play) garde son état `isLoading`/disabled pendant un run. Ne pas toucher au `<header>` sémantique ni au skip-link.
-
 - [ ] **Step 4: Vérification renforcée (surface la plus visible)**
 
 ```bash
@@ -395,7 +374,6 @@ sleep 4 && rtk curl -s http://localhost:3003/login | grep -o "<header[^>]*>" | h
 ```
 
 Plus script jetable `renderToStaticMarkup` de la topbar (Theme + ThemeProvider mockée si nécessaire) : asserter le skip-link, le bouton menu avec accessible name, et l'absence de classes shadcn. Tuer le serveur. Menus ouverts/fermés : passe visuelle Task 11.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -417,7 +395,6 @@ rtk git add components/topbar.tsx && rtk git commit -m "feat: migrate topbar to 
 - [ ] **Step 1: Migrer les deux pages**
 
 ATTENTION : `app/changelog/page.tsx` et `app/settings/page.tsx` sont probablement des Server Components (pas de `'use client'`). Vérifier que les composants Astryx utilisés y sont RSC-compatibles (la doc Astryx a une page RSC-Utilities ; Card/Heading/Token rendent du DOM statique et devraient passer). Si un composant exige le client, extraire un petit composant client plutôt que de marquer la page entière `'use client'`. Mapping standard sinon : Card+Heading, Badge -> Token (versions du changelog), Alert -> Banner.
-
 - [ ] **Step 2: Vérifier qu'il ne reste aucun consommateur shadcn**
 
 ```bash
@@ -425,7 +402,6 @@ rtk grep -rn "from '@/components/ui/" app components | grep -v "^components/ui/"
 ```
 
 Expected: zéro occurrence.
-
 - [ ] **Step 3: Gates et commit**
 
 ```bash
@@ -462,7 +438,6 @@ rtk proxy bun remove radix-ui class-variance-authority tw-animate-css @tanstack/
 ```
 
 Expected: le grep préalable retourne zéro occurrence AVANT le rm (sinon STOP : un fichier a été oublié, le migrer d'abord). Attention : `tailwind-merge` et `clsx` restent (utilisés par `cn()` dans `lib/utils.ts`, qui sert toujours aux className Tailwind).
-
 - [ ] **Step 2: Backlog trivial - layer properties et script theme:build**
 
 Dans `app/globals.css:5`, ajouter `properties` en tête de la déclaration d'ordre :
@@ -478,7 +453,6 @@ Dans `package.json` scripts :
 ```
 
 (Vérifier la commande exacte utilisée par le commit 98902ee de la phase 1 : `rtk git show 98902ee --stat` et reprendre la même invocation. Lancer une fois `rtk proxy bun run theme:build` et vérifier par `rtk git diff lib/` que la sortie est stable - aucune diff attendue.)
-
 - [ ] **Step 3: Purge des styles morts dans globals.css**
 
 Chercher les classes définies pour les composants supprimés :
@@ -488,7 +462,6 @@ rtk grep -n "kpi-flash\|live-glow\|label-eyebrow\|skip-link\|app-backdrop\|pulse
 ```
 
 Pour chacune, vérifier qu'un fichier `.tsx` la référence encore (`rtk grep -rn "<classe>" app components`) ; supprimer celles qui ne sont plus référencées. Prudence : la plupart sont encore utilisées par les composants migrés - ne supprimer que les orphelines avérées.
-
 - [ ] **Step 4: Knip et gates complets**
 
 ```bash
@@ -497,7 +470,6 @@ rtk proxy bun lint && rtk proxy bun test && rtk npm run build
 ```
 
 Expected: knip sans nouvelle dépendance morte (`@astryxdesign/cli` est maintenant utilisé par theme:build) ; lint/tests/build PASS.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -521,7 +493,6 @@ rtk proxy bun lint && rtk proxy bun test && rtk npm run build
 ```
 
 Expected: tout PASS. Le poids CSS (surveillé depuis la phase 1 : 229KB) sera comparé par le Lighthouse CI au push - noter le chiffre du rapport dans le commit de merge ou la PR.
-
 - [ ] **Step 2: Audit accessibilité sur les pages publiques**
 
 ```bash
@@ -531,11 +502,9 @@ rtk proxy bunx @axe-core/cli http://localhost:3003/changelog --tags wcag2a,wcag2
 ```
 
 Expected: aucune violation NOUVELLE vs main (le contraste du bouton login préexiste, déjà documenté en phase 1). Arrêter le serveur. Attention à l'épinglage d'axe-core/cli (quirk bunx rencontré en phase 1, voir task-9-report.md).
-
 - [ ] **Step 3: Préparer la passe visuelle utilisateur**
 
 Relancer le serveur dev et lister pour l'utilisateur les écrans à vérifier : /login, /setup (si accessible), dashboard (déjà validé phase 1 - vérifier l'absence de régression), /settings (formulaires, switch, cartes, les 3 dialogs, table users), /changelog, topbar (menus, thème, mobile), toasts (sauvegarder un réglage). Rappeler les 6 modales à tester au clavier (focus trap, Escape, retour de focus).
-
 - [ ] **Step 4: Commit final si corrections**
 
 ```bash

@@ -24,20 +24,20 @@
 
 ## File Structure
 
-| Fichier | Rôle |
-|---|---|
-| Create: `lib/astryx-theme.ts` | Thème custom `defineTheme`, source unique des overrides de tokens |
-| Create: `components/astryx-providers.tsx` | Provider client : `Theme` (pont next-themes) + `LinkProvider` |
-| Create: `components/time-range-picker.test.tsx` | Test de rendu du nouveau TimeRangePicker |
-| Modify: `app/globals.css` | Imports CSS Astryx ; suppression du CSS `.segmented-*` orphelin |
-| Modify: `app/layout.tsx` | Branche `AstryxProviders` dans l'arbre |
-| Modify: `components/dashboard.tsx` | Card/Skeleton Astryx (fallback du chart) |
-| Modify: `components/kpi-cards.tsx` | Card/Heading Astryx |
-| Modify: `components/time-range-picker.tsx` | Réécriture sur SegmentedControl |
-| Modify: `components/history-chart.tsx` | Card/Heading/Button Astryx, Recharts intact |
-| Modify: `components/table-filters.tsx` | Découplage TanStack (interface contrôlée) + inputs Astryx |
-| Modify: `components/history-table.tsx` | Table Astryx data-driven, retrait TanStack |
-| Modify: `package.json` | + packages Astryx, - `@tanstack/react-table` |
+| Fichier                                         | Rôle                                                              |
+| ----------------------------------------------- | ----------------------------------------------------------------- |
+| Create: `lib/astryx-theme.ts`                   | Thème custom `defineTheme`, source unique des overrides de tokens |
+| Create: `components/astryx-providers.tsx`       | Provider client : `Theme` (pont next-themes) + `LinkProvider`     |
+| Create: `components/time-range-picker.test.tsx` | Test de rendu du nouveau TimeRangePicker                          |
+| Modify: `app/globals.css`                       | Imports CSS Astryx ; suppression du CSS `.segmented-*` orphelin   |
+| Modify: `app/layout.tsx`                        | Branche `AstryxProviders` dans l'arbre                            |
+| Modify: `components/dashboard.tsx`              | Card/Skeleton Astryx (fallback du chart)                          |
+| Modify: `components/kpi-cards.tsx`              | Card/Heading Astryx                                               |
+| Modify: `components/time-range-picker.tsx`      | Réécriture sur SegmentedControl                                   |
+| Modify: `components/history-chart.tsx`          | Card/Heading/Button Astryx, Recharts intact                       |
+| Modify: `components/table-filters.tsx`          | Découplage TanStack (interface contrôlée) + inputs Astryx         |
+| Modify: `components/history-table.tsx`          | Table Astryx data-driven, retrait TanStack                        |
+| Modify: `package.json`                          | + packages Astryx, - `@tanstack/react-table`                      |
 
 ---
 
@@ -59,7 +59,6 @@ rtk proxy bun add --exact --dev @astryxdesign/cli
 ```
 
 Expected: `package.json` contient les trois packages sans `^`.
-
 - [ ] **Step 2: Vérifier la structure du package (sous-chemins d'import)**
 
 ```bash
@@ -68,7 +67,6 @@ rtk proxy cat node_modules/@astryxdesign/core/package.json | head -60
 ```
 
 Expected: un champ `exports` exposant `./astryx.css`, `./Button`, `./Card`, `./Table`, `./theme`, etc. Noter les chemins exacts si différents de ceux utilisés dans les tâches suivantes (p. ex. `./css/astryx.css`) et les reporter.
-
 - [ ] **Step 3: Ajouter les imports CSS dans `app/globals.css`**
 
 Remplacer :
@@ -88,7 +86,6 @@ par :
 ```
 
 Ne PAS importer `reset.css` (voir Global Constraints).
-
 - [ ] **Step 4: Vérifier que rien ne casse visuellement**
 
 ```bash
@@ -96,7 +93,6 @@ rtk npm run dev
 ```
 
 Ouvrir http://localhost:3003 (dashboard), /login et /settings. Expected: rendu strictement identique à `main` (le CSS Astryx est chargé mais aucun composant Astryx n'est rendu). Vérifier aussi le dark mode via le toggle de la topbar.
-
 - [ ] **Step 5: Lint et commit**
 
 ```bash
@@ -128,7 +124,6 @@ rtk proxy sh -c "grep -oE -- '--[a-z0-9-]+' node_modules/@astryxdesign/theme-neu
 ```
 
 Expected: signature de `defineTheme`, valeurs admises du prop `mode` du composant `Theme` (attendu : `'light' | 'dark' | 'system'`), et la liste réelle des noms de tokens CSS. Ajuster les noms de tokens du Step 2 avec ceux listés (les noms documentés sont `--color-accent`, `--color-surface`, `--radius-container` ; compléter background/border/typo avec les noms réels trouvés).
-
 - [ ] **Step 2: Créer `lib/astryx-theme.ts`**
 
 Les valeurs oklch reprennent exactement `app/globals.css` (`:root` et `.dark`), en tuples `[light, dark]` :
@@ -145,14 +140,13 @@ export const astryxTheme = defineTheme({
     '--color-background': ['oklch(0.99 0.002 250)', 'oklch(0.135 0.01 260)'],
     '--color-border': ['oklch(0.922 0 0)', 'oklch(1 0 0 / 10%)'],
     '--radius-container': '0.625rem',
-    '--font-family-base': "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
-    '--font-family-mono': "var(--font-mono), ui-monospace, monospace",
+    '--font-family-base': 'var(--font-sans), ui-sans-serif, system-ui, sans-serif',
+    '--font-family-mono': 'var(--font-mono), ui-monospace, monospace',
   },
 });
 ```
 
 Remplacer les clés par les noms réels relevés au Step 1 si différents. `var(--font-sans)` / `var(--font-mono)` sont fournis par next/font dans `app/layout.tsx` (Instrument Sans, JetBrains Mono).
-
 - [ ] **Step 3: Créer `components/astryx-providers.tsx`**
 
 ```tsx
@@ -190,23 +184,23 @@ import { AstryxProviders } from '@/components/astryx-providers';
 Et remplacer :
 
 ```tsx
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <FocusMainOnNavigate />
-          <SessionShell>{children}</SessionShell>
-          <Toaster position="top-right" richColors closeButton />
-        </ThemeProvider>
+<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  <FocusMainOnNavigate />
+  <SessionShell>{children}</SessionShell>
+  <Toaster position="top-right" richColors closeButton />
+</ThemeProvider>;
 ```
 
 par :
 
 ```tsx
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AstryxProviders>
-            <FocusMainOnNavigate />
-            <SessionShell>{children}</SessionShell>
-            <Toaster position="top-right" richColors closeButton />
-          </AstryxProviders>
-        </ThemeProvider>
+<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  <AstryxProviders>
+    <FocusMainOnNavigate />
+    <SessionShell>{children}</SessionShell>
+    <Toaster position="top-right" richColors closeButton />
+  </AstryxProviders>
+</ThemeProvider>;
 ```
 
 - [ ] **Step 5: Vérifier le rendu et l'hydratation**
@@ -216,7 +210,6 @@ rtk npm run dev
 ```
 
 Expected: dashboard identique, pas d'erreur d'hydratation en console, l'attribut `data-astryx-theme` est présent sur l'élément racine (inspecter le DOM). Basculer light/dark via la topbar : pas de flash, pas d'erreur.
-
 - [ ] **Step 6: Lint et commit**
 
 ```bash
@@ -246,7 +239,6 @@ rtk proxy sh -c "find node_modules/@astryxdesign/core -name '*.d.ts' -path '*Seg
 ```
 
 Expected: props du `SegmentedControl` (attendu : `value`, `onChange`, items via children `SegmentedControlItem {value, label}` ou prop `options`). Adapter le Step 2 à la signature réelle.
-
 - [ ] **Step 2: Écrire le test de rendu (échec attendu)**
 
 Créer `components/time-range-picker.test.tsx` :
@@ -275,7 +267,6 @@ rtk proxy bun test components/time-range-picker.test.tsx
 ```
 
 Expected: PASS trivial sur l'ancien composant (il rend déjà `aria-pressed`) ou FAIL selon l'implémentation SSR ; ce test verrouille le contrat pendant la réécriture. Si `renderToStaticMarkup` échoue car le SegmentedControl exige le contexte `Theme`, wrapper le rendu du test dans `<Theme theme={astryxTheme} mode="light">` (imports depuis `@astryxdesign/core/theme` et `@/lib/astryx-theme`).
-
 - [ ] **Step 3: Réécrire `components/time-range-picker.tsx`**
 
 Remplacer tout le fichier par :
@@ -321,7 +312,6 @@ export function TimeRangePicker({
 ```
 
 Adapter noms/props à la signature relevée au Step 1 (p. ex. `options={RANGES}` au lieu de children). La gestion manuelle de la pill animée (refs, useLayoutEffect, ~90 lignes) disparaît.
-
 - [ ] **Step 4: Supprimer le CSS orphelin**
 
 Dans `app/globals.css`, supprimer le bloc commençant à `/* ---- Underline glide for segmented controls ---- */` (lignes ~294-320) : règles `.segmented-track` et `.segmented-pill`. Vérifier qu'aucun autre fichier ne les référence :
@@ -331,7 +321,6 @@ rtk grep -rn "segmented-track\|segmented-pill" app components lib
 ```
 
 Expected: aucune occurrence restante.
-
 - [ ] **Step 5: Tester**
 
 ```bash
@@ -340,7 +329,6 @@ rtk npm run dev
 ```
 
 Expected: test PASS. En manuel sur http://localhost:3003 : cliquer 6h/7d/30d change le chart et met à jour `?range=` dans l'URL ; navigation clavier (flèches ou tab) fonctionnelle ; rendu correct en light et dark.
-
 - [ ] **Step 6: Lint et commit**
 
 ```bash
@@ -400,7 +388,6 @@ par :
 ```
 
 (Le Skeleton Astryx est full-width par défaut ; `height` en pixels remplace `h-64` = 16rem = 256px.)
-
 - [ ] **Step 2: Vérifier**
 
 ```bash
@@ -408,7 +395,6 @@ rtk npm run dev
 ```
 
 Expected: recharger le dashboard avec le cache vidé (ou throttling réseau) montre brièvement le skeleton dans une Card avant le chart. Aucun autre changement visuel (le heading "Overview" et la structure ne bougent pas).
-
 - [ ] **Step 3: Lint et commit**
 
 ```bash
@@ -483,7 +469,6 @@ par :
 et fermer en remplaçant `</CardTitle>` par `</Heading>` et `</CardHeader>` par `</div>`. Enfin remplacer `<CardContent className="px-0 pb-0">` par `<div>` et son `</CardContent>` par `</div>`.
 
 Le contenu interne (valeur, DeltaBadge, Sparkline, logique de flash) ne change pas.
-
 - [ ] **Step 3: Vérifier**
 
 ```bash
@@ -491,7 +476,6 @@ rtk npm run dev
 ```
 
 Expected: les 3 cartes KPI ont le même layout qu'avant (eyebrow + valeur mono + delta + sparkline en bas), fonds/bordures cohérents en light et dark, l'animation de flash au retour d'une mesure fonctionne toujours (attendre un run ou déclencher une mesure). Si la typo du `Heading` Astryx écrase `label-eyebrow`, garder la classe et vérifier qu'elle gagne (elle est chargée après dans la cascade Tailwind utilities).
-
 - [ ] **Step 4: Lint et commit**
 
 ```bash
@@ -532,7 +516,6 @@ import { Heading } from '@astryxdesign/core/Text';
 - [ ] **Step 2: Migrer l'état vide (lignes ~72-94)**
 
 Même transformation que Task 5 : `CardHeader` → `div`, `CardTitle as="h2"` → `Heading level={2}` (mêmes classes conservées), `CardContent` → `div`. La Card englobante garde ses defaults Astryx (pas de classes shadcn à reporter ici).
-
 - [ ] **Step 3: Migrer la Card principale (lignes ~101-128)**
 
 Remplacer :
@@ -557,21 +540,20 @@ par :
 Même transformation header/title/content que Task 5. Le bouton "View as table" est un Button Astryx à `label` (pas de children) :
 
 ```tsx
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<TableIcon aria-hidden />}
-            label={showTable ? 'Hide table' : 'View as table'}
-            aria-pressed={showTable}
-            aria-controls="chart-data-table"
-            onClick={() => setShowTable((v) => !v)}
-          />
+<Button
+  variant="ghost"
+  size="sm"
+  icon={<TableIcon aria-hidden />}
+  label={showTable ? 'Hide table' : 'View as table'}
+  aria-pressed={showTable}
+  aria-controls="chart-data-table"
+  onClick={() => setShowTable((v) => !v)}
+/>;
 ```
 
 (Astryx n'a pas de size `xs` documentée : `sm` est la plus proche. Vérifier `Button.d.ts` si doute : `rtk proxy sh -c "find node_modules/@astryxdesign/core -name '*.d.ts' -path '*Button*' -exec cat {} +"`.)
 
 Tout le rendu Recharts (SVG, tooltips, axes) et `buildSummary` restent intacts.
-
 - [ ] **Step 4: Vérifier**
 
 ```bash
@@ -579,7 +561,6 @@ rtk npm run dev
 ```
 
 Expected: chart identique, légende intacte, toggle "View as table" affiche/masque la table de données accessible (`chart-data-table`), effet `live-glow` visible pendant une mesure, état vide correct (tester avec `?range=6h` si aucune donnée récente).
-
 - [ ] **Step 5: Lint et commit**
 
 ```bash
@@ -647,11 +628,9 @@ function withTimeRange(current: TableFiltersType, next: TimeRange): TableFilters
 ```
 
 Chaque site d'appel devient `onChange(withNumericRange(value, 'download', {...}))` (idem `upload`, `latency`, `time`, et affectation directe pour `server` et `status`). L'état courant se lit depuis `value.download`, `value.time`, etc. au lieu de `column.getFilterValue()`. Les helpers de parsing (`parseNumber`, `parseTime`, `toDateTimeLocal`) et les résumés (`formatNumericSummary`, ...) ne changent pas.
-
 - [ ] **Step 2: Migrer les contrôles vers Astryx**
 
 Mapping systématique dans tout le fichier :
-
 - `<Input ... />` + `<Label htmlFor=...>` → `<TextInput label="..." value={...} onChange={(v) => ...} size="sm" />`. Le `onChange` Astryx reçoit la valeur directement (pas d'event) : `onChange={(v) => onChange(withNumericRange(value, 'download', { ...cur, min: parseNumber(v) }))}`. Les inputs datetime-local : vérifier si `TextInput` accepte `type="datetime-local"`, sinon utiliser `DateTimeInput` depuis `@astryxdesign/core/DateTimeInput` (lire son `.d.ts` : `rtk proxy sh -c "find node_modules/@astryxdesign/core -name '*.d.ts' -path '*DateTime*' -exec cat {} +"`).
 - Chips de filtres actifs `<Badge>` avec bouton `X` → `<Token label={summary} onRemove={() => onChange(...)} />` (le Token intègre le bouton de suppression accessible).
 - `<Button variant="ghost" size="...">` avec texte → `<Button variant="ghost" size="sm" label="..." onClick={...} />`.
@@ -665,7 +644,6 @@ rtk proxy bun tsc
 ```
 
 Expected: les seules erreurs restantes pointent vers `history-table.tsx` (qui passe encore `table={...}`) : c'est attendu, Task 8 le corrige. Aucune erreur dans `table-filters.tsx` lui-même.
-
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -693,7 +671,6 @@ rtk proxy sh -c "find node_modules/@astryxdesign/core -name '*.d.ts' -path '*Tab
 ```
 
 Expected: signatures de `TableProps` (dont la prop d'accessible name : `aria-label` ou `caption`), `TableColumn`, `useTableSortable`, `useTableSortableState` (tri contrôlé). Adapter le code du Step 2 aux signatures réelles, en particulier le câblage du tri contrôlé.
-
 - [ ] **Step 2: Réécrire le state et le rendu**
 
 Supprimer tous les imports `@tanstack/react-table`, `flexRender` inclus, et les imports shadcn (`Badge`, `Button`, `Card...`, `Select...`, `Table...`). Nouveaux imports :
@@ -738,7 +715,12 @@ function statusToken(status: MeasurementDto['status']) {
 }
 
 const columns: TableColumn<MeasurementDto>[] = [
-  { key: 'timestamp', header: 'Time', sortable: { sortKey: 'timestamp' }, renderCell: (m) => <TimeCell ts={m.timestamp} /> },
+  {
+    key: 'timestamp',
+    header: 'Time',
+    sortable: { sortKey: 'timestamp' },
+    renderCell: (m) => <TimeCell ts={m.timestamp} />,
+  },
   {
     key: 'download',
     header: 'Download',
@@ -751,7 +733,12 @@ const columns: TableColumn<MeasurementDto>[] = [
     sortable: { sortKey: 'uploadMbps' },
     renderCell: (m) => <span className="font-mono text-speed-up">{formatMbps(m.uploadMbps)}</span>,
   },
-  { key: 'latency', header: 'Latency (u/l)', sortable: { sortKey: 'latencyLoadedMs' }, renderCell: (m) => <LatencyCell m={m} /> },
+  {
+    key: 'latency',
+    header: 'Latency (u/l)',
+    sortable: { sortKey: 'latencyLoadedMs' },
+    renderCell: (m) => <LatencyCell m={m} />,
+  },
   {
     key: 'server',
     header: 'Server',
@@ -857,7 +844,6 @@ return (
 avec `firstRow`/`lastRow` recalculés depuis `page`/`pageSize` (formules identiques à l'existant, `pageIndex` = `page - 1`). Les imports lucide `ArrowDown/ArrowUp/ArrowUpDown` sautent (les indicateurs de tri viennent de la Table Astryx) ; `CircleCheck/CircleAlert/OctagonAlert` aussi (remplacés par les couleurs de Token).
 
 Note TypeScript : `MeasurementDto` est un type alias objet, il satisfait la contrainte `T extends Record<string, unknown>` de la Table. Si tsc refuse, typer `Table` explicitement : `<Table<MeasurementDto> ... />`.
-
 - [ ] **Step 3: Retirer TanStack des dépendances**
 
 ```bash
@@ -866,7 +852,6 @@ rtk proxy bun remove @tanstack/react-table
 ```
 
 Expected: le grep ne montre plus aucune occurrence avant le remove ; `package.json` et `bun.lock` mis à jour.
-
 - [ ] **Step 4: Vérifier le comportement complet**
 
 ```bash
@@ -876,7 +861,6 @@ rtk npm run dev
 ```
 
 Expected: lint et tests PASS. En manuel : tri par colonne (Time, Download, Upload, Latency, Status) déclenche un refetch serveur trié et revient page 1 ; `aria-sort` présent sur la colonne active (inspecter le DOM) ; filtres (plage numérique, dates, serveur, statuts) refetchent et les chips Token se suppriment ; pagination et taille de page fonctionnent ; le live-update (nouvelle mesure) rafraîchit la table via `refreshSignal`.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -903,7 +887,6 @@ rtk grep -rn "@/components/ui/" components/dashboard.tsx components/kpi-cards.ts
 ```
 
 Expected: aucune occurrence.
-
 - [ ] **Step 2: Vérifier les dépendances et exports morts**
 
 ```bash
@@ -911,7 +894,6 @@ rtk proxy bunx knip
 ```
 
 Expected: pas de nouveau finding lié à la migration (les composants `components/ui/*` encore utilisés par la topbar/footer/autres pages ne doivent PAS être signalés ; si `select.tsx` ou `table.tsx` deviennent orphelins, les laisser : ils partent avec la migration complète, le noter dans le commit de la phase suivante).
-
 - [ ] **Step 3: Build de production et tests**
 
 ```bash
@@ -921,7 +903,6 @@ rtk npm run build
 ```
 
 Expected: tout PASS, build Next.js sans erreur ni warning nouveau. Le poids de page sera comparé à `main` par le Lighthouse CI existant (`.lighthouserc.json`) au push : vérifier son rapport une fois la branche poussée.
-
 - [ ] **Step 4: Audit accessibilité**
 
 ```bash
@@ -930,11 +911,9 @@ rtk proxy bunx @axe-core/cli http://localhost:3003 --tags wcag2a,wcag2aa,wcag21a
 ```
 
 Expected: 0 violation (même niveau que `main`). Arrêter le serveur ensuite.
-
 - [ ] **Step 5: Vérification visuelle finale light/dark**
 
 Sur http://localhost:3003 : comparer avec `main` (les deux modes) : KPI cards, chart, table, filtres, segmented control, états de chargement. Les écarts mineurs de rendu Astryx (ombres, focus rings) sont acceptables ; tout écart de layout ou de couleur de marque se corrige dans `lib/astryx-theme.ts`, jamais dans les composants.
-
 - [ ] **Step 6: Commit final si corrections**
 
 ```bash

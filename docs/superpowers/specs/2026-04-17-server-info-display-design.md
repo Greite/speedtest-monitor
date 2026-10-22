@@ -20,11 +20,11 @@ Out of scope:
 
 ### Fields captured from `fast --json`
 
-| Source key | Type | Example |
-|---|---|---|
+| Source key        | Type       | Example                  |
+| ----------------- | ---------- | ------------------------ |
 | `serverLocations` | `string[]` | `["Paris", "Frankfurt"]` |
-| `userLocation` | `string` | `"Paris, France"` |
-| `userIp` | `string` | `"81.x.x.x"` |
+| `userLocation`    | `string`   | `"Paris, France"`        |
+| `userIp`          | `string`   | `"81.x.x.x"`             |
 
 All three are already emitted in JSON mode unconditionally (`node_modules/fast-cli/distribution/ui.js:63-77`). The `--verbose` flag is not required.
 

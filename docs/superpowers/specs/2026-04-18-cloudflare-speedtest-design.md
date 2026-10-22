@@ -133,13 +133,13 @@ const engine = new Speedtest({
   autoStart: false,
   measurements: [
     { type: 'latency', numPackets: 20 },
-    { type: 'download',  bytes: 1e5,   count: 1 },   // warm-up
-    { type: 'download',  bytes: 1e6,   count: 8 },
-    { type: 'download',  bytes: 1e7,   count: 6 },
-    { type: 'download',  bytes: 2.5e7, count: 4, bypassMinDuration: true },
-    { type: 'upload',    bytes: 1e5,   count: 1 },
-    { type: 'upload',    bytes: 1e6,   count: 8 },
-    { type: 'upload',    bytes: 1e7,   count: 6 },
+    { type: 'download', bytes: 1e5, count: 1 }, // warm-up
+    { type: 'download', bytes: 1e6, count: 8 },
+    { type: 'download', bytes: 1e7, count: 6 },
+    { type: 'download', bytes: 2.5e7, count: 4, bypassMinDuration: true },
+    { type: 'upload', bytes: 1e5, count: 1 },
+    { type: 'upload', bytes: 1e6, count: 8 },
+    { type: 'upload', bytes: 1e7, count: 6 },
     { type: 'packetLoss', numPackets: 1000, responsesWaitTime: 3000 },
   ],
 });
@@ -153,13 +153,13 @@ rejects with `new Error('timed out')` so the existing runner
 ### Summary mapping
 
 ```ts
-downloadMbps      = summary.download / 1_000_000            // bps → Mbps, rounded upstream in UI formatters
-uploadMbps        = summary.upload   / 1_000_000
-latencyUnloadedMs = summary.latency                         // ms
-latencyLoadedMs   = max(summary.downLoadedLatency, summary.upLoadedLatency)
-bufferBloatMs     = max(latencyLoadedMs - latencyUnloadedMs, 0), Math.round
-jitterMs          = summary.jitter
-packetLossPct     = summary.packetLoss
+downloadMbps = summary.download / 1_000_000; // bps → Mbps, rounded upstream in UI formatters
+uploadMbps = summary.upload / 1_000_000;
+latencyUnloadedMs = summary.latency; // ms
+latencyLoadedMs = max(summary.downLoadedLatency, summary.upLoadedLatency);
+(bufferBloatMs = max(latencyLoadedMs - latencyUnloadedMs, 0)), Math.round;
+jitterMs = summary.jitter;
+packetLossPct = summary.packetLoss;
 ```
 
 ### User info mapping
@@ -167,11 +167,11 @@ packetLossPct     = summary.packetLoss
 `results.getUserInfo()` returns the client + edge metadata. We map:
 
 ```ts
-userLocation = [meta.city, meta.country].filter(Boolean).join(', ') || null
-userIp       = meta.clientIp ?? null
-userIsp      = meta.asOrganization ?? meta.isp ?? null
-coloCode     = meta.colo ?? null    // e.g. "CDG", "LAX", "FRA"
-serverLocations = coloCode ? [coloCode] : null
+userLocation = [meta.city, meta.country].filter(Boolean).join(', ') || null;
+userIp = meta.clientIp ?? null;
+userIsp = meta.asOrganization ?? meta.isp ?? null;
+coloCode = meta.colo ?? null; // e.g. "CDG", "LAX", "FRA"
+serverLocations = coloCode ? [coloCode] : null;
 ```
 
 `coloCode` is stored both as `serverLocations[0]` (to preserve the
@@ -230,11 +230,8 @@ Expected result:
 ## Testing
 
 Colocated `.test.ts` files under `lib/measurement/`:
-
-| File | Covers |
-|---|---|
-| `lib/measurement/cloudflare.test.ts` | Mock of `@cloudflare/speedtest` via `vi.mock`. Full summary → every field mapped correctly. Summary with `upload: undefined` → EngineResult with `uploadMbps: null`. `onError` path → Promise rejects. 60 s timeout → `engine.pause()` called and rejection with `timed out`. |
-| `lib/measurement/runner.test.ts` | Mock `runCloudflareSpeedTest`. Happy path → row inserted with `status='success'`, measurement + alert broadcast. Partial results → `status='error'` with the incomplete-results message. Engine error → `status='error'`. Timeout text triggers `status='timeout'`. Concurrent invocation throws `MeasurementBusyError`. |
+- `lib/measurement/cloudflare.test.ts`: Mock of `@cloudflare/speedtest` via `vi.mock`. Full summary → every field mapped correctly. Summary with `upload: undefined` → EngineResult with `uploadMbps: null`. `onError` path → Promise rejects. 60 s timeout → `engine.pause()` called and rejection with `timed out`.
+- `lib/measurement/runner.test.ts`: Mock `runCloudflareSpeedTest`. Happy path → row inserted with `status='success'`, measurement + alert broadcast. Partial results → `status='error'` with the incomplete-results message. Engine error → `status='error'`. Timeout text triggers `status='timeout'`. Concurrent invocation throws `MeasurementBusyError`.
 
 Existing tests not covered by this spec (`lib/fastcli/runner.test.ts`
 does not exist today, so nothing to migrate). Scheduler and API tests

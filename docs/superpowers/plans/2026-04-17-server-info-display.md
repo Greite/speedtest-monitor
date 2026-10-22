@@ -45,9 +45,7 @@ import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const measurements = sqliteTable('measurements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  timestamp: integer('timestamp', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+  timestamp: integer('timestamp', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
   downloadMbps: real('download_mbps'),
   uploadMbps: real('upload_mbps'),
   latencyUnloadedMs: real('latency_unloaded_ms'),
@@ -62,7 +60,6 @@ export const measurements = sqliteTable('measurements', {
 ```
 
 Leave `settings` table unchanged. Keep the existing exports at the bottom of the file.
-
 - [ ] **Step 2: Generate migration**
 
 Run:
@@ -71,7 +68,6 @@ bun run db:generate
 ```
 
 Expected: drizzle-kit creates `drizzle/0001_<adjective>_<noun>.sql` and updates `drizzle/meta/_journal.json` + a new `drizzle/meta/0001_snapshot.json`.
-
 - [ ] **Step 3: Inspect generated SQL**
 
 Open the newly created `drizzle/0001_*.sql`. It should contain three `ALTER TABLE measurements ADD COLUMN ...` statements for `server_locations`, `user_location`, `user_ip`. All three should be nullable (no `NOT NULL`). Example of what to expect:
@@ -83,7 +79,6 @@ ALTER TABLE `measurements` ADD `user_ip` text;
 ```
 
 If drizzle-kit generated anything else (dropping the table, recreating, etc.), stop and investigate - do not proceed.
-
 - [ ] **Step 4: Typecheck**
 
 Run:
@@ -92,7 +87,6 @@ bun run typecheck
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -163,7 +157,6 @@ const row = insertMeasurement({
 ```
 
 Do not touch `spawnFastCli` - `fast --json` already emits these fields unconditionally (verified in `node_modules/fast-cli/distribution/ui.js:63-77`).
-
 - [ ] **Step 2: Typecheck**
 
 Run:
@@ -172,7 +165,6 @@ bun run typecheck
 ```
 
 Expected: exits 0. If it complains about `insertMeasurement` signature, the Drizzle `$inferInsert` type should already include the new fields via the schema change from Task 1. If it still errors, confirm Task 1 was committed and the TypeScript server is seeing fresh types.
-
 - [ ] **Step 3: Lint**
 
 Run:
@@ -181,7 +173,6 @@ bun run lint
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -260,7 +251,6 @@ bun run test -- lib/types.test.ts
 ```
 
 Expected: FAIL. Errors like `Property 'serverLocations' is missing in type 'MeasurementDto'` or test assertions failing because the fields are `undefined` on the DTO.
-
 - [ ] **Step 3: Extend `MeasurementDto` and `toMeasurementDto`**
 
 Edit `lib/types.ts`. Replace the entire file with:
@@ -314,7 +304,6 @@ bun run test -- lib/types.test.ts
 ```
 
 Expected: PASS, 3 tests green.
-
 - [ ] **Step 5: Full test run + typecheck + lint**
 
 Run in sequence:
@@ -323,7 +312,6 @@ bun run test && bun run typecheck && bun run lint
 ```
 
 Expected: all exit 0. If any existing test broke because `MeasurementDto` was constructed elsewhere with the old shape, update it to include `serverLocations: null, userLocation: null, userIp: null` in fixtures.
-
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -345,7 +333,7 @@ Edit `components/history-table.tsx`. Two changes:
 **(a)** In the `<TableHeader>` block, add a new `<TableHead>` after the existing `<TableHead>Status</TableHead>`:
 
 ```tsx
-<TableHead>Server</TableHead>
+<TableHead>Server</TableHead>;
 ```
 
 **(b)** Update the empty-state `colSpan` from `5` to `6`:
@@ -353,15 +341,13 @@ Edit `components/history-table.tsx`. Two changes:
 ```tsx
 <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
   No measurements yet.
-</TableCell>
+</TableCell>;
 ```
 
 **(c)** In the row mapping, add a new `<TableCell>` after the status cell:
 
 ```tsx
-<TableCell className="text-xs text-muted-foreground">
-  {m.serverLocations?.join(' | ') ?? '-'}
-</TableCell>
+<TableCell className="text-xs text-muted-foreground">{m.serverLocations?.join(' | ') ?? '-'}</TableCell>;
 ```
 
 The complete row block should read:
@@ -374,20 +360,15 @@ The complete row block should read:
   <TableCell>
     <span className="inline-flex items-center gap-2">
       <span
-        className={cn(
-          'inline-block size-2 rounded-full',
-          levelColor[latencyLevel(m.latencyLoadedMs)],
-        )}
+        className={cn('inline-block size-2 rounded-full', levelColor[latencyLevel(m.latencyLoadedMs)])}
         aria-hidden
       />
       {formatMs(m.latencyUnloadedMs)} / {formatMs(m.latencyLoadedMs)}
     </span>
   </TableCell>
   <TableCell>{statusBadge(m.status)}</TableCell>
-  <TableCell className="text-xs text-muted-foreground">
-    {m.serverLocations?.join(' | ') ?? '-'}
-  </TableCell>
-</TableRow>
+  <TableCell className="text-xs text-muted-foreground">{m.serverLocations?.join(' | ') ?? '-'}</TableCell>
+</TableRow>;
 ```
 
 - [ ] **Step 2: Typecheck + lint**
@@ -398,7 +379,6 @@ bun run typecheck && bun run lint
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -487,9 +467,7 @@ function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) 
             color: 'var(--color-muted-foreground)',
           }}
         >
-          {point.serverLocations?.length ? (
-            <div>Server: {point.serverLocations.join(' | ')}</div>
-          ) : null}
+          {point.serverLocations?.length ? <div>Server: {point.serverLocations.join(' | ')}</div> : null}
           {point.userLocation ? <div>Client: {point.userLocation}</div> : null}
           {point.userIp ? <div>IP: {point.userIp}</div> : null}
         </div>
@@ -519,11 +497,10 @@ import {
 Replace the existing `<Tooltip contentStyle={...} labelStyle={...} />` with:
 
 ```tsx
-<Tooltip content={<ChartTooltip />} />
+<Tooltip content={<ChartTooltip />} />;
 ```
 
 Remove the old `contentStyle`/`labelStyle` inline props - our custom renderer owns the styling now.
-
 - [ ] **Step 4: Typecheck + lint**
 
 Run:
@@ -532,7 +509,6 @@ bun run typecheck && bun run lint
 ```
 
 Expected: exits 0. If `TooltipProps<number, string>` generic args cause issues (recharts 3 type quirks), widen to `TooltipProps<any, any>` or fall back to destructuring `props: any` for the tooltip renderer signature only - keep the internal cast `payload[0]?.payload as Point | undefined` intact.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -545,7 +521,6 @@ git commit -m "feat(ui): render server/client info in history chart tooltip"
 ## Task 6: End-to-end manual verification
 
 **Files:** none (verification only)
-
 - [ ] **Step 1: Run the dev server**
 
 ```bash
@@ -553,7 +528,6 @@ bun run dev
 ```
 
 Open http://localhost:3000 in a browser.
-
 - [ ] **Step 2: Trigger a measurement**
 
 In another terminal:
@@ -562,7 +536,6 @@ curl -X POST http://localhost:3000/api/measurements/run
 ```
 
 Wait ~90 seconds for completion (watch the WS `running` → `measurement` events in the UI's live state).
-
 - [ ] **Step 3: Verify the API response**
 
 ```bash
@@ -570,7 +543,6 @@ curl -s 'http://localhost:3000/api/measurements?range=1h' | jq '.measurements[0]
 ```
 
 Expected: the first object includes `serverLocations: ["..."]` (non-empty array), `userLocation: "..."` (non-empty string), `userIp: "..."` (non-empty string). If any are `null` on a successful run, fast-cli may have failed to scrape the DOM - retry once; if still null, flag for investigation.
-
 - [ ] **Step 4: Verify the UI**
 
 In the browser:
@@ -581,7 +553,6 @@ In the browser:
 - [ ] **Step 5: Check error path (optional, skip if not easily testable)**
 
 Temporarily rename the `fast` binary path or disconnect the network to force an error measurement, then confirm the resulting row has `status: 'error'` and all three new fields are `null` in the DB and UI. Revert.
-
 - [ ] **Step 6: Stop the dev server**
 
 Ctrl+C the `bun run dev` process.
@@ -593,7 +564,6 @@ No commit for this task (verification only).
 ## Post-implementation
 
 After all 6 tasks complete and are committed:
-
 1. **Push the branch** (if on a feature branch) and open a PR.
 2. **Consider README update**: the Configuration table and API section don't mention the new fields. A short addition in the API response shape paragraph would help users. Not strictly required for this feature to work.
 3. **No Docker image changes**: no new runtime deps.

@@ -28,24 +28,24 @@ open http://localhost:3000
 
 Configuration:
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `SPEEDTEST_INTERVAL_MINUTES` | `15` | Default interval used if the DB has no override |
-| `SPEEDTEST_DB_PATH` | `/data/speedtest.db` | SQLite file path (volume-persisted) |
-| `SPEEDTEST_LOG_LEVEL` | `INFO` | Minimum level written to the log file: `DEBUG`, `INFO`, `WARNING` or `ERROR` |
-| `SPEEDTEST_LOG_DIR` | `/data/logs` | Directory for `app.log` and its rotated copies (volume-persisted in Docker, `./logs` outside) |
-| `SPEEDTEST_LOG_MAX_SIZE_MB` | `5` | Size at which `app.log` is rotated to `app.log.1` |
-| `SPEEDTEST_LOG_MAX_FILES` | `5` | Rotated files kept (`app.log.1` … `app.log.N`); older ones are deleted |
-| `SPEEDTEST_TEST_DURATION_S` | `10` | Duration of each download/upload phase (seconds). Raise for multi-Gbps links so TCP can ramp up and the sample is not dominated by slow-start. |
-| `SPEEDTEST_PARALLEL_STREAMS` | `8` | Parallel HTTP streams per phase. More streams help saturate high-bandwidth links (try `16` on 10 Gbps). |
-| `SPEEDTEST_DOWNLOAD_MB_PER_REQUEST` | `100` | Download payload size (MB) per request. |
-| `SPEEDTEST_UPLOAD_MB_PER_REQUEST` | `25` | Upload payload size (MB) per request. Lower it (e.g. `5`) on slow uplinks: bytes only count when a request completes, so oversized payloads can yield `upload produced no bytes`. |
-| `SPEEDTEST_LOCALE` | `en-US` | BCP 47 locale for dates/times in the dashboard and alert emails (e.g. `fr-FR`, `de-DE`) |
-| `SPEEDTEST_TIMEZONE` | `UTC` | IANA timezone for dates/times in the dashboard and alert emails (e.g. `Europe/Paris`) |
-| `PORT` | `3000` | HTTP + WebSocket port |
-| `TZ` | - | Container system timezone (log lines only; display uses `SPEEDTEST_TIMEZONE`) |
-| `PUID` | `1001` | UID the server runs as; `/data` is chowned to it at startup (linuxserver.io-style). Unraid: `99` |
-| `PGID` | `1001` | GID the server runs as. Unraid: `100` |
+| Variable                            | Default              | Purpose                                                                                                                                                                           |
+| ----------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SPEEDTEST_INTERVAL_MINUTES`        | `15`                 | Default interval used if the DB has no override                                                                                                                                   |
+| `SPEEDTEST_DB_PATH`                 | `/data/speedtest.db` | SQLite file path (volume-persisted)                                                                                                                                               |
+| `SPEEDTEST_LOG_LEVEL`               | `INFO`               | Minimum level written to the log file: `DEBUG`, `INFO`, `WARNING` or `ERROR`                                                                                                      |
+| `SPEEDTEST_LOG_DIR`                 | `/data/logs`         | Directory for `app.log` and its rotated copies (volume-persisted in Docker, `./logs` outside)                                                                                     |
+| `SPEEDTEST_LOG_MAX_SIZE_MB`         | `5`                  | Size at which `app.log` is rotated to `app.log.1`                                                                                                                                 |
+| `SPEEDTEST_LOG_MAX_FILES`           | `5`                  | Rotated files kept (`app.log.1` … `app.log.N`); older ones are deleted                                                                                                            |
+| `SPEEDTEST_TEST_DURATION_S`         | `10`                 | Duration of each download/upload phase (seconds). Raise for multi-Gbps links so TCP can ramp up and the sample is not dominated by slow-start.                                    |
+| `SPEEDTEST_PARALLEL_STREAMS`        | `8`                  | Parallel HTTP streams per phase. More streams help saturate high-bandwidth links (try `16` on 10 Gbps).                                                                           |
+| `SPEEDTEST_DOWNLOAD_MB_PER_REQUEST` | `100`                | Download payload size (MB) per request.                                                                                                                                           |
+| `SPEEDTEST_UPLOAD_MB_PER_REQUEST`   | `25`                 | Upload payload size (MB) per request. Lower it (e.g. `5`) on slow uplinks: bytes only count when a request completes, so oversized payloads can yield `upload produced no bytes`. |
+| `SPEEDTEST_LOCALE`                  | `en-US`              | BCP 47 locale for dates/times in the dashboard and alert emails (e.g. `fr-FR`, `de-DE`)                                                                                           |
+| `SPEEDTEST_TIMEZONE`                | `UTC`                | IANA timezone for dates/times in the dashboard and alert emails (e.g. `Europe/Paris`)                                                                                             |
+| `PORT`                              | `3000`               | HTTP + WebSocket port                                                                                                                                                             |
+| `TZ`                                | -                    | Container system timezone (log lines only; display uses `SPEEDTEST_TIMEZONE`)                                                                                                     |
+| `PUID`                              | `1001`               | UID the server runs as; `/data` is chowned to it at startup (linuxserver.io-style). Unraid: `99`                                                                                  |
+| `PGID`                              | `1001`               | GID the server runs as. Unraid: `100`                                                                                                                                             |
 
 Change the interval at any time via the UI (`/settings`) - it is persisted in SQLite and takes effect immediately without a restart.
 
@@ -60,14 +60,14 @@ enable them and set at least one threshold.
 All destinations are optional. A destination is available iff its required
 env vars are set.
 
-| Destination | Required env | Optional env |
-|---|---|---|
-| Webhook (generic) | `SPEEDTEST_WEBHOOK_URL` | `SPEEDTEST_WEBHOOK_HEADERS` (JSON) |
-| ntfy | `SPEEDTEST_NTFY_URL` (full URL incl. topic) | `SPEEDTEST_NTFY_TOKEN` |
-| Discord | `SPEEDTEST_DISCORD_WEBHOOK` | - |
-| Slack | `SPEEDTEST_SLACK_WEBHOOK` | - |
-| Email (SMTP) | `SPEEDTEST_SMTP_HOST`, `SPEEDTEST_SMTP_FROM`, `SPEEDTEST_SMTP_TO` | `SPEEDTEST_SMTP_PORT` (587), `SPEEDTEST_SMTP_SECURE` (auto), `SPEEDTEST_SMTP_USER`, `SPEEDTEST_SMTP_PASS` |
-| - | - | `SPEEDTEST_PUBLIC_URL` (dashboard link in emails) |
+| Destination       | Required env                                                      | Optional env                                                                                              |
+| ----------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Webhook (generic) | `SPEEDTEST_WEBHOOK_URL`                                           | `SPEEDTEST_WEBHOOK_HEADERS` (JSON)                                                                        |
+| ntfy              | `SPEEDTEST_NTFY_URL` (full URL incl. topic)                       | `SPEEDTEST_NTFY_TOKEN`                                                                                    |
+| Discord           | `SPEEDTEST_DISCORD_WEBHOOK`                                       | -                                                                                                         |
+| Slack             | `SPEEDTEST_SLACK_WEBHOOK`                                         | -                                                                                                         |
+| Email (SMTP)      | `SPEEDTEST_SMTP_HOST`, `SPEEDTEST_SMTP_FROM`, `SPEEDTEST_SMTP_TO` | `SPEEDTEST_SMTP_PORT` (587), `SPEEDTEST_SMTP_SECURE` (auto), `SPEEDTEST_SMTP_USER`, `SPEEDTEST_SMTP_PASS` |
+| -                 | -                                                                 | `SPEEDTEST_PUBLIC_URL` (dashboard link in emails)                                                         |
 
 ### Configure rules (UI)
 
@@ -91,7 +91,6 @@ wiring without waiting for a real incident.
 ## Authentication
 
 speedtest-monitor requires authentication for all routes. Two roles exist:
-
 - **admin** - full access, can manage users, change settings, configure alerts, trigger manual measurements
 - **viewer** - read-only access: dashboard, history, settings in read-only mode
 
@@ -178,7 +177,6 @@ users. The last remaining admin cannot be demoted or deleted.
 ### Upgrading from the next-auth release
 
 The auth stack moved from next-auth v5 beta to Better Auth. Same env vars, but:
-
 1. Set `BETTER_AUTH_URL` to your public origin (`AUTH_TRUST_HOST` is no longer used).
 2. On first boot, the existing `users` table is copied into the new
    `user`/`account` tables. Argon2id password hashes verify without re-hashing.
@@ -196,7 +194,6 @@ Deployments on a version older than v1.10.0 must first upgrade to an intermediat
 The 0.2+ release swaps the measurement backend from fast.com (via the
 `fast-cli` + Chromium browser) to Cloudflare Speed Test (HTTP only). On
 first boot after the upgrade:
-
 - Three new nullable columns (`jitter_ms`, `packet_loss_pct`, `user_isp`)
   are added to the `measurements` table. Historical rows keep them
   `null` - the data was never captured.
@@ -247,23 +244,23 @@ curl -X PATCH http://localhost:3003/api/settings \
 
 All routes require an authenticated session (cookie or OIDC). Mutating routes require the `admin` role.
 
-| Route | Method | Description |
-|---|---|---|
-| `/api/health` | GET | Liveness probe (no auth) |
-| `/api/measurements?range=6h\|12h\|24h\|7d\|30d` | GET | History for the given range |
-| `/api/measurements/table` | GET | Paginated history with server-side sort/filter (used by the dashboard table) |
-| `/api/measurements/run` | POST | Trigger a manual run (409 if already running) |
-| `/api/settings` | GET | Current interval + env default |
-| `/api/settings` | PATCH | `{ intervalMinutes: 1..1440 }` |
-| `/api/alerts/rules` | GET / PUT | Read or upsert the alert rule set |
-| `/api/alerts/test` | POST | Send a synthetic alert to a destination to verify wiring |
-| `/api/users` | GET / POST | List users / create a user (admin) |
-| `/api/users/[id]` | PATCH / DELETE | Update role or delete a user (admin) |
-| `/api/users/[id]/reset-password` | POST | Reset a user's password (admin) |
-| `/api/account/password` | PATCH | Change your own password |
-| `/api/auth/setup` | POST | First-run admin creation (only while no user exists) |
-| `/api/auth/[...all]` | * | Better Auth endpoints (sign-in, callback, session, ...) |
-| `/ws` | WebSocket | Pushes `measurement`, `running` events |
+| Route                                           | Method         | Description                                                                  |
+| ----------------------------------------------- | -------------- | ---------------------------------------------------------------------------- |
+| `/api/health`                                   | GET            | Liveness probe (no auth)                                                     |
+| `/api/measurements?range=6h\|12h\|24h\|7d\|30d` | GET            | History for the given range                                                  |
+| `/api/measurements/table`                       | GET            | Paginated history with server-side sort/filter (used by the dashboard table) |
+| `/api/measurements/run`                         | POST           | Trigger a manual run (409 if already running)                                |
+| `/api/settings`                                 | GET            | Current interval + env default                                               |
+| `/api/settings`                                 | PATCH          | `{ intervalMinutes: 1..1440 }`                                               |
+| `/api/alerts/rules`                             | GET / PUT      | Read or upsert the alert rule set                                            |
+| `/api/alerts/test`                              | POST           | Send a synthetic alert to a destination to verify wiring                     |
+| `/api/users`                                    | GET / POST     | List users / create a user (admin)                                           |
+| `/api/users/[id]`                               | PATCH / DELETE | Update role or delete a user (admin)                                         |
+| `/api/users/[id]/reset-password`                | POST           | Reset a user's password (admin)                                              |
+| `/api/account/password`                         | PATCH          | Change your own password                                                     |
+| `/api/auth/setup`                               | POST           | First-run admin creation (only while no user exists)                         |
+| `/api/auth/[...all]`                            | *              | Better Auth endpoints (sign-in, callback, session, ...)                      |
+| `/ws`                                           | WebSocket      | Pushes `measurement`, `running` events                                       |
 
 ## Tests
 

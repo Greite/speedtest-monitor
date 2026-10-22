@@ -34,14 +34,17 @@
 - [ ] **Step 1: Restructurer la fermeture du script**
 
 Lire le script actuel. Restructurer : le run principal retourne `violationCount` ; `browser.close()` dans `finally` ; `process.exit(violationCount > 0 ? 1 : 0)` APRÈS le try/finally. Aucun `process.exit` à l'intérieur du try.
-
 - [ ] **Step 2: Parsing strict + assertion de schéma**
 
 ```ts
 // Strict flag parsing - unknown flags are fatal (a typo like --schema
 // silently auditing the wrong scheme is exactly what this script exists
 // to prevent).
-function parseArgs(argv: string[]): { url: string; scheme: 'light' | 'dark'; cookies: { name: string; value: string }[] } {
+function parseArgs(argv: string[]): {
+  url: string;
+  scheme: 'light' | 'dark';
+  cookies: { name: string; value: string }[];
+} {
   let url: string | undefined;
   let scheme: 'light' | 'dark' = 'light';
   const cookies: { name: string; value: string }[] = [];
@@ -57,7 +60,9 @@ function parseArgs(argv: string[]): { url: string; scheme: 'light' | 'dark'; coo
       if (eq <= 0) throw new Error(`--cookie expects "name=value", got "${v}"`);
       cookies.push({ name: v.slice(0, eq), value: v.slice(eq + 1) });
     } else if (a.startsWith('-')) {
-      throw new Error(`Unknown flag "${a}". Usage: bun scripts/axe-audit.ts <url> [--scheme light|dark] [--cookie name=value]...`);
+      throw new Error(
+        `Unknown flag "${a}". Usage: bun scripts/axe-audit.ts <url> [--scheme light|dark] [--cookie name=value]...`,
+      );
     } else if (!url) {
       url = a;
     } else {
@@ -81,15 +86,12 @@ if (applied !== scheme) {
 - [ ] **Step 3: Injection de cookies + doc d'en-tête**
 
 Avant `page.goto` : `await browser.defaultBrowserContext().setCookie(...)` ou `page.setCookie` selon l'API puppeteer-core 25 (vérifier le .d.ts installé) avec `{name, value, url}`. En-tête du script : commentaire expliquant comment obtenir un cookie de session (se connecter dans un navigateur, copier le cookie better-auth depuis les DevTools) et l'exemple d'invocation authentifiée.
-
 - [ ] **Step 4: Token brand-hover et hovers topbar**
 
 `app/globals.css` : dans `@theme inline` ajouter `--color-brand-hover: var(--brand-hover);` (à côté de `--color-brand`) ; dans `:root` (bloc brand, ~l.95) `--brand-hover: oklch(0.5 0.19 250);` ; dans `.dark` `--brand-hover: oklch(0.74 0.17 240);` (plus clair que le fond brand sombre : perceptible, et le texte sombre y garde un contraste large). Dans `topbar.tsx`, remplacer les trois `hover:bg-brand/90` par `hover:bg-brand-hover`. Vérifier au calcul WCAG (script jetable ou calcul manuel documenté au rapport) : blanc sur oklch(0.5 0.19 250) >= 4.5:1.
-
 - [ ] **Step 5: Annonce SR du time-range**
 
 Lire `node_modules/@astryxdesign/core/dist/SegmentedControl/*.d.ts` ET la source du rendu de l'item : existe-t-il un moyen d'avoir un accessible name différent du label visible qui atteigne réellement le DOM (prop dédiée transmise, pas avalée) ? Si oui : items annoncés « Last 6h »... (visible « 6h » inchangé), et étendre `components/time-range-picker.test.tsx` pour verrouiller l'accessible name. Si non : documenter au rapport (limitation upstream, repli accepté par la spec) et ne rien changer.
-
 - [ ] **Step 6: Vérification et commit**
 
 ```bash
@@ -156,7 +158,6 @@ describe('TableFilters status pills', () => {
 ```
 
 Ajuster à la réalité du panneau (le panneau des filtres est fermé par défaut : les assertions NumberInput exigent l'état ouvert - si `open` n'est pas contrôlable de l'extérieur, tester ce qui est rendu fermé : chips + compte actif ; documenter ce que le rendu fermé ne couvre pas). Vérifier l'accessible name réel du bouton de suppression du Token dans sa source avant d'écrire l'assertion regex.
-
 - [ ] **Step 2: Itérer jusqu'au vert, gates, commit**
 
 ```bash
@@ -201,7 +202,6 @@ for (const path of OUTPUTS) {
 ```
 
 Adapter la liste OUTPUTS aux fichiers réellement émis (ls lib/speedtest*) et vérifier si `Generated:` apparaît plusieurs fois par fichier (`g` flag si besoin). `package.json` : `"theme:build": "bun scripts/theme-build.ts"`.
-
 - [ ] **Step 2: Normalisation initiale + preuve de déterminisme**
 
 ```bash
@@ -216,14 +216,13 @@ rtk git diff --stat lib/        # IDENTIQUE au précédent (2e run = zéro diff 
 Lire `.github/workflows/a11y.yml` (structure, setup bun existant). Ajouter un step après l'install :
 
 ```yaml
-      - name: Check built theme freshness
-        run: |
-          bun run theme:build
-          git diff --exit-code lib/
+- name: Check built theme freshness
+  run: |
+    bun run theme:build
+    git diff --exit-code lib/
 ```
 
 Valider localement la commande exacte du step (`bun run theme:build && git diff --exit-code lib/` -> exit 0).
-
 - [ ] **Step 4: Validation du lot et commit**
 
 ```bash

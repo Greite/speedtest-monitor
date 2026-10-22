@@ -22,7 +22,6 @@ Related pre-existing quirk: alert emails/webhooks (`lib/alerts/format.ts`, `lib/
 Make locale and timezone runtime-configurable via environment variables, defaulting to `en-US` / `UTC`.
 
 Approaches considered and rejected:
-
 - **Flip the default to `en-US` only:** one-line change but the locale stays frozen at build time for Docker users; does not fix the root cause.
 - **Settings-page option stored in SQLite:** best UX but a larger effort (client provider, DB migration, cache invalidation); can be layered on top of this design later.
 - **Accept-Language detection:** zero config but unpredictable with caching and multiple viewers, and reintroduces hydration risk.

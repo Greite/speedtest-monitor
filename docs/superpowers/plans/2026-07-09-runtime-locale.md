@@ -85,7 +85,6 @@ describe('resolveDisplayConfig', () => {
 
 Run: `rtk bun test lib/runtime-config.test.ts`
 Expected: FAIL, cannot resolve module `./runtime-config`.
-
 - [ ] **Step 3: Write the implementation**
 
 Create `lib/runtime-config.ts`:
@@ -147,7 +146,6 @@ export function resolveDisplayConfig(): DisplayConfig {
 
 Run: `rtk bun test lib/runtime-config.test.ts`
 Expected: PASS (3 tests). Two `console.warn` lines from the invalid-values test are expected output, not failures.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -174,14 +172,7 @@ In `lib/format.test.ts`, replace the import block at the top:
 ```ts
 import { afterEach, describe, expect, it } from 'bun:test';
 
-import {
-  formatMbps,
-  formatMs,
-  formatRelativeTime,
-  formatTime,
-  latencyLevel,
-  resetFormatCache,
-} from './format';
+import { formatMbps, formatMs, formatRelativeTime, formatTime, latencyLevel, resetFormatCache } from './format';
 ```
 
 Append at the end of the file:
@@ -245,7 +236,6 @@ describe('locale and timezone configuration', () => {
 
 Run: `rtk bun test lib/format.test.ts`
 Expected: FAIL, `resetFormatCache` is not exported (and/or French/English assertions fail because the current code pins `fr-FR`).
-
 - [ ] **Step 3: Implement the lazy formatters**
 
 In `lib/format.ts`, add the import at the top of the file:
@@ -326,22 +316,18 @@ export function formatRelativeTime(timestamp: number | string | Date, now: numbe
 ```
 
 Everything else in the file (`formatMbps`, `formatMs`, `asDate`, `latencyLevel`, `computeDelta`, types) stays as is.
-
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `rtk bun test lib/format.test.ts`
 Expected: PASS (all describe blocks, including the pre-existing ones).
-
 - [ ] **Step 5: Verify no NEXT_PUBLIC_ references remain**
 
 Run: `rtk grep -rn "NEXT_PUBLIC_LOCALE\|NEXT_PUBLIC_TIMEZONE" . --include="*.ts" --include="*.tsx" --include="*.md" --include="Dockerfile" --include="*.yml"`
 Expected: no matches outside `docs/superpowers/` (spec/plan may mention the old names historically).
-
 - [ ] **Step 6: Run the full test suite**
 
 Run: `rtk bun test`
 Expected: PASS, no regressions.
-
 - [ ] **Step 7: Commit**
 
 ```bash
@@ -409,17 +395,14 @@ import { resolveDisplayConfig } from '@/lib/runtime-config';
 ```
 
 Note: the `biome-ignore` comment is only needed if `rtk bun run lint` flags `noDangerouslySetInnerHtml`; if lint passes without it, omit it.
-
 - [ ] **Step 2: Typecheck and lint**
 
 Run: `rtk bun run lint`
 Expected: PASS (tsc + biome clean).
-
 - [ ] **Step 3: Verify the production build stays green**
 
 Run: `rtk bun run build`
 Expected: build completes; routes are reported as dynamic (`ƒ`), which is correct - no page may bake the config at build time.
-
 - [ ] **Step 4: Verify runtime injection end-to-end**
 
 Start the dev server in the background with French config, give Next time to compile, then inspect the HTML:
@@ -438,7 +421,6 @@ window.__SPEEDTEST_CONFIG__={"locale":"fr-FR","timeZone":"Europe/Paris"}
 ```
 
 The first request may take 10-20 s while Next compiles the page. Stop the background server afterwards.
-
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -504,7 +486,6 @@ describe('formatMessage timezone', () => {
 
 Run: `rtk bun test lib/alerts/format.test.ts`
 Expected: FAIL - current code formats in the machine's local timezone (e.g. `13:00:00` appears for Paris machines even without the env var, or the UTC case shows the local offset). At least one of the two new tests must fail on any machine whose local timezone is not the one under test.
-
 - [ ] **Step 3: Implement**
 
 In `lib/alerts/format.ts`, add the import and change `formatTime`:
@@ -536,12 +517,10 @@ function formatTimestamp(ms: number): string {
 
 Run: `rtk bun test lib/alerts`
 Expected: PASS (all alert test files, including the pre-existing ones - they assert titles and metric strings, not timestamps).
-
 - [ ] **Step 5: Run the full test suite**
 
 Run: `rtk bun test`
 Expected: PASS.
-
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -580,12 +559,12 @@ In `README.md`, insert two rows after the `SPEEDTEST_PARALLEL_STREAMS` row and r
 Replace the `environment:` block with:
 
 ```yaml
-    environment:
-      SPEEDTEST_INTERVAL_MINUTES: "15"
-      # SPEEDTEST_LOCALE: "en-US"
-      # SPEEDTEST_TIMEZONE: "Europe/Paris"
-      TZ: "Europe/Paris"
-      AUTH_SECRET: ${AUTH_SECRET:-}
+environment:
+  SPEEDTEST_INTERVAL_MINUTES: "15"
+  # SPEEDTEST_LOCALE: "en-US"
+  # SPEEDTEST_TIMEZONE: "Europe/Paris"
+  TZ: "Europe/Paris"
+  AUTH_SECRET: ${AUTH_SECRET:-}
 ```
 
 - [ ] **Step 3: Update the Dockerfile runner ENV block**
@@ -608,7 +587,6 @@ ENV NODE_ENV=production \
 
 Run: `rtk bun run lint && rtk bun test`
 Expected: both PASS.
-
 - [ ] **Step 5: Commit**
 
 ```bash

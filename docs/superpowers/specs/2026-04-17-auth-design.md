@@ -33,10 +33,10 @@ Out of scope (v2+):
 
 ## Roles
 
-| Role | GET on any API/page | Mutations (POST/PATCH/DELETE) | `/api/alerts/test` | Users management |
-|---|---|---|---|---|
-| `admin` | yes | yes | yes | yes |
-| `viewer` | yes | **no** (403) | **no** | **no** (route hidden/403) |
+| Role     | GET on any API/page | Mutations (POST/PATCH/DELETE) | `/api/alerts/test` | Users management          |
+| -------- | ------------------- | ----------------------------- | ------------------ | ------------------------- |
+| `admin`  | yes                 | yes                           | yes                | yes                       |
+| `viewer` | yes                 | **no** (403)                  | **no**             | **no** (route hidden/403) |
 
 `viewer` cannot trigger a manual measurement (`POST /api/measurements/run`) — the scheduler continues to produce measurements automatically. This is intentional: keeping the rule "GET for viewer, everything for admin" simple.
 
@@ -85,13 +85,15 @@ export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash'),
-  role: text('role', { enum: ['admin', 'viewer'] }).notNull().default('viewer'),
-  provider: text('provider', { enum: ['local', 'oidc'] }).notNull().default('local'),
+  role: text('role', { enum: ['admin', 'viewer'] })
+    .notNull()
+    .default('viewer'),
+  provider: text('provider', { enum: ['local', 'oidc'] })
+    .notNull()
+    .default('local'),
   oidcSubject: text('oidc_subject').unique(),
   name: text('name'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
   lastLoginAt: integer('last_login_at', { mode: 'timestamp_ms' }),
 });
 
@@ -151,7 +153,9 @@ Credentials({
   name: 'Email + password',
   credentials: { email: {}, password: {} },
   async authorize(creds) {
-    const email = String(creds?.email ?? '').toLowerCase().trim();
+    const email = String(creds?.email ?? '')
+      .toLowerCase()
+      .trim();
     const password = String(creds?.password ?? '');
     if (!email || !password) return null;
     const user = findUserByEmail(email);
@@ -160,7 +164,7 @@ Credentials({
     updateLastLogin(user.id);
     return { id: String(user.id), email: user.email, name: user.name ?? undefined, role: user.role };
   },
-})
+});
 ```
 
 **OIDC** (enabled iff `SPEEDTEST_OIDC_ISSUER` is set):
@@ -233,15 +237,15 @@ Rules, in order:
 
 ## New API routes
 
-| Method | Path | Auth | Body | Returns |
-|---|---|---|---|---|
-| POST | `/api/auth/setup` | public iff `countUsers()===0` | `{email, password}` | 204 + session cookie |
-| POST | `/api/account/password` | signed-in | `{currentPassword, newPassword}` | `{ok: true}` |
-| GET | `/api/users` | admin | — | `{users: User[]}` (no `passwordHash`) |
-| POST | `/api/users` | admin | `{email, password, role?}` | `{user: User}` (no `passwordHash`) |
-| PATCH | `/api/users/:id` | admin | `{role?, name?}` | `{user: User}` |
-| POST | `/api/users/:id/reset-password` | admin | `{newPassword}` | `{ok: true}` |
-| DELETE | `/api/users/:id` | admin | — | 204 |
+| Method | Path                            | Auth                          | Body                             | Returns                               |
+| ------ | ------------------------------- | ----------------------------- | -------------------------------- | ------------------------------------- |
+| POST   | `/api/auth/setup`               | public iff `countUsers()===0` | `{email, password}`              | 204 + session cookie                  |
+| POST   | `/api/account/password`         | signed-in                     | `{currentPassword, newPassword}` | `{ok: true}`                          |
+| GET    | `/api/users`                    | admin                         | —                                | `{users: User[]}` (no `passwordHash`) |
+| POST   | `/api/users`                    | admin                         | `{email, password, role?}`       | `{user: User}` (no `passwordHash`)    |
+| PATCH  | `/api/users/:id`                | admin                         | `{role?, name?}`                 | `{user: User}`                        |
+| POST   | `/api/users/:id/reset-password` | admin                         | `{newPassword}`                  | `{ok: true}`                          |
+| DELETE | `/api/users/:id`                | admin                         | —                                | 204                                   |
 
 Server-side invariants enforced in handlers beyond the middleware:
 - Email uniqueness: returned as `409 Conflict` on insert.
@@ -302,18 +306,18 @@ SPEEDTEST_OIDC_ALLOW_NEW_USERS   # default "true", set "false" to require admin-
 
 Colocated `.test.ts`, vitest. Pure modules first, then handlers.
 
-| File | Coverage |
-|---|---|
-| `lib/auth/hash.test.ts` | `hashPassword` non-empty argon2id string, roundtrip verify true, verify false on wrong, `needsRehash` detects upgrades |
-| `lib/auth/users.test.ts` | email lowercasing, findByEmail/findByOidcSubject, create/update/delete, countAdmins, last-admin check used by invariants |
-| `lib/auth/bootstrap.test.ts` | no-op without env, creates admin, upserts role+rehash on existing email, lowercases email |
-| `lib/auth/providers.test.ts` | Credentials: reject empty/bad password, accept good; OIDC profile: create with viewer role when no admin match, create with admin role on match, existing user gets `sub` linked, `allowNew=false` throws |
-| `app/api/auth/setup/route.test.ts` | accepts if 0 users, 404 if any user exists, rejects short password, creates admin + issues session |
-| `app/api/account/password/route.test.ts` | requires current match, rejects short new password, updates hash |
-| `app/api/users/route.test.ts` | GET omits `passwordHash`, POST validates zod + rejects dup email (409), defaults role to viewer |
-| `app/api/users/[id]/route.test.ts` | PATCH role success, DELETE success, last-admin protection returns 409 on PATCH role change and DELETE |
-| `app/api/users/[id]/reset-password/route.test.ts` | admin resets target user's password, short password rejected |
-| `lib/auth/middleware.test.ts` (or split) | public paths pass, unauth API → 401, unauth page → /login redirect, viewer POST → 403, admin POST → pass, `/setup` gated by countUsers |
+| File                                              | Coverage                                                                                                                                                                                                  |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/auth/hash.test.ts`                           | `hashPassword` non-empty argon2id string, roundtrip verify true, verify false on wrong, `needsRehash` detects upgrades                                                                                    |
+| `lib/auth/users.test.ts`                          | email lowercasing, findByEmail/findByOidcSubject, create/update/delete, countAdmins, last-admin check used by invariants                                                                                  |
+| `lib/auth/bootstrap.test.ts`                      | no-op without env, creates admin, upserts role+rehash on existing email, lowercases email                                                                                                                 |
+| `lib/auth/providers.test.ts`                      | Credentials: reject empty/bad password, accept good; OIDC profile: create with viewer role when no admin match, create with admin role on match, existing user gets `sub` linked, `allowNew=false` throws |
+| `app/api/auth/setup/route.test.ts`                | accepts if 0 users, 404 if any user exists, rejects short password, creates admin + issues session                                                                                                        |
+| `app/api/account/password/route.test.ts`          | requires current match, rejects short new password, updates hash                                                                                                                                          |
+| `app/api/users/route.test.ts`                     | GET omits `passwordHash`, POST validates zod + rejects dup email (409), defaults role to viewer                                                                                                           |
+| `app/api/users/[id]/route.test.ts`                | PATCH role success, DELETE success, last-admin protection returns 409 on PATCH role change and DELETE                                                                                                     |
+| `app/api/users/[id]/reset-password/route.test.ts` | admin resets target user's password, short password rejected                                                                                                                                              |
+| `lib/auth/middleware.test.ts` (or split)          | public paths pass, unauth API → 401, unauth page → /login redirect, viewer POST → 403, admin POST → pass, `/setup` gated by countUsers                                                                    |
 
 ## Migration and dependencies
 

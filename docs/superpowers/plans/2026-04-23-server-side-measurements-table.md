@@ -79,9 +79,7 @@ describe('parseTableQuery', () => {
   });
 
   it('parses numeric range filters', () => {
-    const q = parseTableQuery(
-      qs({ downloadMin: '100', downloadMax: '500', latencyMin: '10' }),
-    );
+    const q = parseTableQuery(qs({ downloadMin: '100', downloadMax: '500', latencyMin: '10' }));
     expect(q.filters.download).toEqual({ min: 100, max: 500 });
     expect(q.filters.latency).toEqual({ min: 10 });
   });
@@ -120,7 +118,6 @@ bun test lib/measurements-query.test.ts
 ```
 
 Expected: FAIL with `Cannot find module './measurements-query'`.
-
 - [ ] **Step 3: Implement parser**
 
 Create `lib/measurements-query.ts`:
@@ -128,13 +125,7 @@ Create `lib/measurements-query.ts`:
 ```ts
 import { z } from 'zod';
 
-export const SORT_COLUMNS = [
-  'timestamp',
-  'downloadMbps',
-  'uploadMbps',
-  'latencyLoadedMs',
-  'status',
-] as const;
+export const SORT_COLUMNS = ['timestamp', 'downloadMbps', 'uploadMbps', 'latencyLoadedMs', 'status'] as const;
 
 export type SortColumn = (typeof SORT_COLUMNS)[number];
 
@@ -197,7 +188,10 @@ function readTimeRange(params: URLSearchParams): TimeRange | undefined {
 function readStatuses(params: URLSearchParams): StatusValue[] | undefined {
   const raw = params.get('status');
   if (raw == null || raw === '') return undefined;
-  const parts = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  const parts = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (parts.length === 0) return undefined;
   const validated = z.array(z.enum(STATUSES)).parse(parts);
   return [...new Set(validated)];
@@ -219,9 +213,7 @@ const sortDirSchema = z.enum(['asc', 'desc']).default('desc');
 
 export function parseTableQuery(params: URLSearchParams): TableQuery {
   const page = pageSchema.parse(params.get('page') ?? undefined);
-  const pageSize = params.get('pageSize')
-    ? pageSizeSchema.parse(params.get('pageSize'))
-    : (25 as PageSize);
+  const pageSize = params.get('pageSize') ? pageSizeSchema.parse(params.get('pageSize')) : (25 as PageSize);
   const sort = sortSchema.parse(params.get('sort') ?? undefined);
   const sortDir = sortDirSchema.parse(params.get('sortDir') ?? undefined);
 
@@ -250,7 +242,6 @@ bun test lib/measurements-query.test.ts
 ```
 
 Expected: all tests pass.
-
 - [ ] **Step 5: Typecheck**
 
 ```bash
@@ -258,7 +249,6 @@ bun run typecheck
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -301,17 +291,49 @@ describe('listMeasurementsPaged', () => {
 
     const base = Date.UTC(2026, 0, 1);
     const rows = [
-      { timestamp: new Date(base + 1000), downloadMbps: 50, uploadMbps: 10, latencyLoadedMs: 30, status: 'success' as const, serverLocations: ['Paris'] },
-      { timestamp: new Date(base + 2000), downloadMbps: 200, uploadMbps: 20, latencyLoadedMs: 15, status: 'success' as const, serverLocations: ['London'] },
-      { timestamp: new Date(base + 3000), downloadMbps: 500, uploadMbps: 40, latencyLoadedMs: 80, status: 'timeout' as const, serverLocations: ['Berlin'] },
-      { timestamp: new Date(base + 4000), downloadMbps: null, uploadMbps: null, latencyLoadedMs: null, status: 'error' as const, serverLocations: null },
+      {
+        timestamp: new Date(base + 1000),
+        downloadMbps: 50,
+        uploadMbps: 10,
+        latencyLoadedMs: 30,
+        status: 'success' as const,
+        serverLocations: ['Paris'],
+      },
+      {
+        timestamp: new Date(base + 2000),
+        downloadMbps: 200,
+        uploadMbps: 20,
+        latencyLoadedMs: 15,
+        status: 'success' as const,
+        serverLocations: ['London'],
+      },
+      {
+        timestamp: new Date(base + 3000),
+        downloadMbps: 500,
+        uploadMbps: 40,
+        latencyLoadedMs: 80,
+        status: 'timeout' as const,
+        serverLocations: ['Berlin'],
+      },
+      {
+        timestamp: new Date(base + 4000),
+        downloadMbps: null,
+        uploadMbps: null,
+        latencyLoadedMs: null,
+        status: 'error' as const,
+        serverLocations: null,
+      },
     ];
     for (const r of rows) db.insert(measurementsTable).values(r).run();
   });
 
   it('returns rows sorted desc by timestamp and totalCount by default', () => {
     const r = listMeasurementsPaged({
-      page: 1, pageSize: 25, sort: 'timestamp', sortDir: 'desc', filters: {},
+      page: 1,
+      pageSize: 25,
+      sort: 'timestamp',
+      sortDir: 'desc',
+      filters: {},
     });
     expect(r.totalCount).toBe(4);
     expect(r.rows).toHaveLength(4);
@@ -320,10 +342,18 @@ describe('listMeasurementsPaged', () => {
 
   it('paginates correctly', () => {
     const p1 = listMeasurementsPaged({
-      page: 1, pageSize: 2, sort: 'timestamp', sortDir: 'asc', filters: {},
+      page: 1,
+      pageSize: 2,
+      sort: 'timestamp',
+      sortDir: 'asc',
+      filters: {},
     });
     const p2 = listMeasurementsPaged({
-      page: 2, pageSize: 2, sort: 'timestamp', sortDir: 'asc', filters: {},
+      page: 2,
+      pageSize: 2,
+      sort: 'timestamp',
+      sortDir: 'asc',
+      filters: {},
     });
     expect(p1.rows).toHaveLength(2);
     expect(p2.rows).toHaveLength(2);
@@ -333,14 +363,21 @@ describe('listMeasurementsPaged', () => {
 
   it('sorts by downloadMbps asc with NULLs last', () => {
     const r = listMeasurementsPaged({
-      page: 1, pageSize: 25, sort: 'downloadMbps', sortDir: 'asc', filters: {},
+      page: 1,
+      pageSize: 25,
+      sort: 'downloadMbps',
+      sortDir: 'asc',
+      filters: {},
     });
     expect(r.rows.map((x) => x.downloadMbps)).toEqual([50, 200, 500, null]);
   });
 
   it('filters by numeric range', () => {
     const r = listMeasurementsPaged({
-      page: 1, pageSize: 25, sort: 'timestamp', sortDir: 'desc',
+      page: 1,
+      pageSize: 25,
+      sort: 'timestamp',
+      sortDir: 'desc',
       filters: { download: { min: 100, max: 400 } },
     });
     expect(r.totalCount).toBe(1);
@@ -350,7 +387,10 @@ describe('listMeasurementsPaged', () => {
   it('filters by time range', () => {
     const base = Date.UTC(2026, 0, 1);
     const r = listMeasurementsPaged({
-      page: 1, pageSize: 25, sort: 'timestamp', sortDir: 'asc',
+      page: 1,
+      pageSize: 25,
+      sort: 'timestamp',
+      sortDir: 'asc',
       filters: { time: { from: base + 1500, to: base + 3500 } },
     });
     expect(r.totalCount).toBe(2);
@@ -359,7 +399,10 @@ describe('listMeasurementsPaged', () => {
 
   it('filters by status list', () => {
     const r = listMeasurementsPaged({
-      page: 1, pageSize: 25, sort: 'timestamp', sortDir: 'desc',
+      page: 1,
+      pageSize: 25,
+      sort: 'timestamp',
+      sortDir: 'desc',
       filters: { status: ['success'] },
     });
     expect(r.totalCount).toBe(2);
@@ -367,7 +410,10 @@ describe('listMeasurementsPaged', () => {
 
   it('filters by server contains (case-insensitive)', () => {
     const r = listMeasurementsPaged({
-      page: 1, pageSize: 25, sort: 'timestamp', sortDir: 'desc',
+      page: 1,
+      pageSize: 25,
+      sort: 'timestamp',
+      sortDir: 'desc',
       filters: { server: 'par' },
     });
     expect(r.totalCount).toBe(1);
@@ -383,7 +429,6 @@ bun test lib/measurements.test.ts
 ```
 
 Expected: FAIL with `listMeasurementsPaged is not a function`.
-
 - [ ] **Step 3: Implement `listMeasurementsPaged`**
 
 Edit `lib/measurements.ts`. Add the imports and function at the bottom:
@@ -436,11 +481,9 @@ export function listMeasurementsPaged(query: TableQuery): {
     query.sortDir === 'asc' ? asc(sortCol) : desc(sortCol),
   ];
 
-  const countRow = db
-    .select({ n: sql<number>`count(*)` })
-    .from(measurements)
-    .where(where)
-    .get() as { n: number } | undefined;
+  const countRow = db.select({ n: sql<number>`count(*)` }).from(measurements).where(where).get() as
+    | { n: number }
+    | undefined;
   const totalCount = countRow?.n ?? 0;
 
   const rows = db
@@ -463,7 +506,6 @@ bun test lib/measurements.test.ts
 ```
 
 Expected: all new tests pass; existing tests still pass.
-
 - [ ] **Step 5: Typecheck**
 
 ```bash
@@ -471,7 +513,6 @@ bun run typecheck
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -517,14 +558,16 @@ beforeEach(() => {
 
   const base = Date.UTC(2026, 0, 1);
   for (let i = 0; i < 30; i++) {
-    db.insert(measurements).values({
-      timestamp: new Date(base + i * 1000),
-      downloadMbps: i * 10,
-      uploadMbps: i,
-      latencyLoadedMs: 100 - i,
-      status: 'success',
-      serverLocations: ['Paris'],
-    }).run();
+    db.insert(measurements)
+      .values({
+        timestamp: new Date(base + i * 1000),
+        downloadMbps: i * 10,
+        uploadMbps: i,
+        latencyLoadedMs: 100 - i,
+        status: 'success',
+        serverLocations: ['Paris'],
+      })
+      .run();
   }
 });
 
@@ -540,9 +583,7 @@ describe('GET /api/measurements/table', () => {
   });
 
   it('respects page and pageSize', async () => {
-    const res = await GET(
-      new Request('http://x/api/measurements/table?page=2&pageSize=10'),
-    );
+    const res = await GET(new Request('http://x/api/measurements/table?page=2&pageSize=10'));
     const body = await res.json();
     expect(body.page).toBe(2);
     expect(body.pageSize).toBe(10);
@@ -550,9 +591,7 @@ describe('GET /api/measurements/table', () => {
   });
 
   it('filters and paginates together', async () => {
-    const res = await GET(
-      new Request('http://x/api/measurements/table?downloadMin=200&pageSize=10'),
-    );
+    const res = await GET(new Request('http://x/api/measurements/table?downloadMin=200&pageSize=10'));
     const body = await res.json();
     expect(body.totalCount).toBe(10); // i=20..29
     expect(body.measurements).toHaveLength(10);
@@ -564,9 +603,7 @@ describe('GET /api/measurements/table', () => {
   });
 
   it('returns 400 on invalid pageSize', async () => {
-    const res = await GET(
-      new Request('http://x/api/measurements/table?pageSize=7'),
-    );
+    const res = await GET(new Request('http://x/api/measurements/table?pageSize=7'));
     expect(res.status).toBe(400);
   });
 });
@@ -579,7 +616,6 @@ bun test app/api/measurements/table/route.test.ts
 ```
 
 Expected: FAIL with `Cannot find module './route'`.
-
 - [ ] **Step 3: Implement the route**
 
 Create `app/api/measurements/table/route.ts`:
@@ -599,10 +635,7 @@ export function GET(req: Request) {
   try {
     query = parseTableQuery(url.searchParams);
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'invalid query' },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'invalid query' }, { status: 400 });
   }
   const { rows, totalCount } = listMeasurementsPaged(query);
   return NextResponse.json({
@@ -623,7 +656,6 @@ bun test app/api/measurements/table/route.test.ts
 ```
 
 Expected: all pass.
-
 - [ ] **Step 5: Typecheck + lint**
 
 ```bash
@@ -631,7 +663,6 @@ bun run typecheck && bun run lint
 ```
 
 Expected: both exit 0.
-
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -731,7 +762,6 @@ bun run typecheck
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -770,34 +800,10 @@ import { useTableMeasurements } from '@/components/use-table-measurements';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  formatDateTime,
-  formatMbps,
-  formatMs,
-  type LatencyLevel,
-  latencyLevel,
-} from '@/lib/format';
-import type {
-  PageSize,
-  SortColumn,
-  TableFilters as TableFiltersType,
-} from '@/lib/measurements-query';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatDateTime, formatMbps, formatMs, type LatencyLevel, latencyLevel } from '@/lib/format';
+import type { PageSize, SortColumn, TableFilters as TableFiltersType } from '@/lib/measurements-query';
 import type { MeasurementDto } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -825,18 +831,14 @@ const columns: ColumnDef<MeasurementDto>[] = [
     id: 'download',
     accessorKey: 'downloadMbps',
     header: 'Download',
-    cell: ({ row }) => (
-      <span className="text-speed-down">{formatMbps(row.original.downloadMbps)}</span>
-    ),
+    cell: ({ row }) => <span className="text-speed-down">{formatMbps(row.original.downloadMbps)}</span>,
     enableSorting: true,
   },
   {
     id: 'upload',
     accessorKey: 'uploadMbps',
     header: 'Upload',
-    cell: ({ row }) => (
-      <span className="text-speed-up">{formatMbps(row.original.uploadMbps)}</span>
-    ),
+    cell: ({ row }) => <span className="text-speed-up">{formatMbps(row.original.uploadMbps)}</span>,
     enableSorting: true,
   },
   {
@@ -846,10 +848,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
     cell: ({ row }) => (
       <span className="inline-flex items-center gap-2">
         <span
-          className={cn(
-            'inline-block size-2 rounded-full',
-            levelColor[latencyLevel(row.original.latencyLoadedMs)],
-          )}
+          className={cn('inline-block size-2 rounded-full', levelColor[latencyLevel(row.original.latencyLoadedMs)])}
           aria-hidden
         />
         {formatMs(row.original.latencyUnloadedMs)} / {formatMs(row.original.latencyLoadedMs)}
@@ -862,9 +861,7 @@ const columns: ColumnDef<MeasurementDto>[] = [
     accessorFn: (row) => row.serverLocations?.join(' | ') ?? '',
     header: 'Server',
     cell: ({ row }) => (
-      <span className="text-xs text-muted-foreground">
-        {row.original.serverLocations?.join(' | ') ?? '-'}
-      </span>
+      <span className="text-xs text-muted-foreground">{row.original.serverLocations?.join(' | ') ?? '-'}</span>
     ),
     enableSorting: false,
   },
@@ -971,16 +968,13 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
       <CardContent>
         <TableFilters table={table} />
         <Table>
-          <TableCaption className="sr-only">
-            Recent speedtest measurements, sortable and filterable.
-          </TableCaption>
+          <TableCaption className="sr-only">Recent speedtest measurements, sortable and filterable.</TableCaption>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const sortDir = header.column.getIsSorted();
-                  const ariaSort =
-                    sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : 'none';
+                  const ariaSort = sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : 'none';
                   const canSort = header.column.getCanSort();
                   return (
                     <TableHead key={header.id} aria-sort={ariaSort}>
@@ -1013,10 +1007,7 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="py-6 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
                   {loading ? 'Loading...' : totalCount === 0 ? 'No measurements.' : 'No rows match filters.'}
                 </TableCell>
               </TableRow>
@@ -1024,9 +1015,7 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
               rows.map((row) => (
                 <TableRow key={row.id} className="tabular-nums">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
@@ -1038,21 +1027,12 @@ export function HistoryTable({ refreshSignal }: { refreshSignal: number | null }
           aria-live="polite"
           aria-atomic="true"
         >
-          <div>
-            {totalCount === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalCount}`}
-          </div>
+          <div>{totalCount === 0 ? 'No rows' : `Showing ${firstRow}-${lastRow} of ${totalCount}`}</div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span>Rows per page</span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => table.setPageSize(Number(v))}
-              >
-                <SelectTrigger
-                  size="sm"
-                  className="h-7 w-[72px] text-xs"
-                  aria-label="Rows per page"
-                >
+              <Select value={String(pageSize)} onValueChange={(v) => table.setPageSize(Number(v))}>
+                <SelectTrigger size="sm" className="h-7 w-[72px] text-xs" aria-label="Rows per page">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1104,7 +1084,6 @@ bun run typecheck
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 3: Lint**
 
 ```bash
@@ -1112,7 +1091,6 @@ bun run lint
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -1136,7 +1114,7 @@ Edit `components/dashboard.tsx`. Replace the `<HistoryTable measurements={measur
 const refreshSignal = measurements[0]?.id ?? null;
 
 // In the returned JSX, replace <HistoryTable measurements={measurements} /> with:
-<HistoryTable refreshSignal={refreshSignal} />
+<HistoryTable refreshSignal={refreshSignal} />;
 ```
 
 Full updated return block:
@@ -1162,7 +1140,6 @@ bun run typecheck
 ```
 
 Expected: exits 0.
-
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -1175,7 +1152,6 @@ git commit -m "refactor(ui): pass refresh signal instead of rows to HistoryTable
 ## Task 7: Manual smoke test
 
 **Files:** none (verification only)
-
 - [ ] **Step 1: Start dev server**
 
 ```bash
@@ -1183,7 +1159,6 @@ bun run dev
 ```
 
 Leaves the server running on the configured port.
-
 - [ ] **Step 2: Open the app in a browser** and verify on the dashboard:
   1. The history table loads with 25 rows.
   2. Clicking the "Download" column header reorders rows by download speed; the top row is the max in the entire DB (open the DB with a SQL client or another tab running a manual query to cross-check at least the first row).
@@ -1196,7 +1171,6 @@ Leaves the server running on the configured port.
 - [ ] **Step 3: Stop dev server**
 
 Kill the dev server.
-
 - [ ] **Step 4: Run full test suite**
 
 ```bash
@@ -1204,7 +1178,6 @@ bun test
 ```
 
 Expected: all tests pass.
-
 - [ ] **Step 5: Lint + typecheck**
 
 ```bash
@@ -1212,7 +1185,6 @@ bun run lint && bun run typecheck
 ```
 
 Expected: both exit 0.
-
 - [ ] **Step 6: Final commit (if any tweaks were needed during smoke test)**
 
 If the smoke test surfaced tweaks, commit them. Otherwise this task has no commit.

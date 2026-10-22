@@ -35,14 +35,14 @@ any argon2id implementation.
 
 Key API differences vs `@node-rs/argon2`:
 
-| Concern | `@node-rs/argon2` | `Bun.password` |
-|---|---|---|
-| hash() signature | `hash(plain, opts)` | `hash(plain, opts)` |
-| verify() signature | `verify(hash, plain)` | `verify(plain, hash)` |
-| options.algorithm | numeric (2 for argon2id) | string (`'argon2id'`) |
-| options.parallelism | supported | not configurable (default 1) |
-| options.memoryCost | KiB | KiB |
-| options.timeCost | iterations | iterations |
+| Concern             | `@node-rs/argon2`        | `Bun.password`               |
+| ------------------- | ------------------------ | ---------------------------- |
+| hash() signature    | `hash(plain, opts)`      | `hash(plain, opts)`          |
+| verify() signature  | `verify(hash, plain)`    | `verify(plain, hash)`        |
+| options.algorithm   | numeric (2 for argon2id) | string (`'argon2id'`)        |
+| options.parallelism | supported                | not configurable (default 1) |
+| options.memoryCost  | KiB                      | KiB                          |
+| options.timeCost    | iterations               | iterations                   |
 
 ## Implementation
 
