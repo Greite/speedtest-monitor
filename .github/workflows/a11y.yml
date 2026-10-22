@@ -43,6 +43,8 @@ jobs:
             fi
             sleep 1
           done
+          # /api/health stays up even when page rendering crashes; fail here, not in axe.
+          curl -fsSL -o /dev/null http://localhost:3003/login
 
       - name: Run axe scan
         run: bunx -p @axe-core/cli axe http://localhost:3003/login --exit --tags wcag2a,wcag2aa,wcag21a,wcag21aa --chromedriver-path "$CHROMEWEBDRIVER/chromedriver"
