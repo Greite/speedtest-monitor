@@ -30,8 +30,8 @@ jobs:
 
       - name: Start server
         env:
-          SPEEDTEST_AUTH_SECRET: ci-only-secret-do-not-use-in-prod
-          DATABASE_URL: file:./speedtest.db
+          NODE_ENV: production
+          AUTH_SECRET: ci-only-secret-do-not-use-in-prod
         run: |
           bun scripts/migrate.ts || true
           bun server.ts &
@@ -45,10 +45,10 @@ jobs:
           done
 
       - name: Run axe scan
-        run: bunx @axe-core/cli http://localhost:3003/login --exit --tags wcag2a,wcag2aa,wcag21a,wcag21aa
+        run: bunx -p @axe-core/cli axe http://localhost:3003/login --exit --tags wcag2a,wcag2aa,wcag21a,wcag21aa
 
       - name: Run Lighthouse CI
-        run: bunx @lhci/cli autorun --config=.lighthouserc.json || true
+        run: bunx -p @lhci/cli lhci autorun --config=.lighthouserc.json || true
 
       - name: Stop server
         if: always()
