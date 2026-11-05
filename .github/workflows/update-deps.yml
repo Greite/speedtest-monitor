@@ -75,6 +75,14 @@ jobs:
       - name: Migrate Biome config
         run: bunx biome migrate --write
 
+      # A Biome release can change formatter output (2.6.5 reformatted 24
+      # Markdown files); apply it so lint only fails on real problems. Staged
+      # now so build artifacts never end up in the commit
+      - name: Apply Biome formatting
+        run: |
+          bunx biome format --write .
+          git add -u
+
       - name: Detect changes
         id: changes
         run: |
