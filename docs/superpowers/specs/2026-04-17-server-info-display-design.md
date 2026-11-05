@@ -12,6 +12,7 @@ The user asked to expose "server selection" in `/settings`. Investigation of `fa
 Persist three additional fields per measurement and surface them in the history table and chart tooltip. Read-only, additive, no new user input.
 
 Out of scope:
+
 - Picking or restricting servers (not supported by fast-cli)
 - Aggregations over server locations (e.g. "% runs from Paris")
 - Backfilling historical rows (left NULL)

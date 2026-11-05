@@ -10,6 +10,7 @@ Add local + OIDC authentication to speedtest-monitor with two roles (admin, view
 ## Scope
 
 In-scope (v1):
+
 - Local auth: email + password, argon2id hashing
 - OIDC auth via a single configurable provider (generic OIDC)
 - Two roles: `admin` (full control) and `viewer` (read-only — GET only)
@@ -20,6 +21,7 @@ In-scope (v1):
 - JWT session cookies (stateless, via next-auth v5)
 
 Out of scope (v2+):
+
 - Password reset via email (admin can reset for now)
 - Magic-link login
 - Multiple OIDC providers
@@ -71,6 +73,7 @@ components/users/
 ```
 
 Integration with existing code:
+
 - `lib/scheduler/index.ts::bootScheduler()` gains one call to `ensureSeededAdmin()` right after `runMigrations()`.
 - Existing API handlers (`app/api/settings`, `app/api/alerts/*`, `app/api/measurements/*`) remain untouched. The middleware enforces all rules uniformly.
 - `app/layout.tsx` wraps children in a next-auth `SessionProvider` and renders a header with the user menu.
@@ -102,6 +105,7 @@ export type UserRole = 'admin' | 'viewer';
 ```
 
 Decisions:
+
 - `email` is lowercased and trimmed on every insert/lookup
 - `passwordHash` is null for OIDC-only users; a local user that later signs in via OIDC keeps both
 - `oidcSubject` is stored on the first OIDC sign-in so reauth is tolerant of email changes at the IdP
@@ -123,6 +127,7 @@ SPEEDTEST_ADMIN_PASSWORD=<cleartext, single-use at boot>
 ```
 
 `ensureSeededAdmin()`:
+
 1. If either var is unset, no-op.
 2. If no user with that email exists, create `{email, passwordHash, role: 'admin', provider: 'local'}`.
 3. If a user exists, upsert: set `role='admin'` and rehash the password if `needsRehash(existingHash, envPassword)` returns true.
@@ -132,10 +137,12 @@ Idempotent and safe to run every boot.
 ### Setup wizard
 
 `/setup` is a public page that:
+
 - Renders the first-admin form when `countUsers() === 0`
 - Returns 404 (via middleware + handler double-check) when any user exists
 
 The form posts to `POST /api/auth/setup` which:
+
 - Re-verifies `countUsers() === 0` (race-safe via a transaction with unique-email constraint)
 - Creates the admin user and issues a session (`signIn('credentials', {...})` server-side)
 - Redirects to `/`
@@ -227,6 +234,7 @@ callbacks: {
 Single `middleware.ts` at repo root. Runtime: `nodejs` (required to call `countUsers()` which hits better-sqlite3).
 
 Rules, in order:
+
 1. Public: `/api/auth/*`, `/_next/*`, `/favicon.ico`, static icons — pass.
 2. `/setup` and `/api/auth/setup`: pass iff `countUsers() === 0`; otherwise 404.
 3. No session → if API path, `401 {error: 'unauthorized'}`; else redirect to `/login?callbackUrl=<pathname>`.
@@ -248,6 +256,7 @@ Rules, in order:
 | DELETE | `/api/users/:id`                | admin                         | —                                | 204                                   |
 
 Server-side invariants enforced in handlers beyond the middleware:
+
 - Email uniqueness: returned as `409 Conflict` on insert.
 - Password length: min 10 (zod), max 1024.
 - Last-admin protection: `PATCH /api/users/:id` that would leave `countAdmins()===0` returns `409 Conflict {error: 'last admin'}`. Same for `DELETE`.
@@ -264,14 +273,17 @@ Server-side invariants enforced in handlers beyond the middleware:
 **Setup wizard** — email + password + confirm-password (min 10 chars, client-side parity check). POSTs to `/api/auth/setup`. On success the response sets the session cookie and the client redirects to `/`.
 
 **Header** (rendered in `app/layout.tsx` once signed in):
+
 - Title + navigation links
 - User menu (email, role badge, "Change password" anchor, "Logout" action)
 
 **Settings page** gains two cards:
+
 - `PasswordChangeCard` (always visible to signed-in user) — current + new + confirm, posts to `/api/account/password`.
 - `UsersCard` (admin only) — list with actions: Add User, Change Role (select), Reset Password, Delete. Disabled buttons with tooltip when acting on the last admin.
 
 **Viewer read-only UX**:
+
 - Existing settings cards (SettingsForm, AlertsCard) inspect `session.user.role` and disable all inputs + action buttons when `viewer`.
 - A sticky banner `<Alert>` at the top of `/settings` reads "Read-only mode — you do not have permission to change settings".
 
@@ -322,17 +334,20 @@ Colocated `.test.ts`, vitest. Pure modules first, then handlers.
 ## Migration and dependencies
 
 Drizzle migration:
+
 1. Add `users` table in `lib/db/schema.ts`
 2. `bunx drizzle-kit generate` → `drizzle/NNNN_users.sql`
 3. `runMigrations()` applies at boot; `ensureSeededAdmin()` runs immediately after.
 
 New dependencies:
+
 - `next-auth@^5` — Auth.js v5 (Next 16 App-Router compatible)
 - `@node-rs/argon2@^2` — argon2id native bindings with prebuilt binaries for linux-x64 + linux-arm64
 
 Both added to `package.json` `dependencies` and to the `bun add` list in the `runtime-deps` stage of `Dockerfile`.
 
 Backwards compat:
+
 - Schema change is additive (`users` table only); no changes to `measurements`, `settings`, `alerts`.
 - **Breaking UX**: after upgrade, all `/api/*` calls require auth. Scripts/curl commands that worked anonymously will 401. This is the point of the feature.
 - First-run UX: if the upgrade deployment does not set `SPEEDTEST_ADMIN_EMAIL`/`SPEEDTEST_ADMIN_PASSWORD` and does not visit `/setup`, the app remains inaccessible beyond `/setup` itself. Documented prominently in README.
@@ -343,6 +358,7 @@ Rollback: `DROP TABLE users; rm middleware.ts; git revert <commits>;` returns th
 ## README additions
 
 A new `## Authentication` section covering:
+
 - Required + optional env vars
 - First-run (env-seed vs wizard)
 - Example OIDC configs for Authelia / Authentik / Keycloak

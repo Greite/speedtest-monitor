@@ -15,6 +15,7 @@
 ## File Structure
 
 **Modified:**
+
 - `lib/db/schema.ts` - add 3 nullable columns to `measurements`
 - `lib/fastcli/runner.ts` - extend `FastCliJson`, forward new fields to insert
 - `lib/types.ts` - extend `MeasurementDto` and `toMeasurementDto`
@@ -22,6 +23,7 @@
 - `components/history-chart.tsx` - feed extra fields into chart data and render a custom tooltip
 
 **Created:**
+
 - `drizzle/0001_*.sql` - auto-generated migration (filename depends on drizzle-kit)
 - `drizzle/meta/0001_snapshot.json` - auto-generated
 - `drizzle/meta/_journal.json` - updated by drizzle-kit
@@ -32,6 +34,7 @@
 ## Task 1: Add columns to schema and generate migration
 
 **Files:**
+
 - Modify: `lib/db/schema.ts`
 - Create (auto): `drizzle/0001_*.sql`, `drizzle/meta/0001_snapshot.json`
 
@@ -60,14 +63,17 @@ export const measurements = sqliteTable('measurements', {
 ```
 
 Leave `settings` table unchanged. Keep the existing exports at the bottom of the file.
+
 - [ ] **Step 2: Generate migration**
 
 Run:
+
 ```bash
 bun run db:generate
 ```
 
 Expected: drizzle-kit creates `drizzle/0001_<adjective>_<noun>.sql` and updates `drizzle/meta/_journal.json` + a new `drizzle/meta/0001_snapshot.json`.
+
 - [ ] **Step 3: Inspect generated SQL**
 
 Open the newly created `drizzle/0001_*.sql`. It should contain three `ALTER TABLE measurements ADD COLUMN ...` statements for `server_locations`, `user_location`, `user_ip`. All three should be nullable (no `NOT NULL`). Example of what to expect:
@@ -79,14 +85,17 @@ ALTER TABLE `measurements` ADD `user_ip` text;
 ```
 
 If drizzle-kit generated anything else (dropping the table, recreating, etc.), stop and investigate - do not proceed.
+
 - [ ] **Step 4: Typecheck**
 
 Run:
+
 ```bash
 bun run typecheck
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -99,6 +108,7 @@ git commit -m "feat(db): add server_locations, user_location, user_ip to measure
 ## Task 2: Extend runner to capture new fields
 
 **Files:**
+
 - Modify: `lib/fastcli/runner.ts`
 
 - [ ] **Step 1: Extend `FastCliJson` and forward fields**
@@ -157,22 +167,27 @@ const row = insertMeasurement({
 ```
 
 Do not touch `spawnFastCli` - `fast --json` already emits these fields unconditionally (verified in `node_modules/fast-cli/distribution/ui.js:63-77`).
+
 - [ ] **Step 2: Typecheck**
 
 Run:
+
 ```bash
 bun run typecheck
 ```
 
 Expected: exits 0. If it complains about `insertMeasurement` signature, the Drizzle `$inferInsert` type should already include the new fields via the schema change from Task 1. If it still errors, confirm Task 1 was committed and the TypeScript server is seeing fresh types.
+
 - [ ] **Step 3: Lint**
 
 Run:
+
 ```bash
 bun run lint
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -185,6 +200,7 @@ git commit -m "feat(runner): capture serverLocations/userLocation/userIp from fa
 ## Task 3: Extend DTO and propagate to API/WS (TDD)
 
 **Files:**
+
 - Create: `lib/types.test.ts`
 - Modify: `lib/types.ts`
 
@@ -246,11 +262,13 @@ describe('toMeasurementDto', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run:
+
 ```bash
 bun run test -- lib/types.test.ts
 ```
 
 Expected: FAIL. Errors like `Property 'serverLocations' is missing in type 'MeasurementDto'` or test assertions failing because the fields are `undefined` on the DTO.
+
 - [ ] **Step 3: Extend `MeasurementDto` and `toMeasurementDto`**
 
 Edit `lib/types.ts`. Replace the entire file with:
@@ -299,19 +317,23 @@ export type WsEventDto =
 - [ ] **Step 4: Run test to verify it passes**
 
 Run:
+
 ```bash
 bun run test -- lib/types.test.ts
 ```
 
 Expected: PASS, 3 tests green.
+
 - [ ] **Step 5: Full test run + typecheck + lint**
 
 Run in sequence:
+
 ```bash
 bun run test && bun run typecheck && bun run lint
 ```
 
 Expected: all exit 0. If any existing test broke because `MeasurementDto` was constructed elsewhere with the old shape, update it to include `serverLocations: null, userLocation: null, userIp: null` in fixtures.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -324,6 +346,7 @@ git commit -m "feat(dto): expose serverLocations/userLocation/userIp in Measurem
 ## Task 4: Add "Server" column to history table
 
 **Files:**
+
 - Modify: `components/history-table.tsx`
 
 - [ ] **Step 1: Add column header and cell**
@@ -374,11 +397,13 @@ The complete row block should read:
 - [ ] **Step 2: Typecheck + lint**
 
 Run:
+
 ```bash
 bun run typecheck && bun run lint
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -391,6 +416,7 @@ git commit -m "feat(ui): add Server column to history table"
 ## Task 5: Custom tooltip in history chart
 
 **Files:**
+
 - Modify: `components/history-chart.tsx`
 
 - [ ] **Step 1: Extend `Point` type and chart data with the three new fields**
@@ -501,14 +527,17 @@ Replace the existing `<Tooltip contentStyle={...} labelStyle={...} />` with:
 ```
 
 Remove the old `contentStyle`/`labelStyle` inline props - our custom renderer owns the styling now.
+
 - [ ] **Step 4: Typecheck + lint**
 
 Run:
+
 ```bash
 bun run typecheck && bun run lint
 ```
 
 Expected: exits 0. If `TooltipProps<number, string>` generic args cause issues (recharts 3 type quirks), widen to `TooltipProps<any, any>` or fall back to destructuring `props: any` for the tooltip renderer signature only - keep the internal cast `payload[0]?.payload as Point | undefined` intact.
+
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -521,6 +550,7 @@ git commit -m "feat(ui): render server/client info in history chart tooltip"
 ## Task 6: End-to-end manual verification
 
 **Files:** none (verification only)
+
 - [ ] **Step 1: Run the dev server**
 
 ```bash
@@ -528,14 +558,17 @@ bun run dev
 ```
 
 Open http://localhost:3000 in a browser.
+
 - [ ] **Step 2: Trigger a measurement**
 
 In another terminal:
+
 ```bash
 curl -X POST http://localhost:3000/api/measurements/run
 ```
 
 Wait ~90 seconds for completion (watch the WS `running` → `measurement` events in the UI's live state).
+
 - [ ] **Step 3: Verify the API response**
 
 ```bash
@@ -543,9 +576,11 @@ curl -s 'http://localhost:3000/api/measurements?range=1h' | jq '.measurements[0]
 ```
 
 Expected: the first object includes `serverLocations: ["..."]` (non-empty array), `userLocation: "..."` (non-empty string), `userIp: "..."` (non-empty string). If any are `null` on a successful run, fast-cli may have failed to scrape the DOM - retry once; if still null, flag for investigation.
+
 - [ ] **Step 4: Verify the UI**
 
 In the browser:
+
 - History table shows a "Server" column, populated for the new row (e.g. `Paris | Frankfurt`). Older rows show `-`.
 - Hover a point in the chart. Tooltip shows the speed values **and** a separator followed by `Server:`, `Client:`, `IP:` lines.
 - Trigger a second measurement. Both rows appear, tooltip is correct for each.
@@ -553,6 +588,7 @@ In the browser:
 - [ ] **Step 5: Check error path (optional, skip if not easily testable)**
 
 Temporarily rename the `fast` binary path or disconnect the network to force an error measurement, then confirm the resulting row has `status: 'error'` and all three new fields are `null` in the DB and UI. Revert.
+
 - [ ] **Step 6: Stop the dev server**
 
 Ctrl+C the `bun run dev` process.
@@ -564,6 +600,7 @@ No commit for this task (verification only).
 ## Post-implementation
 
 After all 6 tasks complete and are committed:
+
 1. **Push the branch** (if on a feature branch) and open a PR.
 2. **Consider README update**: the Configuration table and API section don't mention the new fields. A short addition in the API response shape paragraph would help users. Not strictly required for this feature to work.
 3. **No Docker image changes**: no new runtime deps.

@@ -29,10 +29,12 @@
 **AMENDED after ledger check (.superpowers/sdd/progress.md):** `scripts/axe-audit.ts` + `puppeteer-core` + `axe-core` are KEPT (built deliberately in Astryx P3 Task 4 — the axe CLI silently audits dark mode on macOS; a P4 follow-up plans to expand its CI use). `knip` + `knip.json` are KEPT (used manually per ledger P2). The Lighthouse `|| true` step + `.lighthouserc.json` are KEPT (documented CSS-payload watch, ledger P1 follow-up). Only the shadcn relic and stale trustedDependencies go.
 
 **Files:**
+
 - Delete: `components.json`
 - Modify: `package.json`
 
 **Interfaces:** none (nothing imports these; verified by audit greps).
+
 - [ ] **Step 1: Delete file**
 
 ```bash
@@ -47,6 +49,7 @@ rm components.json
 - [ ] **Step 3: Verify**
 
 Run: `bun test && bun run tsc && bun run biome:check` — all green.
+
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -58,11 +61,13 @@ git add -A && git commit -m "chore: drop shadcn relic and stale trustedDependenc
 ### Task 2: Replace node-cron with setInterval, inline scheduler/external.ts
 
 **Files:**
+
 - Rewrite: `lib/scheduler/index.ts`
 - Delete: `lib/scheduler/external.ts`, `lib/scheduler/cron-expr.test.ts`
 - Modify: `app/api/settings/route.ts`, `package.json` (remove `node-cron`)
 
 **Interfaces:**
+
 - Produces: `bootScheduler(): Promise<void>`, `rescheduleFromSettings(): void`, `stopScheduler(): void` (same names as before; `cronExprForMinutes` is deleted). `globalThis.__speedtestReschedule` declaration moves into `lib/scheduler/index.ts`.
 - Consumers to check: `grep -rn "scheduler/external\|cronExprForMinutes\|requestReschedule" app lib server.ts` — only `app/api/settings/route.ts` and the deleted test.
 
@@ -138,6 +143,7 @@ export function stopScheduler() {
 ```
 
 (`migrateLegacyAuth` import survives until Task 3 removes it.)
+
 - [ ] **Step 2: Delete `lib/scheduler/external.ts` and `lib/scheduler/cron-expr.test.ts`**
 
 - [ ] **Step 3: Update `app/api/settings/route.ts`**
@@ -149,12 +155,15 @@ globalThis.__speedtestReschedule?.();
 ```
 
 (The `declare global` in `lib/scheduler/index.ts` types it program-wide.)
+
 - [ ] **Step 4: Remove dep**
 
 Remove `node-cron` from `package.json` dependencies, run `bun install`. Verify: `rtk grep -rn "node-cron" lib app server.ts scripts` → no hits.
+
 - [ ] **Step 5: Verify**
 
 Run: `bun test && bun run tsc && bun run biome:check` — green. Smoke: `bun server.ts` boots without throwing (Ctrl-C after "ready").
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -166,29 +175,35 @@ git add -A && git commit -m "refactor: replace node-cron with setInterval and in
 ### Task 3: Delete dead auth code (legacy migration, needsRehash, oidc lookup, types file, AuthError.status)
 
 **Files:**
+
 - Delete: `lib/auth/migrate-legacy.ts`, `lib/auth/types.ts`
 - Modify: `lib/db/schema.ts`, `lib/scheduler/index.ts`, `lib/auth/hash.ts`, `lib/auth/hash.test.ts`, `lib/auth/users.ts`, `lib/auth/users.test.ts`, `lib/auth/authorize.ts`, plus every importer of `@/lib/auth/types`
 - Create (generated): `drizzle/0006_*.sql` via drizzle-kit
 
 **Interfaces:**
+
 - Produces: `lib/auth/authorize.ts` now exports `type SessionUser` (same shape as before: `{ id: string; email: string; name?: string | null; role: UserRole; sessionId?: string }`). `UserRole` stays in `lib/db/schema.ts`.
 - Consumers to repoint: `grep -rn "auth/types" app lib components` — every hit switches to `import type { SessionUser } from '@/lib/auth/authorize'` and/or `import type { UserRole } from '@/lib/db/schema'`.
 
 - [ ] **Step 1: Remove legacy table from schema**
 
 In `lib/db/schema.ts` delete the `legacyUsers` table block (lines 60-79 incl. the comment) and `export type LegacyUser`. Keep `UserRole`/`UserProvider`.
+
 - [ ] **Step 2: Delete `lib/auth/migrate-legacy.ts`; remove its import + `migrateLegacyAuth();` call from `lib/scheduler/index.ts`**
 
 - [ ] **Step 3: Generate the drop migration**
 
 Run: `bun run db:generate`
 Expected: a new `drizzle/0006_*.sql` containing `DROP TABLE \`users\`;`. Inspect it; if drizzle-kit asks interactively about the deleted table, choose "delete". Then run `bun scripts/migrate.ts` against the local dev DB to confirm it applies.
+
 - [ ] **Step 4: Trim `lib/auth/hash.ts`**
 
 Delete `needsRehash`, the `PARALLELISM` constant, and their doc comments (keep `OPTS`, `hashPassword`, `verifyPassword`, `verifyPasswordPair` — hashing itself untouched). In `lib/auth/hash.test.ts` remove `needsRehash` from the import and delete the `it('needsRehash false for a fresh hash', ...)` block.
+
 - [ ] **Step 5: Trim `lib/auth/users.ts`**
 
 Delete `findUserByOidcSubject` (lines 53-56). In `lib/auth/users.test.ts` remove it from the import and delete the `it('findUserByOidcSubject', ...)` block.
+
 - [ ] **Step 6: Fold `lib/auth/types.ts` into authorize, drop AuthError**
 
 Rewrite `lib/auth/authorize.ts`:
@@ -238,9 +253,11 @@ export async function requireAdmin(): Promise<SessionUser> {
 (No catcher anywhere reads `AuthError.status` — grep confirmed; both paths already end as generic 500s. If a status-mapping catcher is ever written, reintroduce the class then.)
 
 Delete `lib/auth/types.ts`. Repoint every `auth/types` importer (grep from Interfaces above).
+
 - [ ] **Step 7: Verify**
 
 Run: `bun test && bun run tsc && bun run biome:check` — green.
+
 - [ ] **Step 8: Commit**
 
 ```bash
@@ -252,15 +269,18 @@ git add -A && git commit -m "refactor: drop legacy auth migration, needsRehash, 
 ### Task 4: Delete dead WS broadcasts, move EngineResult, single Range type
 
 **Files:**
+
 - Modify: `lib/ws/broadcast.ts`, `lib/types.ts`, `lib/alerts/handle.ts`, `lib/alerts/handle.test.ts`, `app/api/settings/route.ts`, `lib/measurement/cloudflare.ts`, `lib/measurement/runner.test.ts`, `lib/measurements.ts`, `components/use-live-measurements.ts`, `components/time-range-picker.tsx`
 - Delete: `lib/measurement/types.ts`
 
 **Interfaces:**
+
 - Produces: `WsEventDto` shrinks to the two variants clients actually handle (`measurement`, `running`). `EngineResult` is exported from `lib/measurement/cloudflare.ts`. `Range` (`'6h' | '12h' | '24h' | '7d' | '30d'`) is exported from `lib/measurements.ts` and imported everywhere else.
 
 - [ ] **Step 1: Trim `lib/ws/broadcast.ts`**
 
 Keep only `broadcastMeasurement` and `broadcastRunning`; delete `broadcastSettingsUpdated` and `broadcastAlert` (and the now-unused `Alert` import).
+
 - [ ] **Step 2: Trim `lib/types.ts`**
 
 Delete `AlertDto` and the `'settings_updated'` / `'alert'` variants of `WsEventDto`:
@@ -272,6 +292,7 @@ export type WsEventDto =
 ```
 
 Remove the now-unused `AlertEvent, AlertKind` from the top import.
+
 - [ ] **Step 3: Update callers**
 
 - `lib/alerts/handle.ts`: remove `broadcastAlert` import; in `dispatchAndUpdate` replace the last two lines with `db.update(alerts).set({ deliveryStatus }).where(eq(alerts.id, row.id)).run();`
@@ -281,12 +302,15 @@ Remove the now-unused `AlertEvent, AlertKind` from the top import.
 - [ ] **Step 4: Move `EngineResult`**
 
 Move the `EngineResult` type from `lib/measurement/types.ts` into `lib/measurement/cloudflare.ts` (exported), delete `lib/measurement/types.ts`, update the import in `lib/measurement/runner.test.ts` to `./cloudflare`.
+
 - [ ] **Step 5: Single `Range` type**
 
 In `lib/measurements.ts` add `export` to the existing `Range` type. In `components/use-live-measurements.ts` and `components/time-range-picker.tsx` delete the local declaration and `import type { Range } from '@/lib/measurements';`.
+
 - [ ] **Step 6: Verify**
 
 Run: `bun test && bun run tsc && bun run biome:check` — green.
+
 - [ ] **Step 7: Commit**
 
 ```bash
@@ -298,11 +322,13 @@ git add -A && git commit -m "refactor: drop listener-less ws broadcasts, move En
 ### Task 5: Replace the MJML email chain with a template literal
 
 **Files:**
+
 - Rewrite: `lib/alerts/templates/render.ts`
 - Delete: `lib/alerts/templates/alert-email.mjml`, `lib/alerts/templates/alert-email.html.ts`, `scripts/build-email-templates.ts`
 - Modify: `package.json` (scripts `build`, `build:email`; deps `mjml`, `@types/mjml`), `lib/alerts/templates/render.test.ts` (only if an assertion targets MJML internals)
 
 **Interfaces:**
+
 - Produces: `renderAlertEmail(payload: AlertPayload, publicUrl: string | null): RenderedEmail` — unchanged signature. New export `formatAlertTimestamp(ms: number): string` (Task 6's folded `formatMessage` will import it).
 - Contract pinned by `render.test.ts`: subject `[Speedtest] <title>`; text lines incl. `Alert ID:`/`Kind:`/`Event:`/optional `Dashboard:`; html contains escaped title/body, `Speedtest Monitor`, uppercase `OBSERVED`/`THRESHOLD` labels with `>42<`-style values only when both metrics are set, dashboard CTA only when `publicUrl` is set, no `__X__` leftovers.
 
@@ -391,6 +417,7 @@ export function renderAlertEmail(payload: AlertPayload, publicUrl: string | null
 ```
 
 (ponytail: plain inline-style HTML — old-Outlook VML conditionals dropped; re-add an MJML build only if broken rendering is actually reported.)
+
 - [ ] **Step 2: Delete the chain**
 
 ```bash
@@ -398,12 +425,15 @@ rm lib/alerts/templates/alert-email.mjml lib/alerts/templates/alert-email.html.t
 ```
 
 In `package.json`: delete the `build:email` script, remove `bun scripts/build-email-templates.ts && ` from the `build` script, remove `mjml` + `@types/mjml` devDeps, `bun install`.
+
 - [ ] **Step 3: Run the render tests**
 
 Run: `bun test lib/alerts/templates` — expected green as-is (the contract above was written against them). Fix the template, not the assertions, unless an assertion targets MJML internals (e.g. Roboto link), in which case delete that assertion.
+
 - [ ] **Step 4: Full verify**
 
 Run: `bun test && bun run tsc && bun run biome:check && bun run build` — green (build proves the pipeline no longer needs the mjml step).
+
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -415,11 +445,13 @@ git add -A && git commit -m "refactor: replace mjml email chain with a template 
 ### Task 6: Fold the alerts module (destinations, state/streak/format/dispatch, evaluate table, small deletes)
 
 **Files:**
+
 - Create: `lib/alerts/destinations.ts` (merge of `destinations/*.ts`), merge tests into `lib/alerts/destinations.test.ts`
 - Delete: `lib/alerts/destinations/` (7 source files + 5 test files), `lib/alerts/state.ts`, `lib/alerts/streak.ts`, `lib/alerts/format.ts`, `lib/alerts/dispatch.ts`
 - Modify: `lib/alerts/handle.ts`, `lib/alerts/evaluate.ts`, `lib/alerts/types.ts`, `lib/alerts/templates/render.ts` (imports only), `app/api/alerts/rules/route.ts`, `components/settings/alerts-card.tsx`, test files: `state.test.ts`, `streak.test.ts`, `format.test.ts`, `dispatch.test.ts` (imports → `./handle`)
 
 **Interfaces:**
+
 - Produces: `lib/alerts/destinations.ts` exports `Destination`, `httpDeliver`, `buildDestinations(cfg)` (the 5 `createXDestination` become non-exported internals unless a test imports them — then keep them exported). `lib/alerts/handle.ts` additionally exports `readAlertState`, `computeFailureStreak`, `formatMessage`, `dispatchAlert` (unchanged signatures).
 - `formatMessage` drops its local `formatTime` and imports `formatAlertTimestamp` from `./templates/render` (no cycle: render imports only runtime-config + types).
 
@@ -445,9 +477,11 @@ function withConfigured() {
 ```
 
 Merge `webhook.test.ts`, `ntfy.test.ts`, `discord.test.ts`, `slack.test.ts`, `smtp.test.ts` into `lib/alerts/destinations.test.ts` (imports from `./destinations`; keep every describe/it). Delete the `lib/alerts/destinations/` directory. Update importers: `grep -rn "alerts/destinations" lib app` (handle.ts, rules route, dispatch types).
+
 - [ ] **Step 2: Fold state/streak/format/dispatch into `lib/alerts/handle.ts`**
 
 Copy `readAlertState`, `computeFailureStreak`, `formatMessage`, `dispatchAlert` (with `withTimeout` and `DEFAULT_TIMEOUT_MS`, keeping the `timeoutMs?` param) into `handle.ts` as exported functions; merge their imports; delete the four source files. In `formatMessage`, replace the local `formatTime(timestamp)` with `formatAlertTimestamp(timestamp)` imported from `./templates/render`. Update the four test files to import from `./handle`. If two test files' `mock.module` calls collide when run together, keep them as separate files (they already are) — only the import path changes.
+
 - [ ] **Step 3: Rewrite `lib/alerts/evaluate.ts` as a table**
 
 ```ts
@@ -525,6 +559,7 @@ export function evaluateAlerts(input: Input): AlertTransition[] {
 ```
 
 Run `bun test lib/alerts/evaluate.test.ts` — must pass unchanged (same semantics: threshold unset, non-success, or null observed → no transition; failure_streak evaluated regardless of measurement status).
+
 - [ ] **Step 4: Small deletes**
 
 - `lib/alerts/types.ts`: delete the `export type { AlertEvent, AlertKind };` re-export (keep the `import type` — the file uses them). Repoint consumers that imported them from `./types` / `../types` (grep `AlertEvent.*from.*alerts/types|from '\.\./types'` in lib/alerts) to `../db/schema` / `../../db/schema`.
@@ -533,6 +568,7 @@ Run `bun test lib/alerts/evaluate.test.ts` — must pass unchanged (same semanti
 - [ ] **Step 5: Verify**
 
 Run: `bun test && bun run tsc && bun run biome:check` — green.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -544,10 +580,12 @@ git add -A && git commit -m "refactor: fold alerts module into fewer files and t
 ### Task 7: Replace the hand-rolled markdown parser with Astryx Markdown
 
 **Files:**
+
 - Rewrite: `components/markdown.tsx` (369 → ~40 lines)
 - Modify: `components/markdown.test.tsx` (keep safeHref coverage, drop parser-internals tests)
 
 **Interfaces:**
+
 - Produces: `Markdown({ source }: { source: string })` — unchanged signature (sole consumer: `app/changelog/page.tsx:151`). `safeHref` becomes exported for its tests.
 - `@astryxdesign/core/Markdown` verified present and publicly exported (`dist/Markdown/`, `export * from './Markdown'`), props: `children: string`, `headingLevelStart`, `components.link`, `density`.
 
@@ -620,9 +658,11 @@ describe('safeHref', () => {
 ```
 
 Delete tests that exercised the deleted parser internals. If the existing file already renders `<Markdown>` and asserts on output HTML, keep any assertion that still holds against Astryx output and delete the rest.
+
 - [ ] **Step 3: Visual check**
 
 Run: `bun run dev`, open `http://localhost:3003/changelog`. Headings, bullet lists, bold, inline code and links must render; links open in a new tab.
+
 - [ ] **Step 4: Verify + commit**
 
 Run: `bun test && bun run tsc && bun run biome:check` — green.
@@ -636,15 +676,18 @@ git add -A && git commit -m "refactor: replace hand-rolled markdown parser with 
 ### Task 8: Topbar diet + native route groups instead of SessionShell
 
 **Files:**
+
 - Modify: `components/topbar.tsx`, `app/layout.tsx`, `components/users/delete-user-dialog.tsx`
 - Create: `app/(chrome)/layout.tsx`
 - Move: `app/page.tsx` → `app/(chrome)/page.tsx`, `app/settings/page.tsx` → `app/(chrome)/settings/page.tsx`, `app/changelog/page.tsx` → `app/(chrome)/changelog/page.tsx` (login/setup stay at `app/`, chrome-less)
 - Delete: `components/auth/session-shell.tsx`, `components/use-dialog-a11y-ids.ts`
 
 **Interfaces:** none new — URL space unchanged (route groups don't affect paths).
+
 - [ ] **Step 1: One theme switcher**
 
 In `components/topbar.tsx` delete `ThemeMenu` (lines 99-159 incl. its comment block) and replace its desktop usage (line 331) with `<ThemeSegmented mounted={mounted} theme={theme} setTheme={setTheme} />`. Remove the now-unused imports (`DropdownMenu`, `DropdownMenuItem`, `Check`).
+
 - [ ] **Step 2: Delete `running2`**
 
 Remove the `running2` state, use `running` alone (`triggerRun` already sets `running: true` synchronously and resets it on error/measurement):
@@ -680,6 +723,7 @@ const runProps = {
 ```
 
 Desktop: `<Button {...runProps} size="sm" icon={...} tooltip={connected ? undefined : 'Waiting for live connection…'} className={runClassName} />`. Mobile: `<IconButton {...runProps} size="sm" icon={...} className={cn('min-h-11 min-w-11', runClassName)} />`. Drawer: `<Button {...runProps} width="100%" icon={...} className={cn('mt-3 min-h-11', runClassName)} />`. (The `icon` stays per-site: sizes differ.)
+
 - [ ] **Step 4: `DrawerSection` wrapper**
 
 Add above `Topbar`:
@@ -708,6 +752,7 @@ function DrawerSection({
 ```
 
 Replace the four drawer `<section aria-labelledby=... ><h3 .../>` blocks (`m-account`/Account/0, `m-live`/Live status/40, `m-theme`/Theme/80, `m-nav`/Navigation/120) with `<DrawerSection id="m-account" title="Account" delay={0}>...</DrawerSection>` etc. The trailing logout `<div className="drawer-section mt-auto pt-2">` has no heading — leave it as is. Import `ReactNode` from react.
+
 - [ ] **Step 5: Inline the a11y-ids hook**
 
 In `LogoutConfirmDialog` (topbar.tsx) and `components/users/delete-user-dialog.tsx`, replace `const { labelId: titleId, descriptionId } = useDialogA11yIds();` with:
@@ -718,6 +763,7 @@ const descriptionId = useId();
 ```
 
 (add `useId` to the react import), delete the `useDialogA11yIds` imports and `components/use-dialog-a11y-ids.ts`.
+
 - [ ] **Step 6: Route groups replace SessionShell**
 
 Create `app/(chrome)/layout.tsx`:
@@ -740,9 +786,11 @@ export default function ChromeLayout({ children }: { children: ReactNode }) {
 ```
 
 `git mv app/page.tsx app/(chrome)/page.tsx`, same for `settings/page.tsx` and `changelog/page.tsx` (bring along any colocated files in those dirs). In `app/layout.tsx`, replace `<SessionShell>{children}</SessionShell>` with `{children}` and drop the import. Delete `components/auth/session-shell.tsx`. Login/setup pages stay at `app/login`/`app/setup` — outside the group, they render without chrome, same as before.
+
 - [ ] **Step 7: Verify**
 
 Run: `bun test && bun run tsc && bun run biome:check && bun run build` — green (build validates the route-group move). Smoke in dev: `/` and `/settings` show Topbar+Footer; `/login` shows neither; theme switcher works on desktop and in the mobile drawer; Run now still triggers a measurement.
+
 - [ ] **Step 8: Commit**
 
 ```bash
@@ -754,10 +802,12 @@ git add -A && git commit -m "refactor: slim topbar and replace SessionShell with
 ### Task 9: Shared submit state for the users dialogs
 
 **Files:**
+
 - Create: `components/users/use-dialog-request.ts`
 - Modify: `components/users/add-user-dialog.tsx`, `components/users/reset-password-dialog.tsx`, `components/users/delete-user-dialog.tsx`, `components/users/users-card.tsx`
 
 **Interfaces:**
+
 - Produces: `useDialogRequest(): { pending, error, fieldErrors, setError, reset, run }` where `run(url: string, init?: RequestInit): Promise<boolean>` — true on success; on failure it has already set `error`/`fieldErrors` and cleared `pending`. On success `pending` stays true (the dialog closes right after).
 
 - [ ] **Step 1: Write the hook**
@@ -837,12 +887,15 @@ async function onSubmit(e: React.FormEvent) {
 ```
 
 reset-password: `run('/api/users/${user.id}/reset-password', ...)` with its two pre-checks; delete-user: `run('/api/users/${user.id}', { method: 'DELETE' })` with no field state. Field-error rendering (`fieldErrors.email` etc.) and Banner/footer markup stay as-is.
+
 - [ ] **Step 3: Pass `refresh` directly in `users-card.tsx`**
 
 Delete the `onAdded`/`onDeleted` `useCallback`s (lines 132-138) and pass `onCreated={refresh}` / `onDeleted={refresh}` at the call sites.
+
 - [ ] **Step 4: Verify**
 
 Run: `bun test && bun run tsc && bun run biome:check` — green. Smoke in dev (`/settings`): create a user with a bad email (field error shows in dialog), then a valid one (toast + list refresh), reset a password, delete the user.
+
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -854,9 +907,11 @@ git add -A && git commit -m "refactor: share users dialog submit state via useDi
 ### Task 10: Small shrinks (parseTableQuery, toSearchParams, z.email, .nums-tab)
 
 **Files:**
+
 - Modify: `lib/measurements-query.ts`, `components/use-table-measurements.ts`, `lib/auth/schema.ts`, `app/globals.css`
 
 **Interfaces:** `parseTableQuery(params: URLSearchParams): TableQuery` unchanged; `lib/measurements-query.test.ts` must pass **without modification** — it is the behavior spec (notably: invalid numbers are silently dropped, invalid enums throw).
+
 - [ ] **Step 1: Rewrite the filter readers in `lib/measurements-query.ts`**
 
 Keep the type exports and the page/pageSize/sort/sortDir parsing as-is. Replace `readNumber`/`readNumericRange`/`readTimeRange`/`readStatuses`/`readServer` and the filters block with:
@@ -917,6 +972,7 @@ export function parseTableQuery(params: URLSearchParams): TableQuery {
 ```
 
 CAUTION: the tests likely assert absent keys (e.g. `filters` deep-equals `{}` when no filter params) — hence the `delete` sweep for `undefined` entries. If a test fails on key presence, adjust the implementation, never the test.
+
 - [ ] **Step 2: Loop in `toSearchParams` (`components/use-table-measurements.ts`)**
 
 ```ts
@@ -951,9 +1007,11 @@ function toSearchParams(q: TableQuery): URLSearchParams {
 - [ ] **Step 3: `z.email()` in `lib/auth/schema.ts`**
 
 Replace the hand-rolled email regex on line 3 with zod 4's built-in `z.email()` (keep any `.trim()`/`.toLowerCase()`/max-length chained on it). Run `bun test lib/auth` — the schema tests define accepted/rejected inputs; if one rejects an address `z.email()` accepts (or vice versa), keep the test's verdict by chaining `.refine`, don't loosen the test.
+
 - [ ] **Step 4: Drop `.nums-tab` from `app/globals.css`**
 
 Line ~175: `table, th, td, .nums-tab {` → `table, th, td {` (grep confirmed zero `nums-tab` usage in app/components/lib).
+
 - [ ] **Step 5: Verify + commit**
 
 Run: `bun test && bun run tsc && bun run biome:check` — green.

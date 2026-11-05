@@ -27,6 +27,7 @@ container on `oven/bun:1-slim`. `ws` and `@node-rs/argon2` stay (phases
 ## Scope
 
 In-scope (Phase 1):
+
 - SQLite driver swap: `better-sqlite3` + `drizzle-orm/better-sqlite3`
   -> `bun:sqlite` + `drizzle-orm/bun-sqlite`. Same schema, same data
   format.
@@ -42,6 +43,7 @@ In-scope (Phase 1):
 - README Stack + Development sections updated.
 
 Out of scope (separate phases):
+
 - `ws` -> `Bun.serve` websocket rewrite (Phase 2).
 - `@node-rs/argon2` -> `Bun.password` (Phase 3).
 - Any runtime feature work (measurements, alerts, auth, etc.).
@@ -86,6 +88,7 @@ function openDatabase() {
 ```
 
 Differences worth calling out:
+
 - `new Database(path, { create: true })` - `bun:sqlite` does not create
   the file by default; must pass `{ create: true }` for the prod path.
   `:memory:` does not need it.
@@ -211,6 +214,7 @@ Seven commits (one per batch).
 ```
 
 Dev dependencies:
+
 - Remove: `vitest`
 - Remove: `better-sqlite3`, `@types/better-sqlite3`
 - Add: `@types/bun` (dev)
@@ -278,6 +282,7 @@ CMD ["bun", "dist/server.js"]
 ```
 
 Two small changes from the current file:
+
 - `HEALTHCHECK` uses `bun -e` instead of `node -e`.
 - `CMD` invokes `bun dist/server.js`.
 

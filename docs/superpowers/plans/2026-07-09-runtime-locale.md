@@ -26,10 +26,12 @@
 ### Task 1: `lib/runtime-config.ts` — validated runtime display config
 
 **Files:**
+
 - Create: `lib/runtime-config.ts`
 - Test: `lib/runtime-config.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing (leaf module).
 - Produces: `resolveDisplayConfig(): DisplayConfig` where `type DisplayConfig = { locale: string; timeZone: string }`; constants `DEFAULT_LOCALE = 'en-US'`, `DEFAULT_TIMEZONE = 'UTC'`; global type `window.__SPEEDTEST_CONFIG__?: DisplayConfig`. Tasks 2, 3, 4 import these.
 
@@ -85,6 +87,7 @@ describe('resolveDisplayConfig', () => {
 
 Run: `rtk bun test lib/runtime-config.test.ts`
 Expected: FAIL, cannot resolve module `./runtime-config`.
+
 - [ ] **Step 3: Write the implementation**
 
 Create `lib/runtime-config.ts`:
@@ -146,6 +149,7 @@ export function resolveDisplayConfig(): DisplayConfig {
 
 Run: `rtk bun test lib/runtime-config.test.ts`
 Expected: PASS (3 tests). Two `console.warn` lines from the invalid-values test are expected output, not failures.
+
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -158,10 +162,12 @@ rtk git commit -m "feat(config): runtime display config with locale/timezone val
 ### Task 2: `lib/format.ts` — lazy locale-aware formatters
 
 **Files:**
+
 - Modify: `lib/format.ts` (replace lines 25-49 constants/formatters and line 78 `RELATIVE_FMT`; function bodies of `formatDateTime`, `formatTime`, `formatShortDate`, `formatRelativeTime`)
 - Test: `lib/format.test.ts`
 
 **Interfaces:**
+
 - Consumes: `resolveDisplayConfig()` from `lib/runtime-config.ts` (Task 1).
 - Produces: unchanged public API (`formatMbps`, `formatMs`, `formatDateTime`, `formatTime`, `formatShortDate`, `formatRelativeTime`, `latencyLevel`, `computeDelta`, types) plus new test-only export `resetFormatCache(): void`. Task 3's manual verification and existing components rely on the unchanged API.
 
@@ -236,6 +242,7 @@ describe('locale and timezone configuration', () => {
 
 Run: `rtk bun test lib/format.test.ts`
 Expected: FAIL, `resetFormatCache` is not exported (and/or French/English assertions fail because the current code pins `fr-FR`).
+
 - [ ] **Step 3: Implement the lazy formatters**
 
 In `lib/format.ts`, add the import at the top of the file:
@@ -316,18 +323,22 @@ export function formatRelativeTime(timestamp: number | string | Date, now: numbe
 ```
 
 Everything else in the file (`formatMbps`, `formatMs`, `asDate`, `latencyLevel`, `computeDelta`, types) stays as is.
+
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `rtk bun test lib/format.test.ts`
 Expected: PASS (all describe blocks, including the pre-existing ones).
+
 - [ ] **Step 5: Verify no NEXT_PUBLIC_ references remain**
 
 Run: `rtk grep -rn "NEXT_PUBLIC_LOCALE\|NEXT_PUBLIC_TIMEZONE" . --include="*.ts" --include="*.tsx" --include="*.md" --include="Dockerfile" --include="*.yml"`
 Expected: no matches outside `docs/superpowers/` (spec/plan may mention the old names historically).
+
 - [ ] **Step 6: Run the full test suite**
 
 Run: `rtk bun test`
 Expected: PASS, no regressions.
+
 - [ ] **Step 7: Commit**
 
 ```bash
@@ -340,9 +351,11 @@ rtk git commit -m "refactor(format): lazy locale-aware formatters from runtime c
 ### Task 3: `app/layout.tsx` — inject config before hydration, force dynamic rendering
 
 **Files:**
+
 - Modify: `app/layout.tsx`
 
 **Interfaces:**
+
 - Consumes: `resolveDisplayConfig()` from `lib/runtime-config.ts` (Task 1); the `window.__SPEEDTEST_CONFIG__` global type it declares.
 - Produces: `window.__SPEEDTEST_CONFIG__` set in every rendered document before hydration scripts run; `<html lang>` reflecting the configured locale's language.
 
@@ -395,14 +408,17 @@ import { resolveDisplayConfig } from '@/lib/runtime-config';
 ```
 
 Note: the `biome-ignore` comment is only needed if `rtk bun run lint` flags `noDangerouslySetInnerHtml`; if lint passes without it, omit it.
+
 - [ ] **Step 2: Typecheck and lint**
 
 Run: `rtk bun run lint`
 Expected: PASS (tsc + biome clean).
+
 - [ ] **Step 3: Verify the production build stays green**
 
 Run: `rtk bun run build`
 Expected: build completes; routes are reported as dynamic (`ƒ`), which is correct - no page may bake the config at build time.
+
 - [ ] **Step 4: Verify runtime injection end-to-end**
 
 Start the dev server in the background with French config, give Next time to compile, then inspect the HTML:
@@ -421,6 +437,7 @@ window.__SPEEDTEST_CONFIG__={"locale":"fr-FR","timeZone":"Europe/Paris"}
 ```
 
 The first request may take 10-20 s while Next compiles the page. Stop the background server afterwards.
+
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -433,11 +450,13 @@ rtk git commit -m "feat(layout): inject runtime locale/timezone config before hy
 ### Task 4: Alerts render timestamps in the configured timezone
 
 **Files:**
+
 - Modify: `lib/alerts/format.ts:5-8` (`formatTime`)
 - Modify: `lib/alerts/templates/render.ts:66-68` (`formatTimestamp`)
 - Test: `lib/alerts/format.test.ts`
 
 **Interfaces:**
+
 - Consumes: `resolveDisplayConfig()` from `lib/runtime-config.ts` (Task 1).
 - Produces: no signature changes; alert bodies/emails keep the ISO-like `sv-SE` format but in `SPEEDTEST_TIMEZONE` instead of the container's default timezone.
 
@@ -486,6 +505,7 @@ describe('formatMessage timezone', () => {
 
 Run: `rtk bun test lib/alerts/format.test.ts`
 Expected: FAIL - current code formats in the machine's local timezone (e.g. `13:00:00` appears for Paris machines even without the env var, or the UTC case shows the local offset). At least one of the two new tests must fail on any machine whose local timezone is not the one under test.
+
 - [ ] **Step 3: Implement**
 
 In `lib/alerts/format.ts`, add the import and change `formatTime`:
@@ -517,10 +537,12 @@ function formatTimestamp(ms: number): string {
 
 Run: `rtk bun test lib/alerts`
 Expected: PASS (all alert test files, including the pre-existing ones - they assert titles and metric strings, not timestamps).
+
 - [ ] **Step 5: Run the full test suite**
 
 Run: `rtk bun test`
 Expected: PASS.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -533,11 +555,13 @@ rtk git commit -m "fix(alerts): render timestamps in configured timezone"
 ### Task 5: Documentation and Docker defaults
 
 **Files:**
+
 - Modify: `README.md:30-37` (env table)
 - Modify: `docker-compose.yml:7-10` (environment block)
 - Modify: `Dockerfile:35-41` (runner ENV block)
 
 **Interfaces:**
+
 - Consumes: the env var names/defaults implemented in Tasks 1-4.
 - Produces: user-facing documentation; no code.
 
@@ -587,6 +611,7 @@ ENV NODE_ENV=production \
 
 Run: `rtk bun run lint && rtk bun test`
 Expected: both PASS.
+
 - [ ] **Step 5: Commit**
 
 ```bash

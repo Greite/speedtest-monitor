@@ -15,6 +15,7 @@
 ## Task 1: Swap DB driver to `bun:sqlite`
 
 **Files:**
+
 - Modify: `lib/db/client.ts`
 - Modify: `lib/db/migrate.ts`
 - Modify: `drizzle.config.ts` (if it references `better-sqlite3`)
@@ -77,26 +78,32 @@ export { schema };
 - [ ] **Step 3: Rewrite `lib/db/migrate.ts`**
 
 Open the file. Change the migrator import from:
+
 ```ts
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 ```
 to:
+
 ```ts
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 ```
 Every other line stays.
+
 - [ ] **Step 4: Update `drizzle.config.ts` if needed**
 
 Run: `cat drizzle.config.ts`
 If the config sets `driver: 'better-sqlite'`, change to `driver: 'bun-sqlite'`. If it only sets `dialect: 'sqlite'`, leave unchanged (dialect drives SQL generation, not the runtime driver).
+
 - [ ] **Step 5: Typecheck**
 
 Run: `bunx tsc --noEmit`
 Expected: clean.
+
 - [ ] **Step 6: Smoke-run dev**
 
 Run: `bun run dev &` in one terminal; `sleep 6; curl -sS http://localhost:3003/api/measurements?range=24h; kill %1`.
 Expected: server boots without errors, GET returns valid JSON (`{"range":"24h","measurements":[...]}`), no `bun:sqlite` stack trace.
+
 - [ ] **Step 7: Commit**
 
 ```bash
@@ -109,6 +116,7 @@ git commit -m "feat(db): swap better-sqlite3 for bun:sqlite + drizzle bun-sqlite
 ## Task 2: Remove `bun test` block (bunfig.toml + script)
 
 **Files:**
+
 - Delete: `bunfig.toml`
 - Delete: `scripts/block-bun-test.ts`
 
@@ -134,6 +142,7 @@ git commit -m "chore(test): remove bun test block (bun:sqlite works with native 
 Convert vitest -> bun:test in seven files. Each file only needs the import swap.
 
 **Files:**
+
 - `lib/format.test.ts`
 - `lib/scheduler/cron-expr.test.ts`
 - `lib/alerts/evaluate.test.ts`
@@ -145,10 +154,12 @@ Convert vitest -> bun:test in seven files. Each file only needs the import swap.
 - [ ] **Step 1: Find + replace the import**
 
 For each file in the list, change the top-line import from:
+
 ```ts
 import { <names> } from 'vitest';
 ```
 to:
+
 ```ts
 import { <names> } from 'bun:test';
 ```
@@ -157,10 +168,12 @@ Preserve the imported names verbatim. If the file imports `vi` (it does not in t
 
 Run: `grep -l "from 'vitest'" lib/format.test.ts lib/scheduler/cron-expr.test.ts lib/alerts/evaluate.test.ts lib/alerts/format.test.ts lib/auth/config.test.ts lib/auth/hash.test.ts lib/alerts/config.test.ts`
 Expected: (empty output - zero files still reference 'vitest')
+
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test lib/format.test.ts lib/scheduler/cron-expr.test.ts lib/alerts/evaluate.test.ts lib/alerts/format.test.ts lib/auth/config.test.ts lib/auth/hash.test.ts lib/alerts/config.test.ts`
 Expected: all tests pass.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -175,6 +188,7 @@ git commit -m "test(B1): migrate pure-module tests vitest -> bun:test"
 Convert seven files. Each needs (a) vitest -> bun:test import swap and (b) `better-sqlite3` -> `bun:sqlite` + drizzle adapter swap in the fixture block.
 
 **Files:**
+
 - `lib/types.test.ts`
 - `lib/measurements.test.ts`
 - `lib/auth/users.test.ts`
@@ -188,6 +202,7 @@ Convert seven files. Each needs (a) vitest -> bun:test import swap and (b) `bett
 In each file, perform two swaps. Show the pattern (example taken from `lib/auth/users.test.ts`):
 
 Before:
+
 ```ts
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
@@ -195,6 +210,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 ```
 
 After:
+
 ```ts
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
@@ -205,10 +221,12 @@ Apply the same pattern to the other six files. The `Database.Database` type (as 
 
 Run: `grep -n "Database\.Database\|'vitest'\|'better-sqlite3'" lib/types.test.ts lib/measurements.test.ts lib/auth/users.test.ts lib/auth/bootstrap.test.ts lib/alerts/rules.test.ts lib/alerts/state.test.ts lib/alerts/streak.test.ts`
 Expected: (empty output)
+
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test lib/types.test.ts lib/measurements.test.ts lib/auth/users.test.ts lib/auth/bootstrap.test.ts lib/alerts/rules.test.ts lib/alerts/state.test.ts lib/alerts/streak.test.ts`
 Expected: all pass.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -223,6 +241,7 @@ git commit -m "test(B2): migrate DB fixture tests vitest+better-sqlite3 -> bun:t
 Convert seven files. These use `vi.fn()`, `vi.mock()`, and sometimes `vi.useFakeTimers()`.
 
 **Files:**
+
 - `lib/alerts/destinations/webhook.test.ts`
 - `lib/alerts/destinations/ntfy.test.ts`
 - `lib/alerts/destinations/discord.test.ts`
@@ -234,6 +253,7 @@ Convert seven files. These use `vi.fn()`, `vi.mock()`, and sometimes `vi.useFake
 - [ ] **Step 1: Per-file swap rules**
 
 For each file, apply these substitutions:
+
 1. Import line:
    - `import { <...> , vi , <...> } from 'vitest';` -> replace `vi` with `mock, spyOn, jest` as needed. The bun:test module also re-exports `beforeAll`, `afterAll`, `beforeEach`, `afterEach`, `describe`, `it`, `expect`. Import only what the file actually uses.
    - Change source from `'vitest'` to `'bun:test'`.
@@ -250,6 +270,7 @@ For each file, apply these substitutions:
    - All `.mockReset()`, `.mockResolvedValueOnce()`, `.mockRejectedValueOnce()`, `.mockImplementation()`, `.mockReturnValueOnce()`, `.mock.calls[...]` -> keep as-is (compatible).
 
 Example for `lib/alerts/handle.test.ts`:
+
 ```ts
 // before
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -271,6 +292,7 @@ const { handleAlertsForMeasurement } = await import('./handle');
 ```
 
 `dispatch.test.ts` uses fake timers:
+
 ```ts
 // before
 import { describe, expect, it, vi } from 'vitest';
@@ -282,6 +304,7 @@ import { describe, expect, it, jest, mock } from 'bun:test';
 ```
 
 `webhook.test.ts` / `ntfy.test.ts` / `discord.test.ts` / `slack.test.ts` mock `globalThis.fetch`:
+
 ```ts
 // before
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -303,6 +326,7 @@ afterEach(() => mock.restore());
 ```
 
 `smtp.test.ts` uses `vi.mock('nodemailer', () => ...)`:
+
 ```ts
 // before
 import { describe, expect, it, vi } from 'vitest';
@@ -325,10 +349,12 @@ const { createSmtpDestination } = await import('./smtp');
 
 Run: `grep -n "'vitest'\|\\bvi\\." lib/alerts/destinations/webhook.test.ts lib/alerts/destinations/ntfy.test.ts lib/alerts/destinations/discord.test.ts lib/alerts/destinations/slack.test.ts lib/alerts/destinations/smtp.test.ts lib/alerts/dispatch.test.ts lib/alerts/handle.test.ts`
 Expected: (empty)
+
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test lib/alerts/destinations/ lib/alerts/dispatch.test.ts lib/alerts/handle.test.ts`
 Expected: all pass.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -343,6 +369,7 @@ git commit -m "test(B3): migrate fetch/module-mock + fake-timer tests to bun:tes
 Convert two files: `lib/measurement/cloudflare.test.ts` and `lib/measurement/runner.test.ts`.
 
 **Files:**
+
 - `lib/measurement/cloudflare.test.ts`
 - `lib/measurement/runner.test.ts`
 
@@ -351,6 +378,7 @@ Convert two files: `lib/measurement/cloudflare.test.ts` and `lib/measurement/run
 Apply the same substitutions from Task 5 Step 1. `cloudflare.test.ts` uses `fetchMock = vi.fn()`, `mock.module` is not used there (but if present, swap). `runner.test.ts` uses `vi.mock('./cloudflare', ...)` and `vi.mock('../ws/broadcast', ...)` - swap to `mock.module`.
 
 Concrete diff for `runner.test.ts` preamble:
+
 ```ts
 // before
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -371,6 +399,7 @@ mock.module('../alerts/handle', () => ({ handleAlertsForMeasurement: mock() }));
 
 Run: `bun test lib/measurement/`
 Expected: 12 tests pass.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -383,15 +412,18 @@ git commit -m "test(B4): migrate measurement engine + runner tests to bun:test"
 ## Task 7 - Batch B5: Auth providers
 
 **Files:**
+
 - `lib/auth/providers.test.ts`
 
 - [ ] **Step 1: Apply the swap**
 
 Same rewrite rules as Task 5 Step 1. This file imports `beforeEach`, `describe`, `expect`, `it` from vitest and uses `new Database(':memory:')` fixture (also needs the bun:sqlite + bun-sqlite adapter swap from Task 4 Step 1).
+
 - [ ] **Step 2: Run**
 
 Run: `bun test lib/auth/providers.test.ts`
 Expected: all pass.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -404,6 +436,7 @@ git commit -m "test(B5): migrate auth/providers.test.ts to bun:test"
 ## Task 8 - Batch B6: API routes (users + auth)
 
 **Files:**
+
 - `app/api/users/route.test.ts`
 - `app/api/users/[id]/route.test.ts`
 - `app/api/users/[id]/reset-password/route.test.ts`
@@ -415,6 +448,7 @@ git commit -m "test(B5): migrate auth/providers.test.ts to bun:test"
 Per-file substitutions from Task 5 Step 1 and Task 4 Step 1 (these files have both DB fixtures and mocks). All five files use the `vi.mock('@/lib/auth/handler', ...)` pattern; each becomes `mock.module('@/lib/auth/handler', ...)`.
 
 Concrete diff for a typical file:
+
 ```ts
 // before
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -445,10 +479,12 @@ const { POST } = await import('./route');
 
 Run: `grep -rn "'vitest'\|'better-sqlite3'\|\\bvi\\." app/api/users/ app/api/auth/setup/ app/api/account/password/`
 Expected: (empty)
+
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test app/api/users/ app/api/auth/setup/ app/api/account/password/`
 Expected: all pass.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -461,6 +497,7 @@ git commit -m "test(B6): migrate user + auth API route tests to bun:test"
 ## Task 9 - Batch B7: API routes (alerts + settings)
 
 **Files:**
+
 - `app/api/alerts/rules/route.test.ts`
 - `app/api/alerts/test/route.test.ts`
 - `app/api/settings/settings-schema.test.ts`
@@ -468,10 +505,12 @@ git commit -m "test(B6): migrate user + auth API route tests to bun:test"
 - [ ] **Step 1: Apply the swap**
 
 Same rules. `alerts/rules/route.test.ts` uses DB fixtures + auth mock. `alerts/test/route.test.ts` uses `vi.mock('@/lib/alerts/destinations', ...)`. `settings-schema.test.ts` is pure (only validates a zod schema).
+
 - [ ] **Step 2: Run the batch**
 
 Run: `bun test app/api/alerts/ app/api/settings/`
 Expected: all pass.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -484,17 +523,20 @@ git commit -m "test(B7): migrate alerts + settings API route tests to bun:test"
 ## Task 10: Flip `package.json` test scripts + remove vitest
 
 **Files:**
+
 - `package.json`
 - `bun.lock`
 
 - [ ] **Step 1: Update scripts**
 
 Open `package.json`. Change:
+
 ```json
 "test": "vitest run",
 "test:watch": "vitest"
 ```
 to:
+
 ```json
 "test": "bun test",
 "test:watch": "bun test --watch"
@@ -510,6 +552,7 @@ bun remove vitest
 
 Run: `bun test`
 Expected: every test passes. If any file still imports from `vitest`, fix it now and re-run.
+
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -522,16 +565,19 @@ git commit -m "chore: flip test scripts to \`bun test\` and drop vitest dep"
 ## Task 11: Dockerfile - switch every stage to `oven/bun:1-slim`
 
 **Files:**
+
 - `Dockerfile`
 
 - [ ] **Step 1: Update ARGs**
 
 At the top of the Dockerfile, replace:
+
 ```
 ARG BUN_IMAGE=oven/bun:1.3.12-debian
 ARG NODE_IMAGE=node:24-trixie-slim
 ```
 with:
+
 ```
 ARG BUN_IMAGE=oven/bun:1-slim
 ```
@@ -539,6 +585,7 @@ ARG BUN_IMAGE=oven/bun:1-slim
 - [ ] **Step 2: Point every FROM at `${BUN_IMAGE}`**
 
 Change:
+
 - `FROM ${BUN_IMAGE} AS deps` - unchanged
 - `FROM ${BUN_IMAGE} AS builder` - unchanged
 - `FROM ${BUN_IMAGE} AS runtime-deps` - unchanged
@@ -549,6 +596,7 @@ Change:
 In the `deps` stage, delete the `RUN apt-get ...` line that installs `python3 make g++ ca-certificates`. Keep a slimmer `RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*` only if needed for https; however `oven/bun:1-slim` already ships with `ca-certificates` - verify with `docker run --rm oven/bun:1-slim cat /etc/ssl/certs/ca-certificates.crt | head -1`. If present, omit the entire apt install from `deps` entirely.
 
 Same treatment for `runtime-deps`: remove `python3 make g++ binutils` from the apt install (keep binutils only if still used elsewhere - grep the file; as of this plan it is only referenced in the strip commands which still work on bun images). After the change the RUN block becomes just the `bun add ...` pipeline plus the `find ... strip ...` lines.
+
 - [ ] **Step 4: Drop `better-sqlite3` from the runtime-deps `bun add` list**
 
 Inside the `bun add \` list, delete the `better-sqlite3@^12.9.0 \` line. Also delete the block that prunes `node_modules/better-sqlite3/prebuilds/...` - that directory no longer exists after the swap. Final list:
@@ -570,21 +618,25 @@ Inside the `bun add \` list, delete the `better-sqlite3@^12.9.0 \` line. Also de
 In the `runner` stage:
 
 Replace:
+
 ```
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:3000/api/settings').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 ```
 with:
+
 ```
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD bun -e "fetch('http://127.0.0.1:3000/api/settings').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 ```
 
 Replace:
+
 ```
 CMD ["node", "dist/server.js"]
 ```
 with:
+
 ```
 CMD ["bun", "dist/server.js"]
 ```
@@ -609,6 +661,7 @@ docker rmi speedtest-bun1
 ```
 
 Expected:
+
 - Build succeeds.
 - Logs show `speedtest-monitor ready on http://0.0.0.0:3000` and the scheduler boot lines with no `bun:sqlite` error.
 - `settings HTTP 401` (unauth; correct behaviour).
@@ -626,6 +679,7 @@ git commit -m "build(docker): all stages on oven/bun:1-slim, drop better-sqlite3
 ## Task 12: README updates
 
 **Files:**
+
 - `README.md`
 
 - [ ] **Step 1: Stack section**
@@ -672,6 +726,7 @@ bunx tsc --noEmit
 ```
 
 Expected: suite green, lint clean (2 pre-existing infos ok), typecheck clean.
+
 - [ ] **Step 2: Dev-mode smoke**
 
 ```bash
@@ -681,6 +736,7 @@ curl -sS -o /dev/null -w "root HTTP %{http_code}\n" http://localhost:3003/
 kill %1
 ```
 Expected: `root HTTP 307` (redirect to /login if no user, /setup if 0 user). No stack traces.
+
 - [ ] **Step 3: Final Docker E2E**
 
 ```bash
@@ -712,6 +768,7 @@ rm -f /tmp/fc-cookies.txt
 ```
 
 Expected:
+
 - `login: HTTP 302`
 - Measurement JSON with non-null `downloadMbps`, `uploadMbps`, `latencyUnloadedMs`, `serverLocations: ["<colo>"]`.
 - Completes in ~20-40s.
@@ -729,6 +786,7 @@ git commit -m "chore: post-migration fixes from sanity pass"
 ## Self-review checklist
 
 **Spec coverage:**
+
 - DB driver swap (`lib/db/client.ts`, `lib/db/migrate.ts`, `drizzle.config.ts`): Task 1 ✓
 - `bunfig.toml` + `scripts/block-bun-test.ts` removed: Task 2 ✓
 - Test batches B1-B7: Tasks 3-9 ✓

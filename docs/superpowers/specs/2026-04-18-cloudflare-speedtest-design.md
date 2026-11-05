@@ -26,6 +26,7 @@ the existing scheduler / DB / alerts / WebSocket flow.
 ## Scope
 
 In-scope (v1):
+
 - Single engine (Cloudflare). `fast-cli`, `puppeteer-core`,
   `.puppeteerrc.cjs`, and the Chromium Debian package are removed.
 - Additive schema migration: three new nullable columns on
@@ -41,6 +42,7 @@ In-scope (v1):
 - Timeout reduced from 180 s to 60 s.
 
 Out of scope (v2+):
+
 - Pluggable multi-engine support (`SPEEDTEST_ENGINE=cloudflare|…`).
 - UI surfacing of the new fields (jitter / packet loss / ISP / colo);
   they are stored now and can be rendered in a follow-up without another
@@ -76,6 +78,7 @@ lib/measurement/
 ```
 
 Integration points:
+
 - `app/api/measurements/run/route.ts`: unchanged (imports `runMeasurement`
   from the new path after rename).
 - `lib/scheduler/index.ts`: unchanged (imports `runMeasurementSafe` from
@@ -203,6 +206,7 @@ column and matches what the UI already shows. If a v2 wants a dedicated
 ### `runtime-deps` stage
 
 `bun add` list diff:
+
 ```
 - fast-cli@^5.2.0
 + @cloudflare/speedtest@^1
@@ -222,6 +226,7 @@ remove it from the list too.
   `mkdir /data && chown` step, the COPY --chown lines.
 
 Expected result:
+
 - Image size: ~1.13 GB → ~350–400 MB (down ~70 %).
 - No need for `--shm-size`, `--cap-add`, or running the container
   `--privileged` (we never required these, but the reduction in attack
@@ -230,6 +235,7 @@ Expected result:
 ## Testing
 
 Colocated `.test.ts` files under `lib/measurement/`:
+
 - `lib/measurement/cloudflare.test.ts`: Mock of `@cloudflare/speedtest` via `vi.mock`. Full summary → every field mapped correctly. Summary with `upload: undefined` → EngineResult with `uploadMbps: null`. `onError` path → Promise rejects. 60 s timeout → `engine.pause()` called and rejection with `timed out`.
 - `lib/measurement/runner.test.ts`: Mock `runCloudflareSpeedTest`. Happy path → row inserted with `status='success'`, measurement + alert broadcast. Partial results → `status='error'` with the incomplete-results message. Engine error → `status='error'`. Timeout text triggers `status='timeout'`. Concurrent invocation throws `MeasurementBusyError`.
 
