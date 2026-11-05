@@ -19,6 +19,7 @@ bun run dev                # bun server.ts -> http://localhost:3003
 A fresh SQLite database is created at `./speedtest.db` on the first run (override with `SPEEDTEST_DB_PATH`). Delete it if you want to start from scratch.
 
 `AUTH_SECRET` is required to boot - generate one with `openssl rand -base64 32` and put it in `.env`. The first user to sign up becomes the admin. Optional env vars:
+
 - `SPEEDTEST_ADMIN_EMAIL` / `SPEEDTEST_ADMIN_PASSWORD` - seed an admin account on boot.
 - `SPEEDTEST_OIDC_ISSUER` / `SPEEDTEST_OIDC_CLIENT_ID` / `SPEEDTEST_OIDC_CLIENT_SECRET` (and the optional `SPEEDTEST_OIDC_DISPLAY_NAME`, `SPEEDTEST_OIDC_ADMIN_EMAIL`, `SPEEDTEST_OIDC_ALLOW_NEW_USERS`, `SPEEDTEST_DISABLE_PASSWORD_LOGIN`) - enable SSO via a generic OIDC provider.
 
@@ -85,6 +86,7 @@ Unit tests live next to the code they cover (`**/*.test.ts`) and run on Bun's na
 ## Reporting issues
 
 Open a GitHub issue with:
+
 - What you expected and what happened
 - `bun --version`, `node --version`, OS/arch
 - Relevant logs (`bun run dev` output, browser console, `docker compose logs speedtest`)

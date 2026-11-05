@@ -91,6 +91,7 @@ wiring without waiting for a real incident.
 ## Authentication
 
 speedtest-monitor requires authentication for all routes. Two roles exist:
+
 - **admin** - full access, can manage users, change settings, configure alerts, trigger manual measurements
 - **viewer** - read-only access: dashboard, history, settings in read-only mode
 
@@ -177,6 +178,7 @@ users. The last remaining admin cannot be demoted or deleted.
 ### Upgrading from the next-auth release
 
 The auth stack moved from next-auth v5 beta to Better Auth. Same env vars, but:
+
 1. Set `BETTER_AUTH_URL` to your public origin (`AUTH_TRUST_HOST` is no longer used).
 2. On first boot, the existing `users` table is copied into the new
    `user`/`account` tables. Argon2id password hashes verify without re-hashing.
@@ -194,6 +196,7 @@ Deployments on a version older than v1.10.0 must first upgrade to an intermediat
 The 0.2+ release swaps the measurement backend from fast.com (via the
 `fast-cli` + Chromium browser) to Cloudflare Speed Test (HTTP only). On
 first boot after the upgrade:
+
 - Three new nullable columns (`jitter_ms`, `packet_loss_pct`, `user_isp`)
   are added to the `measurements` table. Historical rows keep them
   `null` - the data was never captured.

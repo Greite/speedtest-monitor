@@ -11,6 +11,7 @@ La phase 1 (dashboard) est terminée et validée visuellement : fondations posé
 ## Objectif et périmètre
 
 Migrer tout ce qui reste sur shadcn/ui, puis supprimer shadcn et ses dépendances. Fichiers concernés (12 fichiers UI + toasts) :
+
 - Settings : `app/settings/page.tsx`, `components/settings-form.tsx`, `components/settings/alerts-card.tsx`, `components/auth/password-change-card.tsx`
 - Users : `components/users/users-card.tsx` (TanStack -> Table Astryx), `add-user-dialog.tsx`, `delete-user-dialog.tsx`, `reset-password-dialog.tsx`
 - Auth : `components/auth/login-form.tsx`, `components/auth/setup-form.tsx`
@@ -48,6 +49,7 @@ Les primitives déjà mappées en phase 1 (Card+Heading, Button/IconButton, Badg
 ## Nettoyage final
 
 Une fois les 12 fichiers migrés et les toasts remplacés :
+
 - Supprimer `components/ui/*` en entier.
 - `bun remove radix-ui class-variance-authority tw-animate-css @tanstack/react-table sonner` (lève l'amendement de la phase 1 sur TanStack).
 - Vérifier via knip qu'aucun orphelin ni dépendance morte ne reste ; `@astryxdesign/cli` reste (build du thème).

@@ -10,6 +10,7 @@ Turn speedtest-monitor from a "nice dashboard" into a monitoring brick that actu
 ## Scope
 
 In-scope (v1):
+
 - Threshold alerts on download, upload, latency, bufferbloat (condition A)
 - Failure-streak alert on N consecutive non-success measurements (condition C)
 - Recovery alerts when a previously-firing condition clears (condition E)
@@ -19,6 +20,7 @@ In-scope (v1):
 - Test endpoint to validate destination wiring without waiting for an incident
 
 Out of scope (v2+):
+
 - Sustained-threshold alerts (N consecutive breaches) — condition A with a sensible streak subsumes 80% of use cases
 - Statistical deviation alerts (>2σ vs rolling baseline)
 - Quiet hours / mute / acknowledge / severity
@@ -268,6 +270,7 @@ Colocated `.test.ts` files, vitest. Pure modules first, then adapters, then inte
 ## Migration & dependencies
 
 Drizzle migration:
+
 1. Add `alerts` table + index in `lib/db/schema.ts`
 2. `bunx drizzle-kit generate` → `drizzle/XXXX_alerts.sql`
 3. Review generated SQL, confirm index syntax

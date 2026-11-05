@@ -5,6 +5,7 @@
 **Goal:** Make sort, filter and pagination on the measurements history table operate against the entire DB instead of only the rows currently loaded client-side.
 
 **Architecture:**
+
 - Introduce a dedicated paginated endpoint `GET /api/measurements/table` that accepts sort, filter and pagination params and returns `{ rows, totalCount }`.
 - Add a pure query-building helper (`lib/measurements-query.ts`) validated with zod, and a server-side lister `listMeasurementsPaged(query)` in `lib/measurements.ts`.
 - Rewrite `HistoryTable` in manual mode (`manualSorting` + `manualFiltering` + `manualPagination`) fed by a new hook `useTableMeasurements` that fetches the new endpoint on state change and refetches when a new live measurement arrives.
@@ -19,6 +20,7 @@
 ## File Structure
 
 **Created:**
+
 - `lib/measurements-query.ts` - zod schema + parser turning `URLSearchParams` into a typed `TableQuery` with defaults
 - `lib/measurements-query.test.ts` - parser tests
 - `app/api/measurements/table/route.ts` - paginated endpoint
@@ -26,6 +28,7 @@
 - `components/use-table-measurements.ts` - client hook (fetch, state, refetch-on-live)
 
 **Modified:**
+
 - `lib/measurements.ts` - add `listMeasurementsPaged(query)` returning `{ rows, totalCount }`
 - `lib/measurements.test.ts` - tests for `listMeasurementsPaged`
 - `components/history-table.tsx` - switch to manual mode; drop `measurements` prop; use new hook; pagination driven by server totals
@@ -37,6 +40,7 @@
 ## Task 1: Zod schema and parser for table query params
 
 **Files:**
+
 - Create: `lib/measurements-query.ts`
 - Create: `lib/measurements-query.test.ts`
 
@@ -118,6 +122,7 @@ bun test lib/measurements-query.test.ts
 ```
 
 Expected: FAIL with `Cannot find module './measurements-query'`.
+
 - [ ] **Step 3: Implement parser**
 
 Create `lib/measurements-query.ts`:
@@ -242,6 +247,7 @@ bun test lib/measurements-query.test.ts
 ```
 
 Expected: all tests pass.
+
 - [ ] **Step 5: Typecheck**
 
 ```bash
@@ -249,6 +255,7 @@ bun run typecheck
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -261,6 +268,7 @@ git commit -m "feat(measurements): add parseTableQuery for server-side table par
 ## Task 2: `listMeasurementsPaged` in `lib/measurements.ts`
 
 **Files:**
+
 - Modify: `lib/measurements.ts`
 - Modify: `lib/measurements.test.ts`
 
@@ -429,6 +437,7 @@ bun test lib/measurements.test.ts
 ```
 
 Expected: FAIL with `listMeasurementsPaged is not a function`.
+
 - [ ] **Step 3: Implement `listMeasurementsPaged`**
 
 Edit `lib/measurements.ts`. Add the imports and function at the bottom:
@@ -506,6 +515,7 @@ bun test lib/measurements.test.ts
 ```
 
 Expected: all new tests pass; existing tests still pass.
+
 - [ ] **Step 5: Typecheck**
 
 ```bash
@@ -513,6 +523,7 @@ bun run typecheck
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -525,6 +536,7 @@ git commit -m "feat(measurements): add listMeasurementsPaged with filters and so
 ## Task 3: API endpoint `GET /api/measurements/table`
 
 **Files:**
+
 - Create: `app/api/measurements/table/route.ts`
 - Create: `app/api/measurements/table/route.test.ts`
 
@@ -616,6 +628,7 @@ bun test app/api/measurements/table/route.test.ts
 ```
 
 Expected: FAIL with `Cannot find module './route'`.
+
 - [ ] **Step 3: Implement the route**
 
 Create `app/api/measurements/table/route.ts`:
@@ -656,6 +669,7 @@ bun test app/api/measurements/table/route.test.ts
 ```
 
 Expected: all pass.
+
 - [ ] **Step 5: Typecheck + lint**
 
 ```bash
@@ -663,6 +677,7 @@ bun run typecheck && bun run lint
 ```
 
 Expected: both exit 0.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -675,6 +690,7 @@ git commit -m "feat(api): add paginated /api/measurements/table endpoint"
 ## Task 4: Client hook `useTableMeasurements`
 
 **Files:**
+
 - Create: `components/use-table-measurements.ts`
 
 - [ ] **Step 1: Implement the hook**
@@ -762,6 +778,7 @@ bun run typecheck
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -774,6 +791,7 @@ git commit -m "feat(ui): add useTableMeasurements hook for paginated server-side
 ## Task 5: Switch `HistoryTable` to manual mode
 
 **Files:**
+
 - Modify: `components/history-table.tsx`
 
 - [ ] **Step 1: Rewrite the component**
@@ -1084,6 +1102,7 @@ bun run typecheck
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 3: Lint**
 
 ```bash
@@ -1091,6 +1110,7 @@ bun run lint
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -1103,6 +1123,7 @@ git commit -m "refactor(ui): switch HistoryTable to server-side sort/filter/pagi
 ## Task 6: Wire up in `Dashboard` and remove table prop
 
 **Files:**
+
 - Modify: `components/dashboard.tsx`
 
 - [ ] **Step 1: Update Dashboard**
@@ -1140,6 +1161,7 @@ bun run typecheck
 ```
 
 Expected: exits 0.
+
 - [ ] **Step 3: Commit**
 
 ```bash
@@ -1152,6 +1174,7 @@ git commit -m "refactor(ui): pass refresh signal instead of rows to HistoryTable
 ## Task 7: Manual smoke test
 
 **Files:** none (verification only)
+
 - [ ] **Step 1: Start dev server**
 
 ```bash
@@ -1159,6 +1182,7 @@ bun run dev
 ```
 
 Leaves the server running on the configured port.
+
 - [ ] **Step 2: Open the app in a browser** and verify on the dashboard:
   1. The history table loads with 25 rows.
   2. Clicking the "Download" column header reorders rows by download speed; the top row is the max in the entire DB (open the DB with a SQL client or another tab running a manual query to cross-check at least the first row).
@@ -1171,6 +1195,7 @@ Leaves the server running on the configured port.
 - [ ] **Step 3: Stop dev server**
 
 Kill the dev server.
+
 - [ ] **Step 4: Run full test suite**
 
 ```bash
@@ -1178,6 +1203,7 @@ bun test
 ```
 
 Expected: all tests pass.
+
 - [ ] **Step 5: Lint + typecheck**
 
 ```bash
@@ -1185,6 +1211,7 @@ bun run lint && bun run typecheck
 ```
 
 Expected: both exit 0.
+
 - [ ] **Step 6: Final commit (if any tweaks were needed during smoke test)**
 
 If the smoke test surfaced tweaks, commit them. Otherwise this task has no commit.

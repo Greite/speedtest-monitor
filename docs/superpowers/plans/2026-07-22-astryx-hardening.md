@@ -23,17 +23,20 @@
 ### Task 1: Durcissement du script axe + résidus UX
 
 **Files:**
+
 - Modify: `scripts/axe-audit.ts`
 - Modify: `app/globals.css` (token `--brand-hover` : `@theme inline` + `:root` + `.dark`)
 - Modify: `components/topbar.tsx:317,364,460` (`hover:bg-brand/90` -> `hover:bg-brand-hover`)
 - Modify: `components/time-range-picker.tsx` (+ son test si l'annonce est restaurée)
 
 **Interfaces:**
+
 - Produces: `axe-audit.ts` avec contrat CLI durci : `bun scripts/axe-audit.ts <url> [--scheme light|dark] [--cookie "name=value"]...` ; token `--brand-hover` consommable en `hover:bg-brand-hover`.
 
 - [ ] **Step 1: Restructurer la fermeture du script**
 
 Lire le script actuel. Restructurer : le run principal retourne `violationCount` ; `browser.close()` dans `finally` ; `process.exit(violationCount > 0 ? 1 : 0)` APRÈS le try/finally. Aucun `process.exit` à l'intérieur du try.
+
 - [ ] **Step 2: Parsing strict + assertion de schéma**
 
 ```ts
@@ -86,12 +89,15 @@ if (applied !== scheme) {
 - [ ] **Step 3: Injection de cookies + doc d'en-tête**
 
 Avant `page.goto` : `await browser.defaultBrowserContext().setCookie(...)` ou `page.setCookie` selon l'API puppeteer-core 25 (vérifier le .d.ts installé) avec `{name, value, url}`. En-tête du script : commentaire expliquant comment obtenir un cookie de session (se connecter dans un navigateur, copier le cookie better-auth depuis les DevTools) et l'exemple d'invocation authentifiée.
+
 - [ ] **Step 4: Token brand-hover et hovers topbar**
 
 `app/globals.css` : dans `@theme inline` ajouter `--color-brand-hover: var(--brand-hover);` (à côté de `--color-brand`) ; dans `:root` (bloc brand, ~l.95) `--brand-hover: oklch(0.5 0.19 250);` ; dans `.dark` `--brand-hover: oklch(0.74 0.17 240);` (plus clair que le fond brand sombre : perceptible, et le texte sombre y garde un contraste large). Dans `topbar.tsx`, remplacer les trois `hover:bg-brand/90` par `hover:bg-brand-hover`. Vérifier au calcul WCAG (script jetable ou calcul manuel documenté au rapport) : blanc sur oklch(0.5 0.19 250) >= 4.5:1.
+
 - [ ] **Step 5: Annonce SR du time-range**
 
 Lire `node_modules/@astryxdesign/core/dist/SegmentedControl/*.d.ts` ET la source du rendu de l'item : existe-t-il un moyen d'avoir un accessible name différent du label visible qui atteigne réellement le DOM (prop dédiée transmise, pas avalée) ? Si oui : items annoncés « Last 6h »... (visible « 6h » inchangé), et étendre `components/time-range-picker.test.tsx` pour verrouiller l'accessible name. Si non : documenter au rapport (limitation upstream, repli accepté par la spec) et ne rien changer.
+
 - [ ] **Step 6: Vérification et commit**
 
 ```bash
@@ -113,9 +119,11 @@ rtk git add -A && rtk git commit -m "feat: harden axe audit script and fix brand
 ### Task 2: Test de composant table-filters
 
 **Files:**
+
 - Create: `components/table-filters.test.tsx`
 
 **Interfaces:**
+
 - Consumes: le pattern de `components/time-range-picker.test.tsx` (bun:test + renderToStaticMarkup, wrap dans Theme si nécessaire) ; `TableFilters {value, onChange}` ; `statusPillClassesOk/Warn/Bad` (lib/utils.ts).
 
 - [ ] **Step 1: Écrire le test (RED d'abord sur une assertion volontairement fausse pour prouver qu'il tourne, puis corriger)**
@@ -158,6 +166,7 @@ describe('TableFilters status pills', () => {
 ```
 
 Ajuster à la réalité du panneau (le panneau des filtres est fermé par défaut : les assertions NumberInput exigent l'état ouvert - si `open` n'est pas contrôlable de l'extérieur, tester ce qui est rendu fermé : chips + compte actif ; documenter ce que le rendu fermé ne couvre pas). Vérifier l'accessible name réel du bouton de suppression du Token dans sa source avant d'écrire l'assertion regex.
+
 - [ ] **Step 2: Itérer jusqu'au vert, gates, commit**
 
 ```bash
@@ -171,6 +180,7 @@ rtk git add components/table-filters.test.tsx && rtk git commit -m "test: lock s
 ### Task 3: Infra (wrapper theme-build + CI) et validation du lot
 
 **Files:**
+
 - Create: `scripts/theme-build.ts`
 - Modify: `package.json` (`theme:build` -> `bun scripts/theme-build.ts`)
 - Modify: `lib/speedtest.*` (normalisation initiale, une fois)
@@ -202,6 +212,7 @@ for (const path of OUTPUTS) {
 ```
 
 Adapter la liste OUTPUTS aux fichiers réellement émis (ls lib/speedtest*) et vérifier si `Generated:` apparaît plusieurs fois par fichier (`g` flag si besoin). `package.json` : `"theme:build": "bun scripts/theme-build.ts"`.
+
 - [ ] **Step 2: Normalisation initiale + preuve de déterminisme**
 
 ```bash
@@ -223,6 +234,7 @@ Lire `.github/workflows/a11y.yml` (structure, setup bun existant). Ajouter un st
 ```
 
 Valider localement la commande exacte du step (`bun run theme:build && git diff --exit-code lib/` -> exit 0).
+
 - [ ] **Step 4: Validation du lot et commit**
 
 ```bash

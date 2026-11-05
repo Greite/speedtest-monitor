@@ -9,6 +9,7 @@ Specs précédentes : `2026-07-21-astryx-dashboard-migration-design.md`, `2026-0
 La migration complète vers Astryx est terminée et prête à merger. Ce lot traite le backlog non bloquant issu des revues : déduplication (sweep DRY), améliorations UX/visuelles, et le contraste du bouton Sign in (seule violation axe restante, préexistante à la migration).
 
 Décisions actées avec l'utilisateur le 2026-07-21 :
+
 - Cartes opaques ACCEPTÉES (pas de restauration de l'effet verre) ; les classes `backdrop-blur` mortes sont supprimées.
 - Contraste : assombrissement du brand clair app-wide (pas de ton dédié au bouton).
 

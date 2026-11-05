@@ -23,6 +23,7 @@ unchanged.
   "`Bun.password` (native argon2id)".
 
 Out of scope:
+
 - Changing argon2 parameters (keep `memoryCost: 19456, timeCost: 2`).
 - Phase 2 (ws -> Bun.serve), explicitly skipped.
 
@@ -85,12 +86,14 @@ keeping the login flow quiet after the swap.
 ## Dockerfile
 
 `runtime-deps` stage `bun add` list:
+
 - Remove: `@node-rs/argon2@^2`
 
 No prebuild pruning / strip commands specific to `@node-rs/argon2`
 exist in the Dockerfile (grep confirmed), so nothing else changes.
 
 Expected effect:
+
 - `~8 MB` drop in node_modules footprint.
 - One less native module to worry about across arm64 / x64 prebuilds.
 - Simpler rebuilds on Bun upgrades.
