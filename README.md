@@ -66,6 +66,7 @@ env vars are set.
 | ntfy              | `SPEEDTEST_NTFY_URL` (full URL incl. topic)                       | `SPEEDTEST_NTFY_TOKEN`                                                                                    |
 | Discord           | `SPEEDTEST_DISCORD_WEBHOOK`                                       | -                                                                                                         |
 | Slack             | `SPEEDTEST_SLACK_WEBHOOK`                                         | -                                                                                                         |
+| Telegram          | `SPEEDTEST_TELEGRAM_BOT_TOKEN`, `SPEEDTEST_TELEGRAM_CHAT_ID`      | -                                                                                                         |
 | Email (SMTP)      | `SPEEDTEST_SMTP_HOST`, `SPEEDTEST_SMTP_FROM`, `SPEEDTEST_SMTP_TO` | `SPEEDTEST_SMTP_PORT` (587), `SPEEDTEST_SMTP_SECURE` (auto), `SPEEDTEST_SMTP_USER`, `SPEEDTEST_SMTP_PASS` |
 | -                 | -                                                                 | `SPEEDTEST_PUBLIC_URL` (dashboard link in emails)                                                         |
 
@@ -273,7 +274,7 @@ Unit tests live next to the code they cover (`lib/**/*.test.ts`, `components/**/
 bun test
 ```
 
-Covered areas: the setInterval scheduler, measurement DTO mapping, range and pagination query parsing, alert evaluation and per-condition state machine, alert dispatch and formatting, alert email rendering, every destination adapter (webhook, ntfy, Discord, Slack, SMTP), auth bootstrap and config, password hashing, OIDC providers, and user management.
+Covered areas: the setInterval scheduler, measurement DTO mapping, range and pagination query parsing, alert evaluation and per-condition state machine, alert dispatch and formatting, alert email rendering, every destination adapter (webhook, ntfy, Discord, Slack, Telegram, SMTP), auth bootstrap and config, password hashing, OIDC providers, and user management.
 
 ## Reverse proxy
 

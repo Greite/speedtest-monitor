@@ -14,6 +14,7 @@ export type AlertRules = {
     ntfy: boolean;
     discord: boolean;
     slack: boolean;
+    telegram: boolean;
     smtp: boolean;
   };
 };
@@ -69,6 +70,7 @@ export const DEFAULT_RULES: AlertRules = {
     ntfy: false,
     discord: false,
     slack: false,
+    telegram: false,
     smtp: false,
   },
 };

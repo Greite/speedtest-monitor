@@ -1,6 +1,14 @@
 import nodemailer from 'nodemailer';
 
-import type { AlertConfig, DiscordConfig, NtfyConfig, SlackConfig, SmtpConfig, WebhookConfig } from './config';
+import type {
+  AlertConfig,
+  DiscordConfig,
+  NtfyConfig,
+  SlackConfig,
+  SmtpConfig,
+  TelegramConfig,
+  WebhookConfig,
+} from './config';
 import { renderAlertEmail } from './templates/render';
 import type { AlertPayload, DeliveryResult, DestinationName } from './types';
 
@@ -98,6 +106,20 @@ export function createSlackDestination(cfg: SlackConfig): Destination {
   };
 }
 
+export function createTelegramDestination(cfg: TelegramConfig): Destination {
+  return {
+    name: 'telegram' as const,
+    async send(payload: AlertPayload): Promise<DeliveryResult> {
+      const result = await httpDeliver(`https://api.telegram.org/bot${cfg.botToken}/sendMessage`, {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: cfg.chatId, text: `${payload.title}\n\n${payload.body}` }),
+      });
+      // The token is part of the URL; fetch errors may echo it, and errors are logged + persisted.
+      return result.error ? { ...result, error: result.error.replaceAll(cfg.botToken, '<redacted>') } : result;
+    },
+  };
+}
+
 export function createSmtpDestination(cfg: SmtpConfig, publicUrl: string | null): Destination {
   const transporter = nodemailer.createTransport({
     host: cfg.host,
@@ -138,6 +160,9 @@ export function buildDestinations(cfg: AlertConfig): Destination[] {
   }
   if (cfg.slack) {
     dests.push(createSlackDestination(cfg.slack));
+  }
+  if (cfg.telegram) {
+    dests.push(createTelegramDestination(cfg.telegram));
   }
   if (cfg.smtp) {
     dests.push(createSmtpDestination(cfg.smtp, cfg.publicUrl));

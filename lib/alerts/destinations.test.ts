@@ -16,6 +16,7 @@ const {
   createNtfyDestination,
   createDiscordDestination,
   createSlackDestination,
+  createTelegramDestination,
   createSmtpDestination,
 } = await import('./destinations');
 
@@ -170,6 +171,49 @@ describe('destinations/slack', () => {
     expect(body.blocks[0].text.text).toBe('Speedtest: X');
     expect(body.blocks[1].type).toBe('section');
     expect(body.blocks[1].text.text).toContain('body');
+  });
+});
+
+describe('destinations/telegram', () => {
+  it('POSTs title + body to the bot sendMessage endpoint for the chat', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{"ok":true}', { status: 200 }));
+    const d = createTelegramDestination({ botToken: '123:abc', chatId: '-10042' });
+    const r = await d.send({
+      event: 'fired',
+      kind: 'download_below',
+      title: 'Speedtest: X',
+      body: 'body',
+      observed: 1,
+      threshold: 2,
+      timestamp: 0,
+      measurementId: 1,
+      alertId: 7,
+    });
+    expect(r.ok).toBe(true);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api.telegram.org/bot123:abc/sendMessage');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toEqual({
+      chat_id: '-10042',
+      text: 'Speedtest: X\n\nbody',
+    });
+  });
+
+  it('redacts the bot token from transport errors', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('connect failed: https://api.telegram.org/bot123:abc/sendMessage'));
+    const d = createTelegramDestination({ botToken: '123:abc', chatId: '-10042' });
+    const r = await d.send({
+      event: 'fired',
+      kind: 'download_below',
+      title: 't',
+      body: 'b',
+      observed: null,
+      threshold: null,
+      timestamp: 0,
+      measurementId: null,
+      alertId: 0,
+    });
+    expect(r.ok).toBe(false);
+    expect(r.error).not.toContain('123:abc');
+    expect(r.error).toContain('<redacted>');
   });
 });
 

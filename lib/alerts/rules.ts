@@ -24,6 +24,7 @@ const rulesSchema = z.object({
       ntfy: z.boolean().default(false),
       discord: z.boolean().default(false),
       slack: z.boolean().default(false),
+      telegram: z.boolean().default(false),
       smtp: z.boolean().default(false),
     })
     .default(DEFAULT_RULES.destinations),

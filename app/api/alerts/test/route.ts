@@ -8,7 +8,7 @@ import { apiValidationError } from '@/lib/api-errors';
 
 const bodySchema = z
   .object({
-    destination: z.enum(['webhook', 'ntfy', 'discord', 'slack', 'smtp']).optional(),
+    destination: z.enum(['webhook', 'ntfy', 'discord', 'slack', 'telegram', 'smtp']).optional(),
   })
   .strict();
 

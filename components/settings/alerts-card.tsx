@@ -21,6 +21,7 @@ type Configured = {
   ntfy: boolean;
   discord: boolean;
   slack: boolean;
+  telegram: boolean;
   smtp: boolean;
 };
 
@@ -42,6 +43,7 @@ const DESTS: { key: keyof Configured; label: string }[] = [
   { key: 'ntfy', label: 'ntfy' },
   { key: 'discord', label: 'Discord' },
   { key: 'slack', label: 'Slack' },
+  { key: 'telegram', label: 'Telegram' },
   { key: 'smtp', label: 'SMTP' },
 ];
 

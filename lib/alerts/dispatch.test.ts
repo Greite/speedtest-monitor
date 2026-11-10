@@ -35,6 +35,7 @@ const rules: AlertRules = {
     ntfy: true,
     discord: false,
     slack: true,
+    telegram: false,
     smtp: false,
   },
 };

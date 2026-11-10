@@ -9,6 +9,8 @@ const ENV_KEYS = [
   'SPEEDTEST_NTFY_TOKEN',
   'SPEEDTEST_DISCORD_WEBHOOK',
   'SPEEDTEST_SLACK_WEBHOOK',
+  'SPEEDTEST_TELEGRAM_BOT_TOKEN',
+  'SPEEDTEST_TELEGRAM_CHAT_ID',
   'SPEEDTEST_SMTP_HOST',
   'SPEEDTEST_SMTP_PORT',
   'SPEEDTEST_SMTP_SECURE',
@@ -37,6 +39,7 @@ describe('alerts/config', () => {
     expect(c.ntfy).toBeNull();
     expect(c.discord).toBeNull();
     expect(c.slack).toBeNull();
+    expect(c.telegram).toBeNull();
     expect(c.smtp).toBeNull();
   });
 
@@ -64,6 +67,13 @@ describe('alerts/config', () => {
       url: 'https://ntfy.sh/topic',
       token: 'tk_1',
     });
+  });
+
+  it('requires both telegram bot token and chat id', () => {
+    process.env.SPEEDTEST_TELEGRAM_BOT_TOKEN = '123:abc';
+    expect(loadAlertConfig().telegram).toBeNull();
+    process.env.SPEEDTEST_TELEGRAM_CHAT_ID = '-10042';
+    expect(loadAlertConfig().telegram).toEqual({ botToken: '123:abc', chatId: '-10042' });
   });
 
   it('derives smtp secure=true when port=465', () => {

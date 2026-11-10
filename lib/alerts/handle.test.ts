@@ -68,7 +68,7 @@ describe('handleAlertsForMeasurement', () => {
     setAlertRules({
       enabled: true,
       thresholds: { downloadMbps: 100, uploadMbps: null, latencyMs: null, bufferBloatMs: null },
-      destinations: { webhook: true, ntfy: false, discord: false, slack: false, smtp: false },
+      destinations: { webhook: true, ntfy: false, discord: false, slack: false, telegram: false, smtp: false },
     });
     const db = drizzle(sqlite, { schema });
     const inserted = db

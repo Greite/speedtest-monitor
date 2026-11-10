@@ -2,6 +2,7 @@ export type WebhookConfig = { url: string; headers: Record<string, string> };
 export type NtfyConfig = { url: string; token?: string };
 export type DiscordConfig = { url: string };
 export type SlackConfig = { url: string };
+export type TelegramConfig = { botToken: string; chatId: string };
 export type SmtpConfig = {
   host: string;
   port: number;
@@ -17,6 +18,7 @@ export type AlertConfig = {
   ntfy: NtfyConfig | null;
   discord: DiscordConfig | null;
   slack: SlackConfig | null;
+  telegram: TelegramConfig | null;
   smtp: SmtpConfig | null;
   publicUrl: string | null;
 };
@@ -75,11 +77,14 @@ export function loadAlertConfig(): AlertConfig {
   const ntfyUrl = process.env.SPEEDTEST_NTFY_URL;
   const discordUrl = process.env.SPEEDTEST_DISCORD_WEBHOOK;
   const slackUrl = process.env.SPEEDTEST_SLACK_WEBHOOK;
+  const telegramToken = process.env.SPEEDTEST_TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.SPEEDTEST_TELEGRAM_CHAT_ID;
   return {
     webhook: webhookUrl ? { url: webhookUrl, headers: parseHeadersJson(process.env.SPEEDTEST_WEBHOOK_HEADERS) } : null,
     ntfy: ntfyUrl ? { url: ntfyUrl, token: process.env.SPEEDTEST_NTFY_TOKEN || undefined } : null,
     discord: discordUrl ? { url: discordUrl } : null,
     slack: slackUrl ? { url: slackUrl } : null,
+    telegram: telegramToken && telegramChatId ? { botToken: telegramToken, chatId: telegramChatId } : null,
     smtp: parseSmtp(),
     publicUrl: process.env.SPEEDTEST_PUBLIC_URL || null,
   };

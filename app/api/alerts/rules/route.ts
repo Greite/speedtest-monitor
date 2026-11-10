@@ -23,6 +23,7 @@ const patchSchema = z
         ntfy: z.boolean().optional(),
         discord: z.boolean().optional(),
         slack: z.boolean().optional(),
+        telegram: z.boolean().optional(),
         smtp: z.boolean().optional(),
       })
       .optional(),
@@ -39,6 +40,7 @@ function withConfigured() {
       ntfy: cfg.ntfy !== null,
       discord: cfg.discord !== null,
       slack: cfg.slack !== null,
+      telegram: cfg.telegram !== null,
       smtp: cfg.smtp !== null,
     },
   };
