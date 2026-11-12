@@ -39,7 +39,7 @@
   "dependencies": {
     "@astryxdesign/core": "0.5.4",
     "@astryxdesign/theme-neutral": "0.5.4",
-    "better-auth": "^1.7.20",
+    "better-auth": "^1.7.22",
     "drizzle-orm": "^0.45.4",
     "next": "^16.4.6",
     "nodemailer": "^10.5.0",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@astryxdesign/cli": "0.5.4",
-    "@biomejs/biome": "^2.6.6",
+    "@biomejs/biome": "^2.6.7",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/bun": "^1.4.4",
     "@types/node": "^26.6.6",
